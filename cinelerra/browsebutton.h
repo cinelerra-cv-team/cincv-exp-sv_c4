@@ -26,7 +26,7 @@ public:
 	int handle_event();
 	void run();
 	int want_directory;
-	char result[1024];
+	char result[OLTEXTLEN];
 	char *title;
 	char *caption;
 	char *init_directory;

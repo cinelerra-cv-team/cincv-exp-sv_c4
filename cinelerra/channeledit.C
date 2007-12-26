@@ -202,7 +202,7 @@ ChannelEditWindow::~ChannelEditWindow()
 int ChannelEditWindow::create_objects()
 {
 	int x = 10, y = 10, i;
-	char string[1024];
+	char string[OLTEXTLEN];
 
 // Create channel list
 	for(i = 0; i < thread->new_channels->size(); i++)

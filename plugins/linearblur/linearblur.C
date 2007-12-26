@@ -553,7 +553,7 @@ void LinearBlurMain::update_gui()
 
 int LinearBlurMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%slinearblur.rc", BCASTDIR);
 

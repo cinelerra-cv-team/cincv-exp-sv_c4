@@ -41,7 +41,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-	char input[1024], output[1024];
+	char input[OLTEXTLEN], output[OLTEXTLEN];
 	int result;
 	BC_Hash defaults("~/.replacerc");
 

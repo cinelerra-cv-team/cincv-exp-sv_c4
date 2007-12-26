@@ -81,7 +81,7 @@ int FeatherEditsWindow::create_objects(int audio, int video)
 		add_subwindow(new BC_Title(x, y, _("Feather by how many frames:")));
 
 	y += 20;
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, "%d", feather_samples);
 	add_subwindow(text = new FeatherEditsTextBox(this, string, x, y));
 

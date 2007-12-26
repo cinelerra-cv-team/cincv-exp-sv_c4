@@ -45,7 +45,7 @@ public:
 // data for reverb
 	ReverbConfig config;
 	
-	char config_directory[1024];
+	char config_directory[OLTEXTLEN];
 
 	double **main_in, **main_out;
 	double **dsp_in;

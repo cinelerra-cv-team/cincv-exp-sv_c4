@@ -457,7 +457,7 @@ void DownSampleMain::update_gui()
 
 int DownSampleMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%sdownsample.rc", BCASTDIR);
 

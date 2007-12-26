@@ -242,7 +242,7 @@ int ReverbMenu::load_defaults(BC_Hash *defaults)
 	if(total_loads > 0)
 	{
 		filemenu->add_item(new BC_MenuItem("-"));
-		char string[1024], path[1024], filename[1024];
+		char string[OLTEXTLEN], path[OLTEXTLEN], filename[OLTEXTLEN];
 	
 		for(int i = 0; i < total_loads; i++)
 		{
@@ -261,7 +261,7 @@ int ReverbMenu::save_defaults(BC_Hash *defaults)
 	if(total_loads > 0)
 	{
 		defaults->update("TOTAL_LOADS",  total_loads);
-		char string[1024];
+		char string[OLTEXTLEN];
 		
 		for(int i = 0; i < total_loads; i++)
 		{
@@ -281,7 +281,7 @@ int ReverbMenu::add_load(char *path)
 	
 // test for existing copy
 	FileSystem fs;
-	char text[1024], new_path[1024];      // get text and path
+	char text[OLTEXTLEN], new_path[OLTEXTLEN];      // get text and path
 	fs.extract_name(text, path);
 	strcpy(new_path, path);
 	

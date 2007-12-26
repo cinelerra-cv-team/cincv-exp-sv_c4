@@ -108,7 +108,7 @@ private:
 	Mutex *threadframe_lock;     // Lock threadframe array.
 
 	FileMOVThread **threads;   // One thread for every CPU
-	char prefix_path[1024];    // Prefix for new file when 2G limit is exceeded
+	char prefix_path[OLTEXTLEN];    // Prefix for new file when 2G limit is exceeded
 	int suffix_number;         // Number for new file
 
 // Temp buffers for converting from double to float

@@ -96,7 +96,7 @@ void MenuEffectThread::run()
 	BC_Hash *defaults = mwindow->defaults;
 	ArrayList<BC_ListBoxItem*> plugin_list;
 	ArrayList<PluginServer*> local_plugindb;
-	char string[1024];
+	char string[OLTEXTLEN];
 	int i;
 	int result = 0;
 // Default configuration

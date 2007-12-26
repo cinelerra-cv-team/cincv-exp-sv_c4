@@ -3,7 +3,10 @@
 
 #include "sizes.h"
 #include <stdio.h>
+// Titlehack requires some definitions
+#include "../guicast/bcwindowbase.inc"
 
+// ToDo: check what these definitions are for
 #define MAX_TITLE 1024
 #define MAX_PROPERTIES 1024
 #define MAX_LENGTH 4096
@@ -99,7 +102,7 @@ public:
 	long output_length;
 	char *output;       // for reading text
 	char left_delimiter, right_delimiter;
-	char filename[1024];  // Filename used in the last read_from_file or write_to_file
+	char filename[OLTEXTLEN];  // Filename used in the last read_from_file or write_to_file
 };
 
 #endif

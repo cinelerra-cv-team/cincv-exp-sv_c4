@@ -42,7 +42,7 @@ int CDRipMain::is_multichannel() { return 1; }
 int CDRipMain::load_defaults()
 {
 // set the default directory
-	char directory[1024];
+	char directory[OLTEXTLEN];
 	sprintf(directory, "%scdripper.rc", BCASTDIR);
 
 // load the defaults

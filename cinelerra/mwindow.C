@@ -222,57 +222,77 @@ void MWindow::init_plugin_path(Preferences *preferences,
 	SplashGUI *splash_window,
 	int *counter)
 {
+printf("MWindow::init_plugin_path(...bla...) : 01\n");
 	int result = 0;
 	PluginServer *newplugin;
 
 	if(!result)
 	{
+printf("MWindow::init_plugin_path(...bla...) : 02\n");
 		for(int i = 0; i < fs->dir_list.total; i++)
 		{
+printf("MWindow::init_plugin_path(...bla...) : 03\n");
 			char path[BCTEXTLEN];
 			strcpy(path, fs->dir_list.values[i]->path);
+printf("MWindow::init_plugin_path(...bla...) : 04\n");
 
 // File is a directory
 			if(fs->is_dir(path))
 			{
+printf("MWindow::init_plugin_path(...bla...) : 05\n");
 				continue;
 			}
 			else
 			{
 // Try to query the plugin
+printf("MWindow::init_plugin_path(...bla...) : 06\n");
 				fs->complete_path(path);
-//printf("MWindow::init_plugin_path %s\n", path);
+printf("MWindow::init_plugin_path(...bla...) : 07\n");
+printf("MWindow::init_plugin_path %s\n", path);
 				PluginServer *new_plugin = new PluginServer(path);
+printf("MWindow::init_plugin_path(...bla...) : 08\n");
 				int result = new_plugin->open_plugin(1, preferences, 0, 0, -1);
+printf("MWindow::init_plugin_path(...bla...) : 09\n");
 
 				if(!result)
 				{
+printf("MWindow::init_plugin_path(...bla...) : 10\n");
 					plugindb->append(new_plugin);
+printf("MWindow::init_plugin_path(...bla...) : 11\n");
 					new_plugin->close_plugin();
+printf("MWindow::init_plugin_path(...bla...) : 12\n");
 					if(splash_window)
 						splash_window->operation->update(_(new_plugin->title));
+printf("MWindow::init_plugin_path(...bla...) : 13\n");
 				}
 				else
 				if(result == PLUGINSERVER_IS_LAD)
 				{
+printf("MWindow::init_plugin_path(...bla...) : 14\n");
 					delete new_plugin;
+printf("MWindow::init_plugin_path(...bla...) : 15\n");
 // Open LAD subplugins
 					int id = 0;
 					do
 					{
 						new_plugin = new PluginServer(path);
+printf("MWindow::init_plugin_path(...bla...) : 16\n");
 						result = new_plugin->open_plugin(1,
 							preferences,
 							0,
 							0,
 							id);
+printf("MWindow::init_plugin_path(...bla...) : 17\n");
 						id++;
 						if(!result)
 						{
+printf("MWindow::init_plugin_path(...bla...) : 18\n");
 							plugindb->append(new_plugin);
 							new_plugin->close_plugin();
+printf("MWindow::init_plugin_path(...bla...) : 19\n");
 							if(splash_window)
-								splash_window->operation->update(_(new_plugin->title));
+{								splash_window->operation->update(_(new_plugin->title));
+printf("MWindow::init_plugin_path(...bla...) : 20\n");}
 							else
 							{
 							}
@@ -281,12 +301,15 @@ void MWindow::init_plugin_path(Preferences *preferences,
 				}
 				else
 				{
+printf("MWindow::init_plugin_path(...bla...) : 21\n");
 // Plugin failed to open
 					delete new_plugin;
 				}
 			}
 
+printf("MWindow::init_plugin_path(...bla...) : 22\n");
 			if(splash_window) splash_window->progress->update((*counter)++);
+printf("MWindow::init_plugin_path(...bla...) : 23\n");
 		}
 	}
 }
@@ -295,6 +318,7 @@ void MWindow::init_plugins(Preferences *preferences,
 	ArrayList<PluginServer*>* &plugindb,
 	SplashGUI *splash_window)
 {
+printf("MWindow::init_plugins(...bla...) : 01\n");
 	plugindb = new ArrayList<PluginServer*>;
 
 
@@ -302,10 +326,13 @@ void MWindow::init_plugins(Preferences *preferences,
 	FileSystem cinelerra_fs;
 	ArrayList<FileSystem*> lad_fs;
 	int result = 0;
+printf("MWindow::init_plugins(...bla...) : 02\n");
 
 // Get directories
 	cinelerra_fs.set_filter("[*.plugin][*.so]");
+printf("MWindow::init_plugins(...bla...) : 03\n");
 	result = cinelerra_fs.update(preferences->global_plugin_dir);
+printf("MWindow::init_plugins(...bla...) : 04\n");
 
 	if(result)
 	{
@@ -313,6 +340,7 @@ void MWindow::init_plugins(Preferences *preferences,
 			_("MWindow::init_plugins: couldn't open %s directory\n"),
 			preferences->global_plugin_dir);
 	}
+printf("MWindow::init_plugins(...bla...) : 05\n");
 
 // Parse LAD environment variable
 	char *env = getenv("LADSPA_PATH");
@@ -359,12 +387,14 @@ void MWindow::init_plugins(Preferences *preferences,
 				ptr1 = ptr;
 		};
 	}
+printf("MWindow::init_plugins(...bla...) : 06\n");
 
 	int total = cinelerra_fs.total_files();
 	int counter = 0;
 	for(int i = 0; i < lad_fs.total; i++)
 		total += lad_fs.values[i]->total_files();
 	if(splash_window) splash_window->progress->update_length(total);
+printf("MWindow::init_plugins(...bla...) : 07\n");
 
 
 // Cinelerra
@@ -374,6 +404,7 @@ void MWindow::init_plugins(Preferences *preferences,
 		&cinelerra_fs,
 		splash_window,
 		&counter);
+printf("MWindow::init_plugins(...bla...) : 08\n");
 #else
 // Call automatically generated routine to get plugins
 #endif
@@ -1280,40 +1311,56 @@ void MWindow::create_objects(int want_gui,
 // get trapped.
 	init_signals();
 
+printf("MWindow::create_objects(...bla...) : 01\n");
 	init_error();
 
 SET_TRACE
 
 	init_defaults(defaults, config_path);
+printf("MWindow::create_objects(...bla...) : 02\n");
 SET_TRACE
 	init_preferences();
+printf("MWindow::create_objects(...bla...) : 03\n");
 SET_TRACE
 	init_plugins(preferences, plugindb, splash_window);
+printf("MWindow::create_objects(...bla...) : 04\n");
 	if(splash_window) splash_window->operation->update(_("Initializing GUI"));
+printf("MWindow::create_objects(...bla...) : 05\n");
 SET_TRACE
 	init_theme();
+printf("MWindow::create_objects(...bla...) : 06\n");
 // Default project created here
 SET_TRACE
 	init_edl();
+printf("MWindow::create_objects(...bla...) : 07\n");
 
 SET_TRACE
 	init_awindow();
+printf("MWindow::create_objects(...bla...) : 08\n");
 SET_TRACE
 	init_compositor();
+printf("MWindow::create_objects(...bla...) : 09\n");
 SET_TRACE
 	init_levelwindow();
+printf("MWindow::create_objects(...bla...) : 10\n");
 SET_TRACE
 	init_viewer();
+printf("MWindow::create_objects(...bla...) : 11\n");
 SET_TRACE
 	init_cache();
+printf("MWindow::create_objects(...bla...) : 12\n");
 SET_TRACE
 	init_indexes();
+printf("MWindow::create_objects(...bla...) : 13\n");
 SET_TRACE
 	init_channeldb();
+printf("MWindow::create_objects(...bla...) : 14\n");
 SET_TRACE
 
 	init_gui();
+printf("MWindow::create_objects(...bla...) : 15\n");
 	init_gwindow();
+printf("MWindow::create_objects(...bla...) : 16\n");
 SET_TRACE
 	init_render();
 	init_brender();

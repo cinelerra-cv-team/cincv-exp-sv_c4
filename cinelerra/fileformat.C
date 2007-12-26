@@ -41,7 +41,7 @@ int FileFormat::create_objects(Asset *asset, char *string2)
 
 int FileFormat::create_objects_(char *string2)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	int x1 = 10, x2 = 180;
 	int x = x1, y = 10;
 	add_subwindow(new BC_Title(x, y, string2));

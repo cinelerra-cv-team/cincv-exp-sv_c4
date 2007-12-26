@@ -188,7 +188,7 @@ public:
 	ReverbLoadPrev(Reverb *reverb, ReverbMenu *menu);
 	int handle_event();
 	int set_path(char *path);
-	char path[1024];
+	char path[OLTEXTLEN];
 	Reverb *reverb;
 	ReverbMenu *menu;
 };
@@ -201,7 +201,7 @@ public:
 	~ReverbLoadPrevThread();
 	void run();
 	int set_path(char *path);
-	char path[1024];
+	char path[OLTEXTLEN];
 	Reverb *reverb;
 	ReverbMenu *menu;
 };

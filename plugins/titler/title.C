@@ -2113,7 +2113,7 @@ void TitleMain::update_gui()
 
 int TitleMain::load_defaults()
 {
-	char directory[1024], text_path[1024];
+	char directory[OLTEXTLEN], text_path[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%stitle.rc", BCASTDIR);
 
@@ -2165,7 +2165,7 @@ int TitleMain::load_defaults()
 
 int TitleMain::save_defaults()
 {
-	char text_path[1024];
+	char text_path[OLTEXTLEN];
 
 	defaults->update("FONT", config.font);
 	defaults->update("ENCODING", config.encoding);

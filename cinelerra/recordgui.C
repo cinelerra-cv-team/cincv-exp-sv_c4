@@ -1302,7 +1302,7 @@ int RecordGUI::update_title(BC_Title *title, double position)
 
 int RecordGUI::update_duration_boxes()
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 //	sprintf(string, "%d", engine->get_loop_hr());
 //	loop_hr->update(string);
 //	sprintf(string, "%d", engine->get_loop_min());
@@ -1419,7 +1419,7 @@ void RecordStatusThread::run()
 		input_lock->lock("RecordStatusThread::run");
 		if(new_dropped_frames >= 0)
 		{
-			char string[1024];
+			char string[OLTEXTLEN];
 			if(gui->total_dropped_frames != new_dropped_frames)
 			{
 				gui->total_dropped_frames = new_dropped_frames;
@@ -1440,7 +1440,7 @@ void RecordStatusThread::run()
 		{
 			if(gui->total_clipped_samples != new_clipped_samples)
 			{
-				char string[1024];
+				char string[OLTEXTLEN];
 				gui->total_clipped_samples = new_clipped_samples;
 				sprintf(string, "%d\n", gui->total_clipped_samples);
 				gui->lock_window("RecordStatusThread::run 2");

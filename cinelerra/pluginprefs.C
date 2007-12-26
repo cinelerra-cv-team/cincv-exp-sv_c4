@@ -24,7 +24,7 @@ PluginPrefs::~PluginPrefs()
 
 int PluginPrefs::create_objects()
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	int x = 5, y = 5;
 
 // 	add_border(get_resources()->get_bg_shadow1(),

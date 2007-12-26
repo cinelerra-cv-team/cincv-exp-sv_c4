@@ -161,7 +161,7 @@ int ScaleThread::update_aspect(ScaleWindow *window)
 {
 	if(auto_aspect)
 	{
-		char string[1024];
+		char string[OLTEXTLEN];
 		mwindow->create_aspect_ratio(aspect_w, aspect_h, dimension[2], dimension[3]);
 		sprintf(string, "%.0f", aspect_w);
 		window->aspect_w->update(string);
@@ -248,7 +248,7 @@ int ScaleWindow::create_objects()
 	y += 30;
 	add_subwindow(new BC_Title(x, y, _("Aspect ratio:")));
 	x += 100;
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, "%.0f", thread->aspect_w);
 	add_subwindow(aspect_w = new ScaleAspectW(x, y, thread, &(thread->aspect_w), string));
 	x += 55;

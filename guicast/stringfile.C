@@ -128,6 +128,7 @@ int StringFile::readline(Freq *arg2)
 int StringFile::readline(char *arg1, char *arg2)
 {
 	int i, len, max;
+	// ToDo: check what max = 1024 is used for.
 	len = 0; max = 1024;
 	
 	while(string[pointer] == ' ') pointer++; // skip indent

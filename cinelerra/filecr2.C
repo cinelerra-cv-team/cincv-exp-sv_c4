@@ -13,7 +13,7 @@ static Mutex cr2_mutex("cr2_mutex");
 
 extern "C"
 {
-extern char dcraw_info[1024];
+extern char dcraw_info[ODTEXTLEN];
 extern float **dcraw_data;
 extern int dcraw_alpha;
 extern float dcraw_matrix[9];

@@ -462,7 +462,7 @@ void PlaybackConfig::copy_from(PlaybackConfig *src)
 
 int PlaybackConfig::load_defaults(BC_Hash *defaults)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, "PLAYBACK_HOSTNAME");
 	defaults->get(string, hostname);
 	sprintf(string, "PLAYBACK_PORT");
@@ -474,7 +474,7 @@ int PlaybackConfig::load_defaults(BC_Hash *defaults)
 
 int PlaybackConfig::save_defaults(BC_Hash *defaults)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, "PLAYBACK_HOSTNAME");
 	defaults->update(string, hostname);
 	sprintf(string, "PLAYBACK_PORT");

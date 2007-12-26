@@ -185,7 +185,7 @@ void NewSvgButton::run()
 // ======================================= get path from user
 	int result;
 //printf("NewSvgButton::run 1\n");
-	char directory[1024], filename[1024];
+	char directory[OLTEXTLEN], filename[OLTEXTLEN];
 	sprintf(directory, "~");
 	client->defaults->get("DIRECTORY", directory);
 
@@ -298,8 +298,8 @@ void EditSvgButton::run()
 	int result;
 	time_t last_update;
 	struct stat st_raw;
-	char filename_raw[1024];
-	char filename_fifo[1024];
+	char filename_raw[OLTEXTLEN];
+	char filename_fifo[OLTEXTLEN];
 	struct fifo_struct fifo_buf;
 	SvgInkscapeThread *inkscape_thread = new SvgInkscapeThread(client, window);
 	
@@ -369,8 +369,8 @@ SvgInkscapeThread::~SvgInkscapeThread()
 void SvgInkscapeThread::run()
 {
 // Runs the inkscape
-	char command[1024];
-	char filename_raw[1024];
+	char command[OLTEXTLEN];
+	char filename_raw[OLTEXTLEN];
 	strcpy(filename_raw, client->config.svg_file);
 	strcat(filename_raw, ".raw");
 

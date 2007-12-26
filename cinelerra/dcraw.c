@@ -92,6 +92,7 @@ typedef unsigned short ushort;
 
 // CINELERRA
 char dcraw_info[1024];
+// ToDo: check whether this numerical value is required or you can use ODTEXTLEN
 float **dcraw_data;
 int dcraw_alpha;
 float dcraw_matrix[9];

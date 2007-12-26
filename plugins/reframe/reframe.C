@@ -40,7 +40,7 @@ NEW_PICON_MACRO(ReFrame)
 
 int ReFrame::load_defaults()
 {
-	char directory[1024];
+	char directory[OLTEXTLEN];
 
 // set the default directory
 	sprintf(directory, "%sreframe.rc", BCASTDIR);

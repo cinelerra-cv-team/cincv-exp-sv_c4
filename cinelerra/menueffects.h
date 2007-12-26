@@ -60,7 +60,7 @@ public:
 	int test_existence(Asset *asset);
 
 	MWindow *mwindow;
-	char title[1024];
+	char title[OLTEXTLEN];
 	int dither, realtime, load_mode;
 	int strategy;
 };

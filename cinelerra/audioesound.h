@@ -2,6 +2,8 @@
 #define AUDIOESOUND_H
 
 #include "audiodevice.inc"
+// Titlehack requires some definitions
+#include "../guicast/bcwindowbase.inc"
 
 #ifdef HAVE_ESOUND
 
@@ -27,7 +29,7 @@ private:
 	char* translate_device_string(char *server, int port);
 	int esd_in, esd_out, esd_duplex;
 	int esd_in_fd, esd_out_fd, esd_duplex_fd;
-	char device_string[1024];
+	char device_string[ODTEXTLEN];
 };
 
 #endif

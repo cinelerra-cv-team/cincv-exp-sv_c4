@@ -134,7 +134,7 @@ void SaveAs::run()
 // ======================================= get path from user
 	int result;
 //printf("SaveAs::run 1\n");
-	char directory[1024], filename[1024];
+	char directory[OLTEXTLEN], filename[OLTEXTLEN];
 	sprintf(directory, "~");
 	mwindow->defaults->get("DIRECTORY", directory);
 

@@ -75,7 +75,7 @@ NEW_PICON_MACRO(ScaleMain)
 
 int ScaleMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%sscale.rc", BCASTDIR);
 

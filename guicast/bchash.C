@@ -71,7 +71,8 @@ int BC_Hash::load()
 
 void BC_Hash::load_stringfile(StringFile *file)
 {
-	char arg1[1024], arg2[1024];
+	//char arg1[1024], arg2[1024];
+	char arg1[BCTEXTLEN], arg2[BCTEXTLEN];
 	total = 0;
 	while(file->get_pointer() < file->get_length())
 	{
@@ -185,28 +186,28 @@ char* BC_Hash::get(char *name, char *default_)
 
 int BC_Hash::update(char *name, double value) // update a value if it exists
 {
-	char string[1024];
+	char string[BCTEXTLEN];
 	sprintf(string, "%.16e", value);
 	return update(name, string);
 }
 
 int BC_Hash::update(char *name, float value) // update a value if it exists
 {
-	char string[1024];
+	char string[BCTEXTLEN];
 	sprintf(string, "%.6e", value);
 	return update(name, string);
 }
 
 int32_t BC_Hash::update(char *name, int32_t value) // update a value if it exists
 {
-	char string[1024];
+	char string[BCTEXTLEN];
 	sprintf(string, "%d", value);
 	return update(name, string);
 }
 
 int BC_Hash::update(char *name, int64_t value) // update a value if it exists
 {
-	char string[1024];
+	char string[BCTEXTLEN];
 	sprintf(string, "%lld", value);
 	return update(name, string);
 }

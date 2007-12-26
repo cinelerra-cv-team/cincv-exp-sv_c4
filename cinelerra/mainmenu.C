@@ -256,7 +256,7 @@ int MainMenu::init_aeffects(BC_Hash *defaults)
 {
 	total_aeffects = defaults->get("TOTAL_AEFFECTS", 0);
 	
-	char string[1024], title[1024];
+	char string[OLTEXTLEN], title[OLTEXTLEN];
 	if(total_aeffects) audiomenu->add_item(new BC_MenuItem("-"));
 	
 	for(int i = 0; i < total_aeffects; i++)
@@ -272,7 +272,7 @@ int MainMenu::init_veffects(BC_Hash *defaults)
 {
 	total_veffects = defaults->get("TOTAL_VEFFECTS", 0);
 	
-	char string[1024], title[1024];
+	char string[OLTEXTLEN], title[OLTEXTLEN];
 	if(total_veffects) videomenu->add_item(new BC_MenuItem("-"));
 	
 	for(int i = 0; i < total_veffects; i++)
@@ -320,7 +320,7 @@ int MainMenu::init_loads(BC_Hash *defaults)
 int MainMenu::save_aeffects(BC_Hash *defaults)
 {
 	defaults->update("TOTAL_AEFFECTS", total_aeffects);
-	char string[1024];
+	char string[OLTEXTLEN];
 	for(int i = 0; i < total_aeffects; i++)
 	{
 		sprintf(string, "AEFFECTRECENT%d", i);
@@ -332,7 +332,7 @@ int MainMenu::save_aeffects(BC_Hash *defaults)
 int MainMenu::save_veffects(BC_Hash *defaults)
 {
 	defaults->update("TOTAL_VEFFECTS", total_veffects);
-	char string[1024];
+	char string[OLTEXTLEN];
 	for(int i = 0; i < total_veffects; i++)
 	{
 		sprintf(string, "VEFFECTRECENT%d", i);
@@ -530,7 +530,7 @@ int Undo::handle_event()
 }
 int Undo::update_caption(char *new_caption)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, _("Undo %s"), new_caption);
 	set_text(string);
 }
@@ -550,7 +550,7 @@ int Redo::handle_event()
 }
 int Redo::update_caption(char *new_caption)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	sprintf(string, _("Redo %s"), new_caption);
 	set_text(string);
 }

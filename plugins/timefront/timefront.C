@@ -1083,7 +1083,7 @@ void TimeFrontMain::update_gui()
 
 int TimeFrontMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%stimefront.rc", BCASTDIR);
 

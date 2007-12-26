@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			char *new_filename;
-			new_filename = new char[1024];
+			new_filename = new char[OLTEXTLEN];
 			strcpy(new_filename, argv[i]);
             fs.complete_path(new_filename);
 

@@ -46,7 +46,7 @@ void ThreadIndexer::run()
 // check locations of each asset
 	FILE *test_file;
 	Asset *current_asset;
-	char new_filename[1024], old_filename[1024];
+	char new_filename[OLTEXTLEN], old_filename[OLTEXTLEN];
 	int result = 0;
 	BC_ProgressBox *progress = 0;
 
@@ -59,11 +59,11 @@ void ThreadIndexer::run()
 
 			result = 1;
 // get location from user
-			char directory[1024];
+			char directory[OLTEXTLEN];
 			sprintf(directory, "~");
 			mwindow->defaults->get("DIRECTORY", directory);
 
-			char string[1024], name[1024];
+			char string[OLTEXTLEN], name[OLTEXTLEN];
 			FileSystem dir;
 			dir.extract_name(name, old_filename);
 			sprintf(string, _("Where is %s?"), name);

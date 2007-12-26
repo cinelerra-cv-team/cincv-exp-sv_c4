@@ -636,7 +636,7 @@ void PerspectiveMain::update_gui()
 
 int PerspectiveMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%sperspective.rc", BCASTDIR);
 

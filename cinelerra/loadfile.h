@@ -127,7 +127,7 @@ public:
 	
 	MWindow *mwindow;
 	Load *loadfile;
-	char path[1024];
+	char path[OLTEXTLEN];
 };
 
 class LoadBackup : public BC_MenuItem

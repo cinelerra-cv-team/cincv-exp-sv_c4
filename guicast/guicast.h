@@ -38,5 +38,7 @@
 #include "bctimer.h"
 #include "error.h"
 #include "debug.h"
+// Titlehack requires some definitions
+#include "bcwindowbase.inc"
 
 #endif

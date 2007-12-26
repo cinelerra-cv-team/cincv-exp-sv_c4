@@ -50,7 +50,7 @@ private:
 	int draw_title();
 // If this menu is pulled down
 	int active;
-	char text[1024];
+	char text[OLTEXTLEN];
 	BC_WindowBase *top_level;
 // Owner menubar if there is one
 	BC_MenuBar *menu_bar;

@@ -113,8 +113,8 @@ int Edit::copy(int64_t start, int64_t end, FileXML *file, char *output_path)
 			if(asset)
 			{
 //printf("Edit::copy 6 %s\n", asset->path);
-				char stored_path[1024];
-				char asset_directory[1024], output_directory[1024];
+				char stored_path[OLTEXTLEN];
+				char asset_directory[OLTEXTLEN], output_directory[OLTEXTLEN];
 				FileSystem fs;
 
 //printf("Edit::copy 6 %s\n", asset->path);

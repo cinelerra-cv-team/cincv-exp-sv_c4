@@ -568,7 +568,7 @@ int RecordMonitorGUI::resize_event(int w, int h)
 int RecordMonitorGUI::set_title()
 {
 return 0;
-	char string[1024];
+	char string[OLTEXTLEN];
 	int scale;
 
 	scale = (int)(thread->get_scale(thread->record->video_window_w) * 100 + 0.5);

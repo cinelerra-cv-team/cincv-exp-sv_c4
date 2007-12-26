@@ -504,7 +504,7 @@ int Edits::load_edit(FileXML *file, int64_t &startproject, int track_offset)
 		{
 			if(file->tag.title_is("FILE"))
 			{
-				char filename[1024];
+				char filename[OLTEXTLEN];
 				sprintf(filename, SILENCE);
 				file->tag.get_property("SRC", filename);
 // Extend path

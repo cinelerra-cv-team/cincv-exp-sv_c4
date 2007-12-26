@@ -434,7 +434,7 @@ void EDLSession::boundaries()
 
 int EDLSession::load_video_config(FileXML *file, int append_mode, uint32_t load_flags)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	if(append_mode) return 0;
 	interpolation_type = file->tag.get_property("INTERPOLATION_TYPE", interpolation_type);
 	interpolate_raw = file->tag.get_property("INTERPOLATE_RAW", interpolate_raw);
@@ -623,7 +623,7 @@ int EDLSession::save_xml(FileXML *file)
 
 int EDLSession::save_video_config(FileXML *file)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	file->tag.set_title("VIDEO");
 	file->tag.set_property("INTERPOLATION_TYPE", interpolation_type);
 	file->tag.set_property("INTERPOLATE_RAW", interpolate_raw);
@@ -657,7 +657,7 @@ int EDLSession::save_video_config(FileXML *file)
 
 int EDLSession::save_audio_config(FileXML *file)
 {
-	char string[1024];
+	char string[OLTEXTLEN];
 	file->tag.set_title("AUDIO");
 	file->tag.set_property("SAMPLERATE", (int64_t)sample_rate);
 	file->tag.set_property("CHANNELS", (int64_t)audio_channels);

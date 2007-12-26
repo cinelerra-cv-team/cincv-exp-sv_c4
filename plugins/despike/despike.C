@@ -75,7 +75,7 @@ int Despike::process_realtime(int64_t size, double *input_ptr, double *output_pt
 
 int Despike::load_defaults()
 {
-	char directory[1024];
+	char directory[OLTEXTLEN];
 
 // set the default directory
 	sprintf(directory, "%sdespike.rc", get_defaultdir());

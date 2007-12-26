@@ -101,7 +101,7 @@ NEW_PICON_MACRO(TranslateMain)
 
 int TranslateMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%stranslate.rc", BCASTDIR);
 

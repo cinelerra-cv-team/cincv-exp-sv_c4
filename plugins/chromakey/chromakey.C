@@ -106,6 +106,8 @@ ChromaKeyWindow::~ChromaKeyWindow()
 
 void ChromaKeyWindow::create_objects()
 {
+printf("ChromaKeyWindow::create_objects() : 01\n");
+
 	int x = 10, y = 10, x1 = 100;
 
 	BC_Title *title;
@@ -568,20 +570,31 @@ LOAD_CONFIGURATION_MACRO(ChromaKey, ChromaKeyConfig)
 int ChromaKey::load_defaults()
 {
 SET_TRACE
-	char directory[BCTEXTLEN];
+printf("ChromaKey::load_defaults() : 01\n");
+	char directory[OLTEXTLEN];
+printf("ChromaKey::load_defaults() : 02\n");
 // set the default directory
 	sprintf(directory, "%schromakey.rc", BCASTDIR);
 
 // load the defaults
+printf("ChromaKey::load_defaults() : 03\n");
 	defaults = new BC_Hash(directory);
+printf("ChromaKey::load_defaults() : 04\n");
 	defaults->load();
+printf("ChromaKey::load_defaults() : 05\n");
 
 	config.red = defaults->get("RED", config.red);
+printf("ChromaKey::load_defaults() : 06\n");
 	config.green = defaults->get("GREEN", config.green);
+printf("ChromaKey::load_defaults() : 07\n");
 	config.blue = defaults->get("BLUE", config.blue);
+printf("ChromaKey::load_defaults() : 08\n");
 	config.threshold = defaults->get("THRESHOLD", config.threshold);
+printf("ChromaKey::load_defaults() : 09\n");
 	config.slope = defaults->get("SLOPE", config.slope);
+printf("ChromaKey::load_defaults() : 10\n");
 	config.use_value = defaults->get("USE_VALUE", config.use_value);
+printf("ChromaKey::load_defaults() : 11\n");
 SET_TRACE
 	return 0;
 }

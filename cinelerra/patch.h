@@ -49,7 +49,7 @@ public:
 	int play;
 	int automate;
 	int draw;
-	char title[1024];
+	char title[OLTEXTLEN];
 
 
 

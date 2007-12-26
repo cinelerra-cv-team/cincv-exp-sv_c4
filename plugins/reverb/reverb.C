@@ -250,7 +250,7 @@ RAISE_WINDOW_MACRO(Reverb)
 
 int Reverb::load_defaults()
 {
-	char directory[1024];
+	char directory[OLTEXTLEN];
 
 // set the default directory
 	sprintf(directory, "%sreverb.rc", get_defaultdir());
@@ -378,7 +378,7 @@ int Reverb::load_from_file(char *path)
 	FILE *in;
 	int result = 0;
 	int length;
-	char string[1024];
+	char string[OLTEXTLEN];
 	
 	if(in = fopen(path, "rb"))
 	{
@@ -394,7 +394,7 @@ int Reverb::load_from_file(char *path)
 		perror("fopen:");
 // failed
 		ErrorBox errorbox("");
-		char string[1024];
+		char string[OLTEXTLEN];
 		sprintf(string, _("Couldn't open %s."), path);
 		errorbox.create_objects(string);
 		errorbox.run_window();
@@ -408,7 +408,7 @@ int Reverb::save_to_file(char *path)
 {
 	FILE *out;
 	int result = 0;
-	char string[1024];
+	char string[OLTEXTLEN];
 	
 	{
 // 		ConfirmSave confirm;
@@ -428,7 +428,7 @@ int Reverb::save_to_file(char *path)
 			result = 1;
 // failed
 			ErrorBox errorbox("");
-			char string[1024];
+			char string[OLTEXTLEN];
 			sprintf(string, _("Couldn't save %s."), path);
 			errorbox.create_objects(string);
 			errorbox.run_window();

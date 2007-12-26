@@ -128,7 +128,7 @@ NEW_PICON_MACRO(SvgMain)
 
 int SvgMain::load_defaults()
 {
-	char directory[1024], string[1024];
+	char directory[OLTEXTLEN], string[OLTEXTLEN];
 // set the default directory
 	sprintf(directory, "%ssvg.rc", BCASTDIR);
 
@@ -230,7 +230,7 @@ void SvgMain::read_data(KeyFrame *keyframe)
 
 int SvgMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 {
-	char filename_raw[1024];
+	char filename_raw[OLTEXTLEN];
 	int fh_raw;
 	struct stat st_raw;
 	VFrame *input, *output;
@@ -253,7 +253,7 @@ int SvgMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 	if (fh_raw == -1 || force_raw_render) // file does not exist, export it
 	{
 		need_reconfigure = 1;
-		char command[1024];
+		char command[OLTEXTLEN];
 		sprintf(command,
 			"inkscape --without-gui --cinelerra-export-file=%s %s",
 			filename_raw, config.svg_file);

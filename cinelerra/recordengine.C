@@ -111,7 +111,7 @@ int RecordEngine::initialize()
 int RecordEngine::run_script(FileXML *script)
 {
 	int result = 0, script_result = 0;
-	char string[1024];
+	char string[OLTEXTLEN];
 
 	while(!result && !script_result)
 	{
