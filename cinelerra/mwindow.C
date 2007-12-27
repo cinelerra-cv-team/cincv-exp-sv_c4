@@ -228,71 +228,72 @@ printf("MWindow::init_plugin_path(...bla...) : 01\n");
 
 	if(!result)
 	{
-printf("MWindow::init_plugin_path(...bla...) : 02\n");
+//printf("MWindow::init_plugin_path(...bla...) : 02\n");
 		for(int i = 0; i < fs->dir_list.total; i++)
 		{
-printf("MWindow::init_plugin_path(...bla...) : 03\n");
+//printf("MWindow::init_plugin_path(...bla...) : 03\n");
 			char path[BCTEXTLEN];
 			strcpy(path, fs->dir_list.values[i]->path);
-printf("MWindow::init_plugin_path(...bla...) : 04\n");
+//printf("MWindow::init_plugin_path(...bla...) : 04\n");
 
 // File is a directory
 			if(fs->is_dir(path))
 			{
-printf("MWindow::init_plugin_path(...bla...) : 05\n");
+//printf("MWindow::init_plugin_path(...bla...) : 05\n");
 				continue;
 			}
 			else
 			{
 // Try to query the plugin
-printf("MWindow::init_plugin_path(...bla...) : 06\n");
+//printf("MWindow::init_plugin_path(...bla...) : 06\n");
 				fs->complete_path(path);
-printf("MWindow::init_plugin_path(...bla...) : 07\n");
+//printf("MWindow::init_plugin_path(...bla...) : 07\n");
 printf("MWindow::init_plugin_path %s\n", path);
 				PluginServer *new_plugin = new PluginServer(path);
-printf("MWindow::init_plugin_path(...bla...) : 08\n");
+//printf("MWindow::init_plugin_path(...bla...) : 08\n");
 				int result = new_plugin->open_plugin(1, preferences, 0, 0, -1);
-printf("MWindow::init_plugin_path(...bla...) : 09\n");
+//printf("MWindow::init_plugin_path(...bla...) : 09\n");
 
 				if(!result)
 				{
-printf("MWindow::init_plugin_path(...bla...) : 10\n");
+//printf("MWindow::init_plugin_path(...bla...) : 10\n");
 					plugindb->append(new_plugin);
-printf("MWindow::init_plugin_path(...bla...) : 11\n");
+//printf("MWindow::init_plugin_path(...bla...) : 11\n");
 					new_plugin->close_plugin();
-printf("MWindow::init_plugin_path(...bla...) : 12\n");
+//printf("MWindow::init_plugin_path(...bla...) : 12\n");
 					if(splash_window)
 						splash_window->operation->update(_(new_plugin->title));
-printf("MWindow::init_plugin_path(...bla...) : 13\n");
+//printf("MWindow::init_plugin_path(...bla...) : 13\n");
 				}
 				else
 				if(result == PLUGINSERVER_IS_LAD)
 				{
-printf("MWindow::init_plugin_path(...bla...) : 14\n");
+//printf("MWindow::init_plugin_path(...bla...) : 14\n");
 					delete new_plugin;
-printf("MWindow::init_plugin_path(...bla...) : 15\n");
+//printf("MWindow::init_plugin_path(...bla...) : 15\n");
 // Open LAD subplugins
 					int id = 0;
 					do
 					{
 						new_plugin = new PluginServer(path);
-printf("MWindow::init_plugin_path(...bla...) : 16\n");
+//printf("MWindow::init_plugin_path(...bla...) : 16\n");
 						result = new_plugin->open_plugin(1,
 							preferences,
 							0,
 							0,
 							id);
-printf("MWindow::init_plugin_path(...bla...) : 17\n");
+//printf("MWindow::init_plugin_path(...bla...) : 17\n");
 						id++;
 						if(!result)
 						{
-printf("MWindow::init_plugin_path(...bla...) : 18\n");
+//printf("MWindow::init_plugin_path(...bla...) : 18\n");
 							plugindb->append(new_plugin);
 							new_plugin->close_plugin();
-printf("MWindow::init_plugin_path(...bla...) : 19\n");
+//printf("MWindow::init_plugin_path(...bla...) : 19\n");
 							if(splash_window)
 {								splash_window->operation->update(_(new_plugin->title));
-printf("MWindow::init_plugin_path(...bla...) : 20\n");}
+//printf("MWindow::init_plugin_path(...bla...) : 20\n");
+}
 							else
 							{
 							}
@@ -301,17 +302,18 @@ printf("MWindow::init_plugin_path(...bla...) : 20\n");}
 				}
 				else
 				{
-printf("MWindow::init_plugin_path(...bla...) : 21\n");
+//printf("MWindow::init_plugin_path(...bla...) : 21\n");
 // Plugin failed to open
 					delete new_plugin;
 				}
 			}
 
-printf("MWindow::init_plugin_path(...bla...) : 22\n");
+//printf("MWindow::init_plugin_path(...bla...) : 22\n");
 			if(splash_window) splash_window->progress->update((*counter)++);
-printf("MWindow::init_plugin_path(...bla...) : 23\n");
+//printf("MWindow::init_plugin_path(...bla...) : 23\n");
 		}
 	}
+printf("MWindow::init_plugin_path(...bla...) : 24\n");
 }
 
 void MWindow::init_plugins(Preferences *preferences, 

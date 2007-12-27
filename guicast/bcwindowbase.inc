@@ -14,9 +14,9 @@ class BC_WindowList;
  * setting, set it to what you want.
  *
  **/
-#define BCTEXTLEN 102400
-#define OLTEXTLEN 102400
-#define ODTEXTLEN 102400
+#define BCTEXTLEN 1024
+#define OLTEXTLEN 1024
+#define ODTEXTLEN 1024
 /*
  * BCTEXTLEN is inherited from the previous git-version, for details 
  * the output of git blame: ^1c535de (Herman Robak      2003-06-16 

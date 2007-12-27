@@ -91,6 +91,8 @@ FileSystem::~FileSystem()
 
 int FileSystem::reset_parameters()
 {
+	//if (filter == NULL) {printf("FileSystem::reset_parameters(): FILTER == NULL! \n");}
+	//else {printf("FileSystem::reset_parameters(): FILTER == %s\n", filter);}
  	show_all_files = 0;
 	want_directory = 0;
 	strcpy(filter, "");
