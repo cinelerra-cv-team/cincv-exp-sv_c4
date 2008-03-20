@@ -681,6 +681,7 @@ int MWindowGUI::keypress_event()
  * the armed / unarmed status
  * p/P toggles the green triangle / play status.
  * */
+/*
 		case 'h':
 		case 'H':
 
@@ -774,7 +775,7 @@ int MWindowGUI::keypress_event()
 				result = 1;
 				break;
 
-
+*/
 		case 'p':
 		case 'P':
 
