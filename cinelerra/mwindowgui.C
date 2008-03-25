@@ -34,6 +34,9 @@
 #include "vwindow.h"
 #include "zoombar.h"
 
+#include "intauto.h"
+#include "intautos.h"
+
 // the main window uses its own private colormap for video
 MWindowGUI::MWindowGUI(MWindow *mwindow)
  : BC_Window(PROGRAM_NAME ": Program", 
@@ -467,6 +470,10 @@ int MWindowGUI::keypress_event()
 	int result = 0;
 	result = mbuttons->keypress_event();
 
+	IntAuto *mute_keyframe = 0;
+	long unit_start;
+	Track *track;
+
 	if(!result)
 	{
 				int cursor_x = canvas->get_relative_cursor_x();
@@ -679,16 +686,17 @@ int MWindowGUI::keypress_event()
 /*
  * Mulitcamhack: let h/H toggle the visibility of tracks just as TAB toggles 
  * the armed / unarmed status
- * p/P toggles the green triangle / play status.
+ * / toggles the green triangle / play status.
  * */
-/*
+
 		case 'h':
 		case 'H':
+
 
 				if(get_keypress() == 'h')
 				{
 // Switch the mute button
-					for(Track *track = mwindow->edl->tracks->first; track; track = track->next)
+					for(track = mwindow->edl->tracks->first; track; track = track->next)
 					{
 						int64_t track_x, track_y, track_w, track_h;
 						canvas->track_dimensions(track, track_x, track_y, track_w, track_h);
@@ -696,10 +704,16 @@ int MWindowGUI::keypress_event()
 						if(cursor_y >= track_y && 
 							cursor_y < track_y + track_h)
 						{
-							if (track->mute)
-								track->mute = 0;
+							unit_start = track->to_units(mwindow->edl->local_session->get_selectionstart(1), 0);
+							mute_keyframe = (IntAuto*)track->automation->autos[AUTOMATION_MUTE]->get_prev_auto(
+									unit_start,
+									PLAY_FORWARD,
+									(Auto* &)mute_keyframe);
+
+							if (mute_keyframe->value)
+								mute_keyframe->value = 0;
 							else
-								track->mute = 1;
+								mute_keyframe->value = 1;
 
 							result = 1; 
 							break;
@@ -709,7 +723,7 @@ int MWindowGUI::keypress_event()
 				else 
 				{
 					Track *this_track = 0;
-					for(Track *track = mwindow->edl->tracks->first; track; track = track->next)
+					for(track = mwindow->edl->tracks->first; track; track = track->next)
 					{
 						int64_t track_x, track_y, track_w, track_h;
 						canvas->track_dimensions(track, track_x, track_y, track_w, track_h);
@@ -734,8 +748,13 @@ int MWindowGUI::keypress_event()
 					else
 					if(total_selected == 1)
 					{
+						unit_start = track->to_units(mwindow->edl->local_session->get_selectionstart(1), 0);
+						mute_keyframe = (IntAuto*)track->automation->autos[AUTOMATION_MUTE]->get_prev_auto(
+							unit_start,
+							PLAY_FORWARD,
+							(Auto* &)mute_keyframe);
 	// this patch was previously the only one on
-						if(this_track && this_track->mute)
+						if(this_track && mute_keyframe->value)
 						{
 							mwindow->edl->tracks->select_all(Tracks::MUTE,
 								1);
@@ -746,7 +765,12 @@ int MWindowGUI::keypress_event()
 							mwindow->edl->tracks->select_all(Tracks::MUTE,
 								0);
 							if (this_track) 
-								this_track->mute = 1;
+							{
+
+								mute_keyframe->value = 1;
+
+							}
+//							this_track->mute = 1;
 
 						}
 					}
@@ -756,7 +780,17 @@ int MWindowGUI::keypress_event()
 						mwindow->edl->tracks->select_all(Tracks::MUTE,
 							0);
 						if (this_track) 
-							this_track->mute = 1;
+						{
+							unit_start = track->to_units(mwindow->edl->local_session->get_selectionstart(1), 0);
+							mute_keyframe = (IntAuto*)track->automation->autos[AUTOMATION_MUTE]->get_prev_auto(
+								unit_start,
+								PLAY_FORWARD,
+								(Auto* &)mute_keyframe);
+
+							mute_keyframe->value = 1;
+
+						}
+//						this_track->mute = 1;
 					}
 
 				}
@@ -770,14 +804,15 @@ int MWindowGUI::keypress_event()
 						1);
 				unlock_window();
 				mwindow->cwindow->update(0, 1, 1);
+				mwindow->restart_brender();
 				lock_window("TrackCanvas::keypress_event 3");
 
 				result = 1;
 				break;
 
-*/
-		case 'p':
-		case 'P':
+
+/*		case 'h':
+		case 'H':
 
 				if(get_keypress() == 'p')
 				{
@@ -868,7 +903,7 @@ int MWindowGUI::keypress_event()
 
 				result = 1;
 				break;
-
+*/
 /*
  *
  * End of Mulicamhack
