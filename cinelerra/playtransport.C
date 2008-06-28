@@ -192,32 +192,54 @@ int PlayTransport::keypress_event()
 	}
 	subwindow->unlock_window();
 
-
-	switch(subwindow->get_keypress())
+	if (subwindow->alt_down())
 	{
-		case KPPLUS:        handle_transport(FAST_REWIND, 0, use_inout);                result = 1; break;
-		case KP6:           handle_transport(NORMAL_REWIND, 0, use_inout);              result = 1; break;
-		case KP5:           handle_transport(SLOW_REWIND, 0, use_inout);                result = 1; break;
-		case KP4:           handle_transport(SINGLE_FRAME_REWIND, 0, use_inout);        result = 1; break;
-		case KP1:           handle_transport(SINGLE_FRAME_FWD, 0, use_inout);   		  result = 1; break;
-		case KP2:           handle_transport(SLOW_FWD, 0, use_inout);           		  result = 1; break;
-		case KP3:           handle_transport(NORMAL_FWD, 0, use_inout);         		  result = 1; break;
-		case KPENTER:       handle_transport(FAST_FWD, 0, use_inout);           		  result = 1; break;
-		case KPINS:         handle_transport(STOP, 0, use_inout);                       result = 1; break;
-		case ' ':           handle_transport(NORMAL_FWD, 0, use_inout);                 result = 1; break;
-		case 'k':           handle_transport(STOP, 0, use_inout);   					  result = 1; break;
-		case END:
-			subwindow->lock_window("PlayTransport::keypress_event 3");
-			goto_end();                                   
-			result = 1; 
-			subwindow->unlock_window();
-			break;
-		case HOME:
-			subwindow->lock_window("PlayTransport::keypress_event 4");
-		    goto_start();                                 
-			result = 1; 
-			subwindow->unlock_window();
-			break;
+		printf("received numpad-hit with hold alt! %i\n", subwindow->get_keypress());
+		switch(subwindow->get_keypress())
+		{
+			case KPPLUS:        handle_transport(SHIFTED_FAST_REWIND, 0, use_inout);                result = 1; break;
+			case KP6:           handle_transport(SHIFTED_NORMAL_REWIND, 0, use_inout);              result = 1; break;
+			case KP5:           handle_transport(SHIFTED_SLOW_REWIND, 0, use_inout);                result = 1; break;
+			case KP4:           handle_transport(SHIFTED_SINGLE_FRAME_REWIND, 0, use_inout);        result = 1; break;
+			case KP1:           handle_transport(SHIFTED_SINGLE_FRAME_FWD, 0, use_inout);   		  result = 1; break;
+			case KP2:           handle_transport(SHIFTED_SLOW_FWD, 0, use_inout);           		  result = 1; break;
+			case KP3:           handle_transport(SHIFTED_NORMAL_FWD, 0, use_inout);         		  result = 1; break;
+			case KPENTER:       handle_transport(SHIFTED_FAST_FWD, 0, use_inout);           		  result = 1; break;
+			case KPINS:         handle_transport(STOP, 0, use_inout);                       result = 1; break;
+			case ' ':           handle_transport(NORMAL_FWD, 0, use_inout);                 result = 1; break;
+			case 'k':           handle_transport(STOP, 0, use_inout);   					  result = 1; break;
+		}
+	}
+	else
+	{
+		printf("received numpad-hit without hold alt! %i\n", subwindow->get_keypress());
+
+		switch(subwindow->get_keypress())
+		{
+			case KPPLUS:        handle_transport(FAST_REWIND, 0, use_inout);                result = 1; break;
+			case KP6:           handle_transport(NORMAL_REWIND, 0, use_inout);              result = 1; break;
+			case KP5:           handle_transport(SLOW_REWIND, 0, use_inout);                result = 1; break;
+			case KP4:           handle_transport(SINGLE_FRAME_REWIND, 0, use_inout);        result = 1; break;
+			case KP1:           handle_transport(SINGLE_FRAME_FWD, 0, use_inout);   		  result = 1; break;
+			case KP2:           handle_transport(SLOW_FWD, 0, use_inout);           		  result = 1; break;
+			case KP3:           handle_transport(NORMAL_FWD, 0, use_inout);         		  result = 1; break;
+			case KPENTER:       handle_transport(FAST_FWD, 0, use_inout);           		  result = 1; break;
+			case KPINS:         handle_transport(STOP, 0, use_inout);                       result = 1; break;
+			case ' ':           handle_transport(NORMAL_FWD, 0, use_inout);                 result = 1; break;
+			case 'k':           handle_transport(STOP, 0, use_inout);   					  result = 1; break;
+			case END:
+				subwindow->lock_window("PlayTransport::keypress_event 3");
+				goto_end();                                   
+				result = 1; 
+				subwindow->unlock_window();
+				break;
+			case HOME:
+				subwindow->lock_window("PlayTransport::keypress_event 4");
+				goto_start();                                 
+				result = 1; 
+				subwindow->unlock_window();
+				break;
+		}
 	}
 
 	subwindow->lock_window("PlayTransport::keypress_event 5");
@@ -256,6 +278,14 @@ void PlayTransport::handle_transport(int command,
 	switch(command)
 	{
 // Commands that play back
+		case SHIFTED_FAST_REWIND:
+		case SHIFTED_NORMAL_REWIND:
+		case SHIFTED_SLOW_REWIND:
+		case SHIFTED_SINGLE_FRAME_REWIND:
+		case SHIFTED_SINGLE_FRAME_FWD:
+		case SHIFTED_SLOW_FWD:
+		case SHIFTED_NORMAL_FWD:
+		case SHIFTED_FAST_FWD:
 		case FAST_REWIND:
 		case NORMAL_REWIND:
 		case SLOW_REWIND:

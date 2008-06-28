@@ -84,6 +84,10 @@ int TransportCommand::get_direction()
 {
 	switch(command)
 	{
+		case SHIFTED_SINGLE_FRAME_FWD:
+		case SHIFTED_NORMAL_FWD:
+		case SHIFTED_FAST_FWD:
+		case SHIFTED_SLOW_FWD:
 		case SINGLE_FRAME_FWD:
 		case NORMAL_FWD:
 		case FAST_FWD:
@@ -92,6 +96,10 @@ int TransportCommand::get_direction()
 			return PLAY_FORWARD;
 			break;
 
+		case SHIFTED_SINGLE_FRAME_REWIND:
+		case SHIFTED_NORMAL_REWIND:
+		case SHIFTED_FAST_REWIND:
+		case SHIFTED_SLOW_REWIND:
 		case SINGLE_FRAME_REWIND:
 		case NORMAL_REWIND:
 		case FAST_REWIND:
@@ -107,6 +115,7 @@ int TransportCommand::get_direction()
 
 float TransportCommand::get_speed()
 {
+//        printf("get_speed(): switch(command)\n");
 	switch(command)
 	{
 		case SLOW_FWD:
@@ -126,6 +135,30 @@ float TransportCommand::get_speed()
 		case FAST_REWIND:
 			return 2;
 			break;
+		
+		case SHIFTED_SINGLE_FRAME_FWD:
+		case SHIFTED_SINGLE_FRAME_REWIND:
+//			printf("speed = 6\n");
+			return 6;
+			break;
+	
+		case SHIFTED_SLOW_FWD:
+		case SHIFTED_SLOW_REWIND:
+//			printf("speed = 16\n");
+			return 20;
+			break;
+		
+		case SHIFTED_NORMAL_FWD:
+		case SHIFTED_NORMAL_REWIND:
+//			printf("speed = 48\n");
+			return 60;
+			break;
+		
+		case SHIFTED_FAST_FWD:
+		case SHIFTED_FAST_REWIND:
+//			printf("speed = 96\n");
+			return 160;
+			break;
 	}
 }
 
@@ -139,6 +172,10 @@ void TransportCommand::set_playback_range(EDL *edl, int use_inout)
 
 	switch(command)
 	{
+		case SHIFTED_SLOW_FWD:
+		case SHIFTED_FAST_FWD:
+		case SHIFTED_NORMAL_FWD:
+		case SHIFTED_SINGLE_FRAME_FWD:
 		case SLOW_FWD:
 		case FAST_FWD:
 		case NORMAL_FWD:
@@ -154,6 +191,10 @@ void TransportCommand::set_playback_range(EDL *edl, int use_inout)
 			}
 			break;
 		
+		case SHIFTED_SLOW_REWIND:
+		case SHIFTED_FAST_REWIND:
+		case SHIFTED_NORMAL_REWIND:
+		case SHIFTED_SINGLE_FRAME_REWIND:
 		case SLOW_REWIND:
 		case FAST_REWIND:
 		case NORMAL_REWIND:
