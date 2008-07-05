@@ -15,8 +15,17 @@
 
 REGISTER_PLUGIN(Spectrogram)
 
+// 16384 is a decent value 
+// Smaller values are more accurate with time, while larger values 
+// offer more accuracy in frequency. This should be easily set by the user
+// eventually...
 #define WINDOW_SIZE 4096
-#define HALF_WINDOW 2048
+#define HALF_WINDOW (WINDOW_SIZE/2)
+
+// Step can be seen as how zoomed in the spectrometer is. The higher the
+// step size, the more zoomed in on the x-axis the GUI will be. An unfortunate
+// side effect is that large values of STEP slow down the playback.
+#define STEP 8
 
 
 SpectrogramConfig::SpectrogramConfig()
@@ -31,7 +40,7 @@ SpectrogramConfig::SpectrogramConfig()
 
 
 SpectrogramLevel::SpectrogramLevel(Spectrogram *plugin, int x, int y)
- : BC_FPot(x, y, plugin->config.level, INFINITYGAIN, 0)
+ : BC_FPot(x, y, plugin->config.level, -100, 0)
 {
 	this->plugin = plugin;
 }
@@ -75,7 +84,7 @@ SpectrogramWindow::~SpectrogramWindow()
 void SpectrogramWindow::create_objects()
 {
 	int x = 60, y = 10;
-	int divisions = 5;
+	int divisions = 20;
 	char string[BCTEXTLEN];
 
 	add_subwindow(canvas = new BC_SubWindow(x, 
@@ -175,7 +184,7 @@ int SpectrogramFFT::read_samples(int64_t output_sample,
 
 
 Spectrogram::Spectrogram(PluginServer *server)
- : PluginAClient(server)
+ : PluginAClient(server), column(0), background(0)
 {
 	reset();
 	PLUGIN_CONSTRUCTOR_MACRO
@@ -218,15 +227,25 @@ int Spectrogram::process_buffer(int64_t size,
 		data = new float[HALF_WINDOW];
 	}
 
-	bzero(data, sizeof(float) * HALF_WINDOW);
-	total_windows = 0;
-	fft->process_buffer(start_position,
-		size, 
-		buffer,
-		get_direction());
-	for(int i = 0; i < HALF_WINDOW; i++)
-		data[i] /= total_windows;
-	send_render_gui(data, HALF_WINDOW);
+	read_samples(buffer, 0, sample_rate, start_position, size);
+	double* copy = new double[size];
+	int inc = (size/STEP);
+	for(int i=0; i<size; i+= inc){
+	//	bzero(data, sizeof(float) * HALF_WINDOW);
+		total_windows = 0;
+		fft->process_buffer(start_position+i,
+			size, 
+			copy,
+			get_direction());
+		for(int j = 0; j < HALF_WINDOW; j++)
+			data[j] /= total_windows;
+		send_render_gui(data, HALF_WINDOW);
+	}
+
+	//printf("Size is: %i\n", size);
+	//printf("Start is: %i\n", start_position);
+
+	delete [] copy;
 
 	return 0;
 }
@@ -287,22 +306,26 @@ void Spectrogram::render_gui(void *data, int size)
 			input1 = input2;
 		}
 
-// Shift left
-		canvas->copy_area(1, 
-			0, 
-			0, 
-			0, 
-			canvas->get_w() - 1,
-			canvas->get_h());
-		int x = canvas->get_w() - 1;
-		double scale = (double)0xffffff;
+//Draw the data
+		column %= canvas->get_w();
+		if(column == 0){
+			background++;
+			background %= 3;
+		}
+		int x = column++;
+		//double scale = (double)0xffffff;
+		double scale = (double) 0xff;
 		for(int i = 0; i < h; i++)
 		{
 			int64_t color;
-			color = (int)(scale * temp[i]);
+			int brightness = (int) (scale * temp[i]);
+			brightness = brightness > 0 ? brightness : 0;
+			brightness = brightness < 0xff ? brightness : 0xff;
 
-			if(color < 0) color = 0;
-			if(color > 0xffffff) color = 0xffffff;
+			color = brightness | brightness << 8 | brightness << 16;
+			color |= 0xff << (background*8) ; 
+			color &= ~(0x7f << (background*8)) ; //(0x80 == ~0x7f)
+
 			canvas->set_color(color);
 			canvas->draw_pixel(x, i);
 		}

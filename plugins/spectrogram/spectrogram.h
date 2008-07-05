@@ -109,6 +109,9 @@ public:
 	SpectrogramFFT *fft;
 	float *data;
 	int total_windows;
+
+	int column;
+	int background;
 };
 
 
