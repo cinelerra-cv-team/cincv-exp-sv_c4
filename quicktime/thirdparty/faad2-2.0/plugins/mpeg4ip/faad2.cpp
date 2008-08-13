@@ -367,6 +367,7 @@ AUDIO_CODEC_WITH_RAW_FILE_PLUGIN("faad2",
                aac_file_eof
                );
 #else
+/*
 AUDIO_CODEC_WITH_RAW_FILE_PLUGIN("faad2",
                aac_codec_create,
                aac_do_pause,
@@ -382,6 +383,7 @@ AUDIO_CODEC_WITH_RAW_FILE_PLUGIN("faad2",
                NULL,
                0
                );
+*/
 #endif
 /* end file aa.cpp */
 
