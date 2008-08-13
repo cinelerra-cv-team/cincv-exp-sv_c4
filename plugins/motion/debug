@@ -1,0 +1,323 @@
+VFrame::create_pbuffer w=1024 h=982
+MotionScanUnit::process_package 104 search_x=56 search_y=49 diff=1358835
+MotionScanUnit::process_package 104 search_x=42 search_y=49 diff=1395165
+MotionScanUnit::process_package 104 search_x=28 search_y=49 diff=1448715
+MotionScanUnit::process_package 104 search_x=14 search_y=49 diff=1495575
+MotionScanUnit::process_package 104 search_x=0 search_y=49 diff=1125009
+MotionScanUnit::process_package 104 search_x=-14 search_y=49 diff=1495575
+MotionScanUnit::process_package 104 search_x=-28 search_y=49 diff=1458285
+MotionScanUnit::process_package 104 search_x=-42 search_y=49 diff=1404735
+MotionScanUnit::process_package 104 search_x=56 search_y=37 diff=1404735
+MotionScanUnit::process_package 104 search_x=42 search_y=37 diff=1441065
+MotionScanUnit::process_package 104 search_x=28 search_y=37 diff=1494615
+MotionScanUnit::process_package 104 search_x=14 search_y=37 diff=1541475
+MotionScanUnit::process_package 104 search_x=0 search_y=37 diff=1083717
+MotionScanUnit::process_package 104 search_x=-14 search_y=37 diff=1541475
+MotionScanUnit::process_package 104 search_x=-28 search_y=37 diff=1504185
+MotionScanUnit::process_package 104 search_x=-42 search_y=37 diff=1450635
+MotionScanUnit::process_package 104 search_x=56 search_y=25 diff=1450635
+MotionScanUnit::process_package 104 search_x=42 search_y=25 diff=1486965
+MotionScanUnit::process_package 104 search_x=28 search_y=25 diff=1540515
+MotionScanUnit::process_package 104 search_x=14 search_y=25 diff=1587375
+MotionScanUnit::process_package 104 search_x=0 search_y=25 diff=1042425
+MotionScanUnit::process_package 104 search_x=-14 search_y=25 diff=1587375
+MotionScanUnit::process_package 104 search_x=-28 search_y=25 diff=1550085
+MotionScanUnit::process_package 104 search_x=-42 search_y=25 diff=1496535
+MotionScanUnit::process_package 104 search_x=56 search_y=13 diff=1492710
+MotionScanUnit::process_package 104 search_x=42 search_y=13 diff=1529040
+MotionScanUnit::process_package 104 search_x=28 search_y=13 diff=1582590
+MotionScanUnit::process_package 104 search_x=14 search_y=13 diff=1629450
+MotionScanUnit::process_package 104 search_x=0 search_y=13 diff=997308
+MotionScanUnit::process_package 104 search_x=-14 search_y=13 diff=1629450
+MotionScanUnit::process_package 104 search_x=-28 search_y=13 diff=1592160
+MotionScanUnit::process_package 104 search_x=-42 search_y=13 diff=1538610
+MotionScanUnit::process_package 104 search_x=56 search_y=0 diff=1079610
+MotionScanUnit::process_package 104 search_x=42 search_y=0 diff=1026060
+MotionScanUnit::process_package 104 search_x=28 search_y=0 diff=972510
+MotionScanUnit::process_package 104 search_x=14 search_y=0 diff=912270
+MotionScanUnit::process_package 104 search_x=0 search_y=0 diff=42240
+MotionScanUnit::process_package 104 search_x=-14 search_y=0 diff=908430
+MotionScanUnit::process_package 104 search_x=-28 search_y=0 diff=978240
+MotionScanUnit::process_package 104 search_x=-42 search_y=0 diff=1031790
+MotionScanUnit::process_package 104 search_x=56 search_y=-12 diff=1492710
+MotionScanUnit::process_package 104 search_x=42 search_y=-12 diff=1529040
+MotionScanUnit::process_package 104 search_x=28 search_y=-12 diff=1582590
+MotionScanUnit::process_package 104 search_x=14 search_y=-12 diff=1629450
+MotionScanUnit::process_package 104 search_x=0 search_y=-12 diff=990042
+MotionScanUnit::process_package 104 search_x=-14 search_y=-12 diff=1629450
+MotionScanUnit::process_package 104 search_x=-28 search_y=-12 diff=1592160
+MotionScanUnit::process_package 104 search_x=-42 search_y=-12 diff=1538610
+MotionScanUnit::process_package 104 search_x=56 search_y=-24 diff=1446810
+MotionScanUnit::process_package 104 search_x=42 search_y=-24 diff=1483140
+MotionScanUnit::process_package 104 search_x=28 search_y=-24 diff=1536690
+MotionScanUnit::process_package 104 search_x=14 search_y=-24 diff=1583550
+MotionScanUnit::process_package 104 search_x=0 search_y=-24 diff=1031334
+MotionScanUnit::process_package 104 search_x=-14 search_y=-24 diff=1583550
+MotionScanUnit::process_package 104 search_x=-28 search_y=-24 diff=1546260
+MotionScanUnit::process_package 104 search_x=-42 search_y=-24 diff=1492710
+MotionScanUnit::process_package 104 search_x=56 search_y=-36 diff=1400910
+MotionScanUnit::process_package 104 search_x=42 search_y=-36 diff=1437240
+MotionScanUnit::process_package 104 search_x=28 search_y=-36 diff=1490790
+MotionScanUnit::process_package 104 search_x=14 search_y=-36 diff=1537650
+MotionScanUnit::process_package 104 search_x=0 search_y=-36 diff=1072626
+MotionScanUnit::process_package 104 search_x=-14 search_y=-36 diff=1537650
+MotionScanUnit::process_package 104 search_x=-28 search_y=-36 diff=1500360
+MotionScanUnit::process_package 104 search_x=-42 search_y=-36 diff=1446810
+MotionScanUnit::process_package 104 search_x=28 search_y=24 diff=1544340
+MotionScanUnit::process_package 104 search_x=21 search_y=24 diff=1571115
+MotionScanUnit::process_package 104 search_x=14 search_y=24 diff=1591200
+MotionScanUnit::process_package 104 search_x=7 search_y=24 diff=1591200
+MotionScanUnit::process_package 104 search_x=0 search_y=24 diff=1038984
+MotionScanUnit::process_package 104 search_x=-7 search_y=24 diff=1591200
+MotionScanUnit::process_package 104 search_x=-14 search_y=24 diff=1591200
+MotionScanUnit::process_package 104 search_x=-21 search_y=24 diff=1580685
+MotionScanUnit::process_package 104 search_x=28 search_y=18 diff=1567290
+MotionScanUnit::process_package 104 search_x=21 search_y=18 diff=1594065
+MotionScanUnit::process_package 104 search_x=14 search_y=18 diff=1614150
+MotionScanUnit::process_package 104 search_x=7 search_y=18 diff=1614150
+MotionScanUnit::process_package 104 search_x=0 search_y=18 diff=1018338
+MotionScanUnit::process_package 104 search_x=-7 search_y=18 diff=1614150
+MotionScanUnit::process_package 104 search_x=-14 search_y=18 diff=1614150
+MotionScanUnit::process_package 104 search_x=-21 search_y=18 diff=1603635
+MotionScanUnit::process_package 104 search_x=28 search_y=12 diff=1582590
+MotionScanUnit::process_package 104 search_x=21 search_y=12 diff=1609365
+MotionScanUnit::process_package 104 search_x=14 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=7 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=0 search_y=12 diff=990042
+MotionScanUnit::process_package 104 search_x=-7 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=-14 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=-21 search_y=12 diff=1618935
+MotionScanUnit::process_package 104 search_x=28 search_y=6 diff=1582590
+MotionScanUnit::process_package 104 search_x=21 search_y=6 diff=1609365
+MotionScanUnit::process_package 104 search_x=14 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=7 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=0 search_y=6 diff=946446
+MotionScanUnit::process_package 104 search_x=-7 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=-14 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=-21 search_y=6 diff=1618935
+MotionScanUnit::process_package 104 search_x=21 search_y=0 diff=945735
+MotionScanUnit::process_package 104 search_x=7 search_y=0 diff=858720
+MotionScanUnit::process_package 104 search_x=-7 search_y=0 diff=854880
+MotionScanUnit::process_package 104 search_x=-21 search_y=0 diff=951465
+MotionScanUnit::process_package 104 search_x=28 search_y=-6 diff=1582590
+MotionScanUnit::process_package 104 search_x=21 search_y=-6 diff=1609365
+MotionScanUnit::process_package 104 search_x=14 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=7 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=0 search_y=-6 diff=946446
+MotionScanUnit::process_package 104 search_x=-7 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=-14 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=-21 search_y=-6 diff=1618935
+MotionScanUnit::process_package 104 search_x=21 search_y=-12 diff=1609365
+MotionScanUnit::process_package 104 search_x=7 search_y=-12 diff=1629450
+MotionScanUnit::process_package 104 search_x=-7 search_y=-12 diff=1629450
+MotionScanUnit::process_package 104 search_x=-21 search_y=-12 diff=1618935
+MotionScanUnit::process_package 104 search_x=28 search_y=-18 diff=1559640
+MotionScanUnit::process_package 104 search_x=21 search_y=-18 diff=1586415
+MotionScanUnit::process_package 104 search_x=14 search_y=-18 diff=1606500
+MotionScanUnit::process_package 104 search_x=7 search_y=-18 diff=1606500
+MotionScanUnit::process_package 104 search_x=0 search_y=-18 diff=1010688
+MotionScanUnit::process_package 104 search_x=-7 search_y=-18 diff=1606500
+MotionScanUnit::process_package 104 search_x=-14 search_y=-18 diff=1606500
+MotionScanUnit::process_package 104 search_x=-21 search_y=-18 diff=1595985
+MotionScanUnit::process_package 104 search_x=11 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=12 diff=1528602
+MotionScanUnit::process_package 104 search_x=-3 search_y=12 diff=1326378
+MotionScanUnit::process_package 104 search_x=-10 search_y=12 diff=1629450
+MotionScanUnit::process_package 104 search_x=14 search_y=9 diff=1629450
+MotionScanUnit::process_package 104 search_x=11 search_y=9 diff=1629450
+MotionScanUnit::process_package 104 search_x=7 search_y=9 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=9 diff=1525164
+MotionScanUnit::process_package 104 search_x=0 search_y=9 diff=968244
+MotionScanUnit::process_package 104 search_x=-3 search_y=9 diff=1316046
+MotionScanUnit::process_package 104 search_x=-7 search_y=9 diff=1629450
+MotionScanUnit::process_package 104 search_x=-10 search_y=9 diff=1629450
+MotionScanUnit::process_package 104 search_x=11 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=6 diff=1521726
+MotionScanUnit::process_package 104 search_x=-3 search_y=6 diff=1305714
+MotionScanUnit::process_package 104 search_x=-10 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=14 search_y=3 diff=1342578
+MotionScanUnit::process_package 104 search_x=11 search_y=3 diff=1333398
+MotionScanUnit::process_package 104 search_x=7 search_y=3 diff=1321158
+MotionScanUnit::process_package 104 search_x=4 search_y=3 diff=1198524
+MotionScanUnit::process_package 104 search_x=0 search_y=3 diff=580404
+MotionScanUnit::process_package 104 search_x=-3 search_y=3 diff=966426
+MotionScanUnit::process_package 104 search_x=-7 search_y=3 diff=1319622
+MotionScanUnit::process_package 104 search_x=-10 search_y=3 diff=1328802
+MotionScanUnit::process_package 104 search_x=11 search_y=0 diff=889320
+MotionScanUnit::process_package 104 search_x=4 search_y=0 diff=715440
+MotionScanUnit::process_package 104 search_x=-3 search_y=0 diff=462660
+MotionScanUnit::process_package 104 search_x=-10 search_y=0 diff=877830
+MotionScanUnit::process_package 104 search_x=14 search_y=-3 diff=1342578
+MotionScanUnit::process_package 104 search_x=11 search_y=-3 diff=1333398
+MotionScanUnit::process_package 104 search_x=7 search_y=-3 diff=1321158
+MotionScanUnit::process_package 104 search_x=4 search_y=-3 diff=1198524
+MotionScanUnit::process_package 104 search_x=0 search_y=-3 diff=580404
+MotionScanUnit::process_package 104 search_x=-3 search_y=-3 diff=966426
+MotionScanUnit::process_package 104 search_x=-7 search_y=-3 diff=1319622
+MotionScanUnit::process_package 104 search_x=-10 search_y=-3 diff=1328802
+MotionScanUnit::process_package 104 search_x=11 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=-6 diff=1521726
+MotionScanUnit::process_package 104 search_x=-3 search_y=-6 diff=1305714
+MotionScanUnit::process_package 104 search_x=-10 search_y=-6 diff=1629450
+MotionScanUnit::process_package 104 search_x=14 search_y=-9 diff=1629450
+MotionScanUnit::process_package 104 search_x=11 search_y=-9 diff=1629450
+MotionScanUnit::process_package 104 search_x=7 search_y=-9 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=-9 diff=1525164
+MotionScanUnit::process_package 104 search_x=0 search_y=-9 diff=968244
+MotionScanUnit::process_package 104 search_x=-3 search_y=-9 diff=1316046
+MotionScanUnit::process_package 104 search_x=-7 search_y=-9 diff=1629450
+MotionScanUnit::process_package 104 search_x=-10 search_y=-9 diff=1629450
+MotionScanUnit::process_package 104 search_x=6 search_y=6 diff=1629450
+MotionScanUnit::process_package 104 search_x=2 search_y=6 diff=1234086
+MotionScanUnit::process_package 104 search_x=-1 search_y=6 diff=1018074
+MotionScanUnit::process_package 104 search_x=-5 search_y=6 diff=1593354
+MotionScanUnit::process_package 104 search_x=7 search_y=5 diff=1629450
+MotionScanUnit::process_package 104 search_x=6 search_y=5 diff=1629450
+MotionScanUnit::process_package 104 search_x=4 search_y=5 diff=1520580
+MotionScanUnit::process_package 104 search_x=2 search_y=5 diff=1229880
+MotionScanUnit::process_package 104 search_x=0 search_y=5 diff=939180
+MotionScanUnit::process_package 104 search_x=-1 search_y=5 diff=1011570
+MotionScanUnit::process_package 104 search_x=-3 search_y=5 diff=1302270
+MotionScanUnit::process_package 104 search_x=-5 search_y=5 diff=1592970
+MotionScanUnit::process_package 104 search_x=6 search_y=3 diff=1318098
+MotionScanUnit::process_package 104 search_x=2 search_y=3 diff=889464
+MotionScanUnit::process_package 104 search_x=-1 search_y=3 diff=657366
+MotionScanUnit::process_package 104 search_x=-5 search_y=3 diff=1275486
+MotionScanUnit::process_package 104 search_x=7 search_y=2 diff=1167012
+MotionScanUnit::process_package 104 search_x=6 search_y=2 diff=1162422
+MotionScanUnit::process_package 104 search_x=4 search_y=2 diff=1037496
+MotionScanUnit::process_package 104 search_x=2 search_y=2 diff=719256
+MotionScanUnit::process_package 104 search_x=0 search_y=2 diff=401016
+MotionScanUnit::process_package 104 search_x=-1 search_y=2 diff=480264
+MotionScanUnit::process_package 104 search_x=-3 search_y=2 diff=798504
+MotionScanUnit::process_package 104 search_x=-5 search_y=2 diff=1116744
+MotionScanUnit::process_package 104 search_x=6 search_y=0 diff=851070
+MotionScanUnit::process_package 104 search_x=2 search_y=0 diff=378840
+MotionScanUnit::process_package 104 search_x=-1 search_y=0 diff=126060
+MotionScanUnit::process_package 104 search_x=-5 search_y=0 diff=799260
+MotionScanUnit::process_package 104 search_x=7 search_y=-1 diff=1012866
+MotionScanUnit::process_package 104 search_x=6 search_y=-1 diff=1006746
+MotionScanUnit::process_package 104 search_x=4 search_y=-1 diff=876468
+MotionScanUnit::process_package 104 search_x=2 search_y=-1 diff=549048
+MotionScanUnit::process_package 104 search_x=0 search_y=-1 diff=221628
+MotionScanUnit::process_package 104 search_x=-1 search_y=-1 diff=303162
+MotionScanUnit::process_package 104 search_x=-3 search_y=-1 diff=630582
+MotionScanUnit::process_package 104 search_x=-5 search_y=-1 diff=958002
+MotionScanUnit::process_package 104 search_x=6 search_y=-3 diff=1318098
+MotionScanUnit::process_package 104 search_x=2 search_y=-3 diff=889464
+MotionScanUnit::process_package 104 search_x=-1 search_y=-3 diff=657366
+MotionScanUnit::process_package 104 search_x=-5 search_y=-3 diff=1275486
+MotionScanUnit::process_package 104 search_x=7 search_y=-4 diff=1475304
+MotionScanUnit::process_package 104 search_x=6 search_y=-4 diff=1473774
+MotionScanUnit::process_package 104 search_x=4 search_y=-4 diff=1359552
+MotionScanUnit::process_package 104 search_x=2 search_y=-4 diff=1059672
+MotionScanUnit::process_package 104 search_x=0 search_y=-4 diff=759792
+MotionScanUnit::process_package 104 search_x=-1 search_y=-4 diff=834468
+MotionScanUnit::process_package 104 search_x=-3 search_y=-4 diff=1134348
+MotionScanUnit::process_package 104 search_x=-5 search_y=-4 diff=1434228
+MotionScanUnit::process_package 104 search_x=3 search_y=3 diff=1043994
+MotionScanUnit::process_package 104 search_x=1 search_y=3 diff=734934
+MotionScanUnit::process_package 104 search_x=-2 search_y=3 diff=811896
+MotionScanUnit::process_package 104 search_x=3 search_y=2 diff=878376
+MotionScanUnit::process_package 104 search_x=1 search_y=2 diff=560136
+MotionScanUnit::process_package 104 search_x=-2 search_y=2 diff=639384
+MotionScanUnit::process_package 104 search_x=3 search_y=1 diff=712758
+MotionScanUnit::process_package 104 search_x=2 search_y=1 diff=549048
+MotionScanUnit::process_package 104 search_x=1 search_y=1 diff=385338
+MotionScanUnit::process_package 104 search_x=0 search_y=1 diff=221628
+MotionScanUnit::process_package 104 search_x=-1 search_y=1 diff=303162
+MotionScanUnit::process_package 104 search_x=-2 search_y=1 diff=466872
+MotionScanUnit::process_package 104 search_x=3 search_y=0 diff=547140
+MotionScanUnit::process_package 104 search_x=1 search_y=0 diff=210540
+MotionScanUnit::process_package 104 search_x=-2 search_y=0 diff=294360
+MotionScanUnit::process_package 104 search_x=3 search_y=-1 diff=712758
+MotionScanUnit::process_package 104 search_x=1 search_y=-1 diff=385338
+MotionScanUnit::process_package 104 search_x=-2 search_y=-1 diff=466872
+MotionScanUnit::process_package 104 search_x=3 search_y=-2 diff=878376
+MotionScanUnit::process_package 104 search_x=2 search_y=-2 diff=719256
+MotionScanUnit::process_package 104 search_x=1 search_y=-2 diff=560136
+MotionScanUnit::process_package 104 search_x=0 search_y=-2 diff=401016
+MotionScanUnit::process_package 104 search_x=-1 search_y=-2 diff=480264
+MotionScanUnit::process_package 104 search_x=-2 search_y=-2 diff=639384
+MotionScan::scan_frame 671 1708 1680
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=0 sub_y=0 diff1=385338 diff2=385338
+MotionScan::scan_frame 538 dx_result=4 dy_result=4 diff=385338
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=1 sub_y=0 diff1=344574 diff2=426108
+MotionScan::scan_frame 538 dx_result=3 dy_result=4 diff=344574
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=2 sub_y=0 diff1=303486 diff2=467196
+MotionScan::scan_frame 538 dx_result=2 dy_result=4 diff=303486
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=3 sub_y=0 diff1=262398 diff2=508284
+MotionScan::scan_frame 538 dx_result=1 dy_result=4 diff=262398
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=0 sub_y=0 diff1=221628 diff2=221628
+MotionScan::scan_frame 538 dx_result=0 dy_result=4 diff=221628
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=1 sub_y=0 diff1=241854 diff2=262398
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=2 sub_y=0 diff1=262398 diff2=303486
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=3 sub_y=0 diff1=282942 diff2=344574
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=0 sub_y=1 diff1=341814 diff2=428016
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=1 sub_y=1 diff1=300759 diff2=468501
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=2 sub_y=1 diff1=259383 diff2=509301
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=3 sub_y=1 diff1=218007 diff2=550101
+MotionScan::scan_frame 538 dx_result=1 dy_result=3 diff=218007
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=0 sub_y=1 diff1=176958 diff2=265446
+MotionScan::scan_frame 538 dx_result=0 dy_result=3 diff=176958
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=1 sub_y=1 diff1=197319 diff2=305931
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=2 sub_y=1 diff1=218007 diff2=346731
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=3 sub_y=1 diff1=238695 diff2=387531
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=0 sub_y=2 diff1=297942 diff2=472164
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=1 sub_y=2 diff1=256599 diff2=512361
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=2 sub_y=2 diff1=214935 diff2=552873
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=3 sub_y=2 diff1=173271 diff2=593385
+MotionScan::scan_frame 538 dx_result=1 dy_result=2 diff=173271
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=0 sub_y=2 diff1=131934 diff2=310746
+MotionScan::scan_frame 538 dx_result=0 dy_result=2 diff=131934
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=1 sub_y=2 diff1=152439 diff2=350943
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=2 sub_y=2 diff1=173271 diff2=391455
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=3 sub_y=2 diff1=194103 diff2=431967
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=0 sub_y=3 diff1=254070 diff2=516324
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=1 sub_y=3 diff1=212439 diff2=556233
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=2 sub_y=3 diff1=170487 diff2=596457
+MotionScan::scan_frame 524 search_x=426 search_y=419 sub_x=3 sub_y=3 diff1=128535 diff2=636681
+MotionScan::scan_frame 538 dx_result=1 dy_result=1 diff=128535
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=0 sub_y=3 diff1=86910 diff2=356058
+MotionScan::scan_frame 538 dx_result=0 dy_result=1 diff=86910
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=1 sub_y=3 diff1=107559 diff2=395967
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=2 sub_y=3 diff1=128535 diff2=436191
+MotionScan::scan_frame 524 search_x=427 search_y=419 sub_x=3 sub_y=3 diff1=149511 diff2=476415
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=0 sub_y=0 diff1=210540 diff2=210540
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=1 sub_y=0 diff1=168630 diff2=252450
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=2 sub_y=0 diff1=126390 diff2=294690
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=3 sub_y=0 diff1=84150 diff2=336930
+MotionScan::scan_frame 538 dx_result=1 dy_result=0 diff=84150
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=0 sub_y=0 diff1=42240 diff2=42240
+MotionScan::scan_frame 538 dx_result=0 dy_result=0 diff=42240
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=1 sub_y=0 diff1=63030 diff2=84150
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=2 sub_y=0 diff1=84150 diff2=126390
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=3 sub_y=0 diff1=105270 diff2=168630
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=0 sub_y=1 diff1=254070 diff2=253218
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=1 sub_y=1 diff1=212439 diff2=294843
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=2 sub_y=1 diff1=170487 diff2=336795
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=3 sub_y=1 diff1=128535 diff2=378747
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=0 sub_y=1 diff1=86910 diff2=86058
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=1 sub_y=1 diff1=107559 diff2=127683
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=2 sub_y=1 diff1=128535 diff2=169635
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=3 sub_y=1 diff1=149511 diff2=211587
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=0 sub_y=2 diff1=297942 diff2=297366
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=1 sub_y=2 diff1=256599 diff2=338703
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=2 sub_y=2 diff1=214935 diff2=380367
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=3 sub_y=2 diff1=173271 diff2=422031
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=0 sub_y=2 diff1=131934 diff2=131358
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=1 sub_y=2 diff1=152439 diff2=172695
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=2 sub_y=2 diff1=173271 diff2=214359
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=3 sub_y=2 diff1=194103 diff2=256023
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=0 sub_y=3 diff1=341814 diff2=341526
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=1 sub_y=3 diff1=300759 diff2=382575
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=2 sub_y=3 diff1=259383 diff2=423951
+MotionScan::scan_frame 524 search_x=426 search_y=420 sub_x=3 sub_y=3 diff1=218007 diff2=465327
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=0 sub_y=3 diff1=176958 diff2=176670
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=1 sub_y=3 diff1=197319 diff2=217719
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=2 sub_y=3 diff1=218007 diff2=259095
+MotionScan::scan_frame 524 search_x=427 search_y=420 sub_x=3 sub_y=3 diff1=238695 diff2=300471
+MotionScan::scan_frame 731 dx=0.00 dy=0.00
+VFrame::create_pbuffer w=1024 h=982
+VFrame::new_texture created texture_id=1 window_id=23 w=1024 h=1024
+VFrame::create_pbuffer w=1024 h=982
