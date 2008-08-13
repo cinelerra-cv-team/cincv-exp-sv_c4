@@ -227,11 +227,11 @@ int BC_Slider::keypress_event()
 	switch(get_keypress())
 	{
 		case UP:
-			increase_value();
+			increase_value_big();
 			result = 1;
 			break;
 		case DOWN:
-			decrease_value();
+			decrease_value_big();
 			result = 1;
 			break;
 		case LEFT:
@@ -495,6 +495,22 @@ int BC_ISlider::decrease_value()
 	return 0;
 }
 
+int BC_ISlider::increase_value_big()
+{
+        value+=10;
+        if(value > maxvalue) value = maxvalue;
+        button_pixel = value_to_pixel();
+        return 0;
+}
+
+int BC_ISlider::increase_value_big()
+{
+        value-=10;
+        if(value < minvalue) value = minvalue;
+        button_pixel = value_to_pixel();
+        return 0;
+}
+
 int BC_ISlider::init_selection(int cursor_x, int cursor_y)
 {
 	if(vertical)
@@ -577,6 +593,8 @@ BC_FSlider::BC_FSlider(int x,
 	this->maxvalue = maxvalue;
 	this->value = value;
 	this->precision = 0.1;
+        this->small_change = 0.1;
+        this->big_change = 1.0;
 }
 
 int BC_FSlider::value_to_pixel()
@@ -637,7 +655,7 @@ char* BC_FSlider::get_caption()
 
 int BC_FSlider::increase_value()
 {
-	value += precision;
+	value += small_change;
 	if(value > maxvalue) value = maxvalue;
 	button_pixel = value_to_pixel();
 	return 0;
@@ -645,10 +663,26 @@ int BC_FSlider::increase_value()
 
 int BC_FSlider::decrease_value()
 {
-	value -= precision;
+	value -= small_change;
 	if(value < minvalue) value = minvalue;
 	button_pixel = value_to_pixel();
 	return 0;
+}
+
+int BC_FSlider::increase_value_big()
+{
+        value += big_change;
+        if(value > maxvalue) value = maxvalue;
+        button_pixel = value_to_pixel();
+        return 0;
+}
+
+int BC_FSlider::decrease_value_big()
+{
+        value -= big_change;
+        if(value < minvalue) value = minvalue;
+        button_pixel = value_to_pixel();
+        return 0;
 }
 
 int BC_FSlider::init_selection(int cursor_x, int cursor_y)
@@ -711,6 +745,12 @@ void BC_FSlider::set_precision(float value)
 	this->precision = value;
 }
 
+void BC_FSlider::set_pagination(float small_change, float big_change)
+{
+        this->small_change = small_change;
+        this->big_change = big_change;
+}
+
 
 
 BC_PercentageSlider::BC_PercentageSlider(int x, 
@@ -741,23 +781,4 @@ char* BC_PercentageSlider::get_caption()
 	sprintf(caption, "%.0f%%", floor((value - minvalue) / (maxvalue - minvalue) * 100));
 	return caption;
 }
-
-int BC_PercentageSlider::increase_value()
-{
-	value += precision;
-	if(value > maxvalue) value = maxvalue;
-	button_pixel = value_to_pixel();
-//printf("BC_PercentageSlider::increase_value %f\n", value);
-	return 0;
-}
-
-int BC_PercentageSlider::decrease_value()
-{
-	value -= precision;
-	if(value < minvalue) value = minvalue;
-	button_pixel = value_to_pixel();
-//printf("BC_PercentageSlider::decrease_value %f\n", value);
-	return 0;
-}
-
 
