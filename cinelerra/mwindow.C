@@ -1500,6 +1500,15 @@ int MWindow::set_editing_mode(int new_editing_mode)
 	return 0;
 }
 
+void MWindow::toggle_editing_mode()
+{
+        int mode = edl->session->editing_mode;
+        if( mode == EDITING_ARROW )
+                set_editing_mode(EDITING_IBEAM);
+        else
+                set_editing_mode(EDITING_ARROW);
+}
+
 
 void MWindow::sync_parameters(int change_type)
 {
