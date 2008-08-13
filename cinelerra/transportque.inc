@@ -44,6 +44,15 @@
 #define REWIND               	  11
 #define GOTO_END             	  12
 #define CURRENT_FRAME             13
+#define SHIFTED_SINGLE_FRAME_FWD     	  14
+#define SHIFTED_NORMAL_FWD           	  15
+#define SHIFTED_FAST_FWD             	  16
+#define SHIFTED_SINGLE_FRAME_REWIND  	  17
+#define SHIFTED_NORMAL_REWIND     	 	  18
+#define SHIFTED_FAST_REWIND       	 	  19
+#define SHIFTED_PAUSE             	 	  20
+#define SHIFTED_SLOW_FWD             	  21
+#define SHIFTED_SLOW_REWIND          	  22
 
 // Level of change.  Changes have to be inclusive of all the lesser changes.
 // Delete cache

@@ -322,6 +322,7 @@ double PlaybackEngine::get_tracking_position()
 			if(command->get_direction() == PLAY_FORWARD)
 			{
 // Interpolate
+//                                printf("playbackengine.C: command->get_speed() returned %f\n",command->get_speed());
 				result = tracking_position + 
 					command->get_speed() * 
 					tracking_timer.get_difference() /

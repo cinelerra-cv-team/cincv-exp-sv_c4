@@ -219,6 +219,7 @@ int VirtualAConsole::process_buffer(int64_t len,
 // Time stretch the fragment to the real_output size
 			if(renderengine->command->get_speed() > 1)
 			{
+//		                printf("get_speed() returned %i\n",(int)renderengine->command->get_speed());
 // Number of samples in real output buffer for each to sample rendered.
 				int interpolate_len = (int)renderengine->command->get_speed();
 				for(in = 0, out = 0; in < len; )
@@ -261,8 +262,11 @@ int VirtualAConsole::process_buffer(int64_t len,
 		}
 		if(!renderengine->audio->get_interrupted())
 		{
-			renderengine->audio->write_buffer(audio_out_packed, 
-				real_output_len);
+                        if (renderengine->command->get_speed() <= 2)
+                        {
+        			renderengine->audio->write_buffer(audio_out_packed, 
+        				real_output_len);
+                        }
 		}
 
 		if(renderengine->audio->get_interrupted()) interrupt = 1;
