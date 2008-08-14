@@ -503,7 +503,7 @@ int BC_ISlider::increase_value_big()
         return 0;
 }
 
-int BC_ISlider::increase_value_big()
+int BC_ISlider::decrease_value_big()
 {
         value-=10;
         if(value < minvalue) value = minvalue;
