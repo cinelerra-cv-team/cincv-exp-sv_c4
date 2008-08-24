@@ -184,6 +184,7 @@ public:
 	int nudge_seconds;
 // Show tool window in CWindow
 	int tool_window;
+        int ruler_dump_target;
 // Location of video outs
 	int vchannel_x[MAXCHANNELS];
 	int vchannel_y[MAXCHANNELS];

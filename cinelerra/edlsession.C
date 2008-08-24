@@ -251,6 +251,7 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	time_format = defaults->get("TIME_FORMAT", TIME_HMS);
 	nudge_seconds = defaults->get("NUDGE_FORMAT", 1);
 	tool_window = defaults->get("TOOL_WINDOW", 0);
+        ruler_dump_target = defaults->get("RULER_DUMP_TARGET", 0);
 	vconfig_in->load_defaults(defaults);
 	for(int i = 0; i < MAXCHANNELS; i++)
 	{
@@ -379,6 +380,7 @@ int EDLSession::save_defaults(BC_Hash *defaults)
 	defaults->update("TIME_FORMAT", time_format);
 	defaults->update("NUDGE_FORMAT", nudge_seconds);
 	defaults->update("TOOL_WINDOW", tool_window);
+	defaults->update("RULER_DUMP_TARGET", ruler_dump_target);
     vconfig_in->save_defaults(defaults);
 	for(int i = 0; i < MAXCHANNELS; i++)
 	{
@@ -778,6 +780,7 @@ int EDLSession::copy(EDLSession *session)
 	time_format = session->time_format;
 	nudge_seconds = session->nudge_seconds;
 	tool_window = session->tool_window;
+        ruler_dump_target = session->ruler_dump_target;
 	for(int i = 0; i < MAXCHANNELS; i++)
 	{
 		vchannel_x[i] = session->vchannel_x[i];

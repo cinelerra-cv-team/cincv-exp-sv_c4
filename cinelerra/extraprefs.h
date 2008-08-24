@@ -32,6 +32,8 @@
 #include "extraprefs.inc"
 #include "vdeviceprefs.inc"
 
+//class RulerDumpTargetMenu;
+
 class ExtraPrefs : public PreferencesDialog
 {
 public:
@@ -39,6 +41,10 @@ public:
 	~ExtraPrefs();
 
 	void create_objects();
+//        int delete_objects();
+//        void reset();
+
+//        RulerDumpTargetMenu *rulerdumptargetmenu;
 
 //	FormatTools *recording_format;
 //	ADevicePrefs *audio_in_device;
@@ -64,6 +70,31 @@ public:
        PreferencesWindow *pwindow;
 };
 
+/*class RulerDumpTargetMenu : public  BC_PopupMenu
+{
+public:
+        RulerDumpTargetMenu(PreferencesWindow *pwindow,
+                        int x,
+                        int y);
+        ~RulerDumpTargetMenu();
+        char* ruler_dump_target_to_string(int target);
+        void create_objects();
+        int handle_event();
 
+        int target;
+        PreferencesWindow *pwindow;
+        char string[BCTEXTLEN];
+};
 
+class RulerDumpTargetItem : public BC_MenuItem
+{
+public:
+        RulerDumpTargetItem(RulerDumpTargetMenu *popup, const char *text, int target);
+        ~RulerDumpTargetItem();
+        int handle_event();
+
+        RulerDumpTargetMenu *popup;
+        int target;
+};
+*/
 #endif

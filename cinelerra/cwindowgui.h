@@ -272,6 +272,7 @@ public:
 		int &rerender,
 		int do_camera);
 	int do_ruler(int draw, int motion, int button_press, int button_release);
+        void dump_ruler_angle_and_length(double rx1, double ry1, double rx2, double ry2);
 	int test_zoom(int &redraw);
 	void reset_camera();
 	void reset_projector();

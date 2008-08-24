@@ -34,6 +34,7 @@
 #include "editpanel.h"
 #include "edl.h"
 #include "edlsession.h"
+#include "extraprefs.inc"
 #include "floatauto.h"
 #include "floatautos.h"
 #include "keys.h"
@@ -1026,6 +1027,20 @@ void CWindowCanvas::draw_crophandle(int x, int y)
 #define RULERHANDLE_H 16
 
 
+void CWindowCanvas::dump_ruler_angle_and_length(double rx1, double ry1, double rx2, double ry2)
+{
+        double angle = fabs(atan((ry2 - ry1) / (rx2 - rx1)) * 360 / 2 / M_PI);
+        double distance = sqrt(SQR(rx2 - rx1) + SQR(ry2 - ry1));
+
+        switch (mwindow->edl->session->ruler_dump_target)
+        {
+                case DUMP_TO_STDOUT:
+                        printf("angle: %f distance: %f\n", angle, distance);                                        ;
+                        break;
+                case DUMP_TO_NOWHERE:
+                        break;
+        }
+}
 
 int CWindowCanvas::do_ruler(int draw, 
 	int motion, 
@@ -1068,25 +1083,30 @@ int CWindowCanvas::do_ruler(int draw,
 			gui->ruler_origin_y = y1;
 		}
 		else
-		if(canvas_cursor_x >= canvas_x1 - RULERHANDLE_W / 2 && 
-			canvas_cursor_x < canvas_x1 + RULERHANDLE_W / 2 && 
-			canvas_cursor_y >= canvas_y1 - RULERHANDLE_W && 
-			canvas_cursor_y < canvas_y1 + RULERHANDLE_H / 2)
-		{
-			gui->ruler_handle = 0;
-			gui->ruler_origin_x = x1;
-			gui->ruler_origin_y = y1;
-		}
-		else
-		if(canvas_cursor_x >= canvas_x2 - RULERHANDLE_W / 2 && 
-			canvas_cursor_x < canvas_x2 + RULERHANDLE_W / 2 && 
-			canvas_cursor_y >= canvas_y2 - RULERHANDLE_W && 
-			canvas_cursor_y < canvas_y2 + RULERHANDLE_H / 2)
-		{
-			gui->ruler_handle = 1;
-			gui->ruler_origin_x = x2;
-			gui->ruler_origin_y = y2;
-		}
+                {
+		        if(canvas_cursor_x >= canvas_x1 - RULERHANDLE_W / 2 && 
+	        		canvas_cursor_x < canvas_x1 + RULERHANDLE_W / 2 && 
+        			canvas_cursor_y >= canvas_y1 - RULERHANDLE_W && 
+			        canvas_cursor_y < canvas_y1 + RULERHANDLE_H / 2)
+		        {
+	        		gui->ruler_handle = 0;
+        			gui->ruler_origin_x = x1;
+			        gui->ruler_origin_y = y1;
+		        }
+	        	else
+        		if(canvas_cursor_x >= canvas_x2 - RULERHANDLE_W / 2 && 
+			        canvas_cursor_x < canvas_x2 + RULERHANDLE_W / 2 && 
+		        	canvas_cursor_y >= canvas_y2 - RULERHANDLE_W && 
+	        		canvas_cursor_y < canvas_y2 + RULERHANDLE_H / 2)
+        		{
+			        gui->ruler_handle = 1;
+		        	gui->ruler_origin_x = x2;
+	        		gui->ruler_origin_y = y2;
+        		}
+                
+                        dump_ruler_angle_and_length(mwindow->edl->session->ruler_x1, mwindow->edl->session->ruler_y1, 
+                                mwindow->edl->session->ruler_x2, mwindow->edl->session->ruler_y2);
+                }
 
 
 // Start new selection
@@ -1237,6 +1257,8 @@ int CWindowCanvas::do_ruler(int draw,
 					gui->update_tool();
 					break;
 			}
+                        dump_ruler_angle_and_length(mwindow->edl->session->ruler_x1, mwindow->edl->session->ruler_y1, 
+                                mwindow->edl->session->ruler_x2, mwindow->edl->session->ruler_y2);
 //printf("CWindowCanvas::do_ruler 2 %f %f %f %f\n", gui->ruler_x1, gui->ruler_y1, gui->ruler_x2, gui->ruler_y2);
 		}
 		else

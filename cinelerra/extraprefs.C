@@ -42,6 +42,7 @@ ExtraPrefs::ExtraPrefs(MWindow *mwindow, PreferencesWindow *pwindow)
 
 ExtraPrefs::~ExtraPrefs()
 {
+//        if (rulerdumptargetmenu) delete rulerdumptargetmenu;
 }
 
 void ExtraPrefs::create_objects()
@@ -49,7 +50,6 @@ void ExtraPrefs::create_objects()
 	int x, y, x2;
 	char string[BCTEXTLEN];
 	BC_Resources *resources = BC_WindowBase::get_resources();
-	BC_Title *title;
 
 	x = mwindow->theme->preferencesoptions_x;
 	y = mwindow->theme->preferencesoptions_y;
@@ -73,8 +73,31 @@ void ExtraPrefs::create_objects()
 	
         add_subwindow(new BC_Bar(5, y, 	get_w() - 10));
 	y += 5;
+        
+        x = 5;
+/*        add_subwindow(new BC_Title(x, y, _("Ruler Dump Target"), LARGEFONT, resources->text_default));
+        y += 25;
+        if (!rulerdumptargetmenu)
+        {
+                add_subwindow(rulerdumptargetmenu = new RulerDumpTargetMenu(pwindow, 
+                        x,
+                        y));
+                rulerdumptargetmenu->create_objects();
+        }*/
+        y += 30;
+}
+/*
+int ExtraPrefs::delete_objects()
+{
+//        reset();
+        return 0;
 }
 
+void ExtraPrefs::reset()
+{
+//        rulerdumptargetmenu = 0;
+}
+*/
 
 
 StillImageUseDuration::StillImageUseDuration(PreferencesWindow *pwindow, int value, int x, int y)
@@ -100,5 +123,58 @@ int StillImageDuration::handle_event()
        return 1;
 }
 
+/*
+RulerDumpTargetMenu::RulerDumpTargetMenu(PreferencesWindow *pwindow, int x, int y) : BC_PopupMenu(x, y, 125, ruler_dump_target_to_string(pwindow->thread->edl->session->ruler_dump_target), 1)
+{
+        this->pwindow = pwindow;
+        target = pwindow->thread->edl->session->ruler_dump_target;
+}
 
+RulerDumpTargetMenu::~RulerDumpTargetMenu()
+{
+        ;
+}
+
+char* RulerDumpTargetMenu::ruler_dump_target_to_string(int target)
+{
+        switch (target)
+        {
+                case DUMP_TO_NOWHERE:
+                        sprintf(string, _("DUMP TO NOWHERE"));
+                        break;
+                case DUMP_TO_STDOUT:
+                        sprintf(string, _("DUMP TO STDOUT"));
+        }
+        return string;
+}
+
+void RulerDumpTargetMenu::create_objects()
+{
+        add_item(new RulerDumpTargetItem(this, _("DUMP TO NOWHERE"), DUMP_TO_NOWHERE));
+        add_item(new RulerDumpTargetItem(this, _("DUMP TO STDOUT"), DUMP_TO_STDOUT));
+}
+
+int RulerDumpTargetMenu::handle_event()
+{
+        pwindow->thread->edl->session->ruler_dump_target = target;
+}
+
+RulerDumpTargetItem::RulerDumpTargetItem(RulerDumpTargetMenu *popup, const char *text, int target) : BC_MenuItem(text)
+{
+        this->popup = popup;
+        this->target = target;
+}
+
+RulerDumpTargetItem::~RulerDumpTargetItem()
+{
+        ;
+}
+
+int RulerDumpTargetItem::handle_event()
+{
+        popup->set_text(get_text());
+        popup->target = target;
+        return 1;
+}
+*/
 

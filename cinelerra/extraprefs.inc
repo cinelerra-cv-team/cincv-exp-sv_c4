@@ -23,6 +23,9 @@
 #ifndef EXTRAPREFS_INC
 #define EXTRAPREFS_INC
 
+#define DUMP_TO_NOWHERE 0
+#define DUMP_TO_STDOUT 1
+
 class ExtraPrefs;
 
 #endif
