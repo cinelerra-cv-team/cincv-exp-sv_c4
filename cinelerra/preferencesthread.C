@@ -30,6 +30,7 @@
 #include "bchash.h"
 #include "edl.h"
 #include "edlsession.h"
+#include "extraprefs.h"
 #include "filesystem.h"
 #include "fonts.h"
 #include "interfaceprefs.h"
@@ -284,6 +285,9 @@ const char* PreferencesThread::category_to_text(int category)
 		case INTERFACE:
 			return _("Interface");
 			break;
+                case EXTRA:
+                        return _("Extra");
+                        break;
 		case ABOUT:
 			return _("About");
 			break;
@@ -444,7 +448,11 @@ int PreferencesWindow::set_current_dialog(int number)
 		case PreferencesThread::INTERFACE:
 			add_subwindow(dialog = new InterfacePrefs(mwindow, this));
 			break;
-	
+                
+                case PreferencesThread::EXTRA:
+			add_subwindow(dialog = new ExtraPrefs(mwindow, this));
+                        break;
+
 		case PreferencesThread::ABOUT:
 			add_subwindow(dialog = new AboutPrefs(mwindow, this));
 			break;

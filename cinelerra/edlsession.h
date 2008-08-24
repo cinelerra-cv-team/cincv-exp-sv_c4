@@ -169,6 +169,9 @@ public:
 	int safe_regions;
     int64_t sample_rate;
 	float scrub_speed;
+//Load files as a duration
+        int si_useduration;
+        float si_duration;
 // Show assets in track canvas
 	int show_assets;
 // Show titles in resources
