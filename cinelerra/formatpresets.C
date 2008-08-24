@@ -234,6 +234,20 @@ void FormatPresets::create_objects()
 	item->edl->session->aspect_w = 4;
 	item->edl->session->aspect_h = 3;
 	preset_items.append(item);
+	
+        item = new FormatPresetItem(mwindow, this, _("Sony 7 Mpx (3072x2304) @ 1 fps"));
+	item->edl->session->audio_channels = 2;
+	item->edl->session->audio_tracks = 0;
+	item->edl->session->sample_rate = 48000;
+	item->edl->session->video_channels = 1;
+	item->edl->session->video_tracks = 1;
+	item->edl->session->frame_rate = 1;
+	item->edl->session->output_w = 3072;
+	item->edl->session->output_h = 2304;
+	item->edl->session->aspect_w = 4;
+	item->edl->session->aspect_h = 3;
+	preset_items.append(item);
+
 
 
 
