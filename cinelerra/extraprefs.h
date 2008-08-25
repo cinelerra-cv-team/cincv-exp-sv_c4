@@ -38,7 +38,7 @@ class ExtraPrefs : public PreferencesDialog
 {
 public:
 	ExtraPrefs(MWindow *mwindow, PreferencesWindow *pwindow);
-	~ExtraPrefs();
+//	~ExtraPrefs();
 
 	void create_objects();
 //        int delete_objects();

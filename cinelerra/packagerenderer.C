@@ -98,7 +98,7 @@ PackageRenderer::~PackageRenderer()
 	delete audio_cache;
 	delete video_cache;
 	delete vconfig;
-	delete aconfig;
+//	delete aconfig;
 }
 
 int PackageRenderer::initialize(MWindow *mwindow,

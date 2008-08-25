@@ -40,15 +40,15 @@ ExtraPrefs::ExtraPrefs(MWindow *mwindow, PreferencesWindow *pwindow)
 	this->mwindow = mwindow;
 }
 
-ExtraPrefs::~ExtraPrefs()
+/*ExtraPrefs::~ExtraPrefs()
 {
 //        if (rulerdumptargetmenu) delete rulerdumptargetmenu;
-}
+}*/
 
 void ExtraPrefs::create_objects()
 {
 	int x, y, x2;
-	char string[BCTEXTLEN];
+//	char string[BCTEXTLEN];
 	BC_Resources *resources = BC_WindowBase::get_resources();
 
 	x = mwindow->theme->preferencesoptions_x;

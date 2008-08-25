@@ -79,6 +79,7 @@ SET_TRACE
 	x2 = MAX(title2->get_w(), title2->get_w()) + 10;
 
 SET_TRACE
+        if ( playback_config && playback_config->aconfig && playback_config->aconfig->fragment_size)
 	sprintf(string, "%d", playback_config->aconfig->fragment_size);
 	PlaybackModuleFragment *menu;
 	add_subwindow(menu = new PlaybackModuleFragment(x2, 
