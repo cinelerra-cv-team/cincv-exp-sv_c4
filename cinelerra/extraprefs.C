@@ -87,6 +87,12 @@ void ExtraPrefs::create_objects()
         rulerdumptargetmenu->create_objects();
         
         y += 30;
+        
+        add_subwindow(new BC_Bar(5, y, 	get_w() - 10));
+	y += 5;
+
+        x = 5;
+        
 }
 
 /*int ExtraPrefs::delete_objects()
