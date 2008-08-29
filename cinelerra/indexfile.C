@@ -430,18 +430,18 @@ int IndexFile::redraw_edits(int force)
 int IndexFile::draw_index(ResourcePixmap *pixmap, Edit *edit, int x, int w)
 {
 	const int debug = 0;
-	if(debug) printf("IndexFile::draw_index %d\n");
+	if(debug) printf("IndexFile::draw_index %d\n", __LINE__);
 // check against index_end when being built
 	if(asset->index_zoom == 0)
 	{
 		printf(_("IndexFile::draw_index: index has 0 zoom\n"));
 		return 0;
 	}
-	if(debug) printf("IndexFile::draw_index %d\n");
+	if(debug) printf("IndexFile::draw_index %d\n", __LINE__);
 
 // test channel number
 	if(edit->channel > asset->channels) return 1;
-	if(debug) printf("IndexFile::draw_index %d\n");
+	if(debug) printf("IndexFile::draw_index %d\n", __LINE__);
 
 // calculate a virtual x where the edit_x should be in floating point
 	double virtual_edit_x = 1.0 * edit->track->from_units(edit->startproject) * 
@@ -478,7 +478,7 @@ int IndexFile::draw_index(ResourcePixmap *pixmap, Edit *edit, int x, int w)
 		lengthindex = asset->get_index_size(edit->channel) - startindex;
 	if(lengthindex <= 0) return 0;
 
-	if(debug) printf("IndexFile::draw_index %d\n");
+	if(debug) printf("IndexFile::draw_index %d\n", __LINE__);
 
 
 
@@ -604,7 +604,7 @@ int IndexFile::draw_index(ResourcePixmap *pixmap, Edit *edit, int x, int w)
 
 
 	if(!buffer_shared) delete [] buffer;
-	if(debug) printf("IndexFile::draw_index %d\n");
+	if(debug) printf("IndexFile::draw_index %d\n", __LINE__);
 	return 0;
 }
 
