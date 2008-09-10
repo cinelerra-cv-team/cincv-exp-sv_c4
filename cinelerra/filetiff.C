@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "edit.h"
 #include "file.h"
@@ -77,7 +98,7 @@ int FileTIFF::check_sig(Asset *asset)
 	return 0;
 }
 
-char* FileTIFF::compression_to_str(int value)
+const char* FileTIFF::compression_to_str(int value)
 {
 	switch(value)
 	{
@@ -92,7 +113,7 @@ char* FileTIFF::compression_to_str(int value)
 	}
 }
 
-char* FileTIFF::cmodel_to_str(int value)
+const char* FileTIFF::cmodel_to_str(int value)
 {
 	switch(value)
 	{
@@ -577,7 +598,7 @@ TIFFConfigVideo::~TIFFConfigVideo()
 {
 }
 
-int TIFFConfigVideo::create_objects()
+void TIFFConfigVideo::create_objects()
 {
 	int x = 10, y = 10;
 
@@ -592,7 +613,6 @@ int TIFFConfigVideo::create_objects()
 	menu2->create_objects();
 
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 int TIFFConfigVideo::close_event()

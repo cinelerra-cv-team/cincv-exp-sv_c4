@@ -717,7 +717,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 			         codec->ffmpeg_id == CODEC_FLAG_H263P_SLICE_STRUCT))
 			{
 				avcodec_thread_init(context, file->cpus);
-				context->thread_count = file->cpus;
+//				context->thread_count = file->cpus;
 			}
 
 			if(!codec->fix_bitrate)

@@ -1,3 +1,25 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
+#include "bcsignals.h"
 #include "browsebutton.h"
 #include "language.h"
 #include "mutex.h"
@@ -12,13 +34,13 @@ BrowseButton::BrowseButton(MWindow *mwindow,
 	BC_TextBox *textbox, 
 	int x, 
 	int y, 
-	char *init_directory, 
-	char *title, 
-	char *caption, 
-	int want_directory,
-	const char *recent_prefix)
+//	const char *recent_prefix)
+	const char *init_directory, 
+	const char *title, 
+	const char *caption, 
+	int want_directory)
  : BC_Button(x, y, mwindow->theme->get_image_set("magnify_button")), 
-   Thread()
+   Thread(0, 0, 0)
 {
 	this->parent_window = parent_window;
 	this->want_directory = want_directory;
@@ -43,7 +65,8 @@ BrowseButton::~BrowseButton()
 		gui->unlock_window();
 	}
 	startup_lock->unlock();
-	Thread::join();
+// Asynchronous thread
+//	Thread::join();
 	delete startup_lock;
 }
 
@@ -112,9 +135,9 @@ void BrowseButton::run()
 BrowseButtonWindow::BrowseButtonWindow(MWindow *mwindow, 
 	BrowseButton *button,
 	BC_WindowBase *parent_window, 
-	char *init_directory, 
-	char *title, 
-	char *caption, 
+	const char *init_directory, 
+	const char *title, 
+	const char *caption, 
 	int want_directory)
  : BC_FileBox(button->x - 
  		BC_WindowBase::get_resources()->filebox_w / 2, 

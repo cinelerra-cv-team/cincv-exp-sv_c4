@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "autoconf.h"
 #include "automation.h"
@@ -54,9 +75,8 @@ Track::~Track()
 	plugin_set.remove_all_objects();
 }
 
-int Track::create_objects()
+void Track::create_objects()
 {
-	return 0;
 }
 
 
@@ -369,20 +389,30 @@ void Track::insert_asset(Asset *asset,
 void Track::insert_track(Track *track, 
 	double position, 
 	int replace_default,
-	int edit_plugins)
+	int edit_plugins,
+	double edl_length)
 {
+// Calculate minimum length of data to pad.
+	int64_t min_length = to_units(
+		MAX(edl_length, track->get_length()),
+		1);
+//printf("Track::insert_track %d %s %lld\n", __LINE__, title, min_length);
 
 // Decide whether to copy settings based on load_mode
 	if(replace_default) copy_settings(track);
 
-	edits->insert_edits(track->edits, to_units(position, 0));
+	edits->insert_edits(track->edits, 
+		to_units(position, 0),
+		min_length);
 
 	if(edit_plugins)
-		insert_plugin_set(track, position);
+		insert_plugin_set(track, 
+			to_units(position, 0),
+			min_length);
 
 	automation->insert_track(track->automation, 
 		to_units(position, 0), 
-		to_units(track->get_length(), 1),
+		min_length,
 		replace_default);
 
 	optimize();
@@ -390,14 +420,15 @@ void Track::insert_track(Track *track,
 }
 
 // Called by insert_track
-void Track::insert_plugin_set(Track *track, double position)
+void Track::insert_plugin_set(Track *track, 
+	int64_t position,
+	int64_t min_length)
 {
 // Extend plugins if no incoming plugins
 	if(!track->plugin_set.total)
 	{
 		shift_effects(position, 
-			track->get_length(), 
-			1);
+			min_length);
 	}
 	else
 	for(int i = 0; i < track->plugin_set.total; i++)
@@ -406,12 +437,13 @@ void Track::insert_plugin_set(Track *track, double position)
 			plugin_set.append(new PluginSet(edl, this));
 
 		plugin_set.values[i]->insert_edits(track->plugin_set.values[i], 
-			to_units(position, 0));
+			position,
+			min_length);
 	}
 }
 
 
-Plugin* Track::insert_effect(char *title, 
+Plugin* Track::insert_effect(const char *title, 
 		SharedLocation *shared_location, 
 		KeyFrame *default_keyframe,
 		PluginSet *plugin_set,
@@ -572,7 +604,7 @@ void Track::remove_pluginset(PluginSet *plugin_set)
 	}
 }
 
-void Track::shift_keyframes(double position, double length, int convert_units)
+void Track::shift_keyframes(int64_t position, int64_t length)
 {
 	if(convert_units)
 	{
@@ -582,10 +614,14 @@ void Track::shift_keyframes(double position, double length, int convert_units)
 
 	automation->paste_silence(Units::to_int64(position), 
 		Units::to_int64(position + length));
+/*
+	automation->paste_silence(position, 
+		position + length);
+*/
 // Effect keyframes are shifted in shift_effects
 }
 
-void Track::shift_effects(double position, double length, int convert_units)
+void Track::shift_effects(int64_t position, int64_t length)
 {
 	if(convert_units)
 	{
@@ -595,7 +631,8 @@ void Track::shift_effects(double position, double length, int convert_units)
 
 	for(int i = 0; i < plugin_set.total; i++)
 	{
-		plugin_set.values[i]->shift_effects(Units::to_int64(position), Units::to_int64(length));
+		plugin_set.values[i]->shift_effects(position, 
+			length);
 	}
 }
 
@@ -883,7 +920,7 @@ int Track::copy_automation(double selectionstart,
 	double selectionend, 
 	FileXML *file,
 	int default_only,
-	int autos_only)
+	int active_only)
 {
 	int64_t start = to_units(selectionstart, 0);
 	int64_t end = to_units(selectionend, 1);
@@ -894,13 +931,10 @@ int Track::copy_automation(double selectionstart,
 	file->append_tag();
 	file->append_newline();
 
-	automation->copy(start, end, file, default_only, autos_only);
+	automation->copy(start, end, file, default_only, active_only);
 
 	if(edl->session->auto_conf->plugins)
 	{
-		file->tag.set_title("PLUGINSETS");
-		file->append_tag();
-		file->append_newline();
 		for(int i = 0; i < plugin_set.total; i++)
 		{
 		
@@ -908,11 +942,8 @@ int Track::copy_automation(double selectionstart,
 				end, 
 				file, 
 				default_only,
-				autos_only);
+				active_only);
 		}
-		file->tag.set_title("/PLUGINSETS");
-		file->append_tag();
-		file->append_newline();
 	}
 
 	file->tag.set_title("/TRACK");
@@ -930,13 +961,15 @@ int Track::paste_automation(double selectionstart,
 	double frame_rate,
 	int64_t sample_rate,
 	FileXML *file,
-	int default_only)
+	int default_only,
+	int active_only)
 {
 // Only used for pasting automation alone.
 	int64_t start;
 	int64_t length;
 	int result;
 	double scale;
+	int current_pluginset;
 
 	if(data_type == TRACK_AUDIO)
 		scale = edl->session->sample_rate / sample_rate;
@@ -947,6 +980,7 @@ int Track::paste_automation(double selectionstart,
 	start = to_units(selectionstart, 0);
 	length = to_units(total_length, 1);
 	result = 0;
+	current_pluginset = 0;
 //printf("Track::paste_automation 1\n");
 
 	while(!result)
@@ -963,24 +997,26 @@ int Track::paste_automation(double selectionstart,
 					scale,
 					file,
 					default_only,
+					active_only,
 					0))
-			/* strstr(file->tag.get_title(), "AUTOS")) */
 			{
 				;
 			}
 			else
-			if(file->tag.title_is("PLUGINSETS"))
+			if(file->tag.title_is("PLUGINSET"))
 			{
-//printf("Track::paste_automation 2 %d\n", current_pluginset);
-				PluginSet::paste_keyframes(start, 
-					length, 
-					file,
-					default_only,
-					this);
+				if(current_pluginset < plugin_set.total)
+				{
+					plugin_set.values[current_pluginset]->paste_keyframes(start, 
+						length, 
+						file,
+						default_only,
+						active_only);
+					current_pluginset++;
+				}
 			}
 		}
 	}
-//printf("Track::paste_automation 3\n");
 	
 
 	return 0;
@@ -1006,13 +1042,14 @@ void Track::clear_automation(double selectionstart,
 
 }
 
-void Track::straighten_automation(double selectionstart, 
-	double selectionend)
+void Track::set_automation_mode(double selectionstart, 
+	double selectionend,
+	int mode)
 {
 	int64_t start = to_units(selectionstart, 0);
 	int64_t end = to_units(selectionend, 1);
 
-	automation->straighten(start, end, edl->session->auto_conf);
+	automation->set_automation_mode(start, end, mode, edl->session->auto_conf);
 }
 
 
@@ -1021,7 +1058,7 @@ void Track::straighten_automation(double selectionstart,
 int Track::copy(double start, 
 	double end, 
 	FileXML *file, 
-	char *output_path)
+	const char *output_path)
 {
 // Use a copy of the selection in converted units
 // So copy_automation doesn't reconvert.
@@ -1213,12 +1250,12 @@ int Track::modify_pluginhandles(double oldposition,
 
 int Track::paste_silence(double start, double end, int edit_plugins)
 {
-	start = to_units(start, 0);
-	end = to_units(end, 1);
+	int64_t start_i = to_units(start, 0);
+	int64_t end_i = to_units(end, 1);
 
-	edits->paste_silence((int64_t)start, (int64_t)end);
-	shift_keyframes(start, end - start, 0);
-	if(edit_plugins) shift_effects(start, end - start, 0);
+	edits->paste_silence(start_i, end_i);
+	shift_keyframes(start_i, end_i - start_i);
+	if(edit_plugins) shift_effects(start_i, end_i - start_i);
 
 	edits->optimize();
 	return 0;
@@ -1506,3 +1543,29 @@ double Track::from_units(int64_t position)
 {
 	return (double)position;
 }
+
+int Track::plugin_exists(Plugin *plugin)
+{
+	for(int number = 0; number < plugin_set.size(); number++)
+	{
+		PluginSet *ptr = plugin_set.get(number);
+		for(Plugin *current_plugin = (Plugin*)ptr->first;
+			current_plugin;
+			current_plugin = (Plugin*)current_plugin->next)
+		{
+			if(current_plugin == plugin) return 1;
+		}
+	}
+
+	for(Edit *current = edits->first; current; current = NEXT)
+	{
+		if(current->transition &&
+			(Plugin*)current->transition == plugin) return 1;
+	}
+
+
+	return 0;
+}
+
+
+		

@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "assets.h"
 #include "awindowgui.h"
@@ -58,7 +79,7 @@ VWindowGUI::~VWindowGUI()
 	delete transport;
 }
 
-void VWindowGUI::change_source(EDL *edl, char *title)
+void VWindowGUI::change_source(EDL *edl, const char *title)
 {
 	update_sources(title);
 	char string[BCTEXTLEN];
@@ -76,7 +97,7 @@ void VWindowGUI::change_source(EDL *edl, char *title)
 
 
 // Get source list from master EDL
-void VWindowGUI::update_sources(char *title)
+void VWindowGUI::update_sources(const char *title)
 {
 	lock_window("VWindowGUI::update_sources");
 
@@ -138,7 +159,7 @@ void VWindowGUI::update_sources(char *title)
 	unlock_window();
 }
 
-int VWindowGUI::create_objects()
+void VWindowGUI::create_objects()
 {
 	in_point = 0;
 	out_point = 0;
@@ -212,7 +233,6 @@ int VWindowGUI::create_objects()
 //printf("VWindowGUI::create_objects 2\n");
 	deactivate();
 	slider->activate();
-	return 0;
 }
 
 int VWindowGUI::resize_event(int w, int h)

@@ -1,9 +1,31 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcdelete.h"
 #include "bcfilebox.h"
 #include "bclistboxitem.h"
 #include "bcnewfolder.h"
 #include "bcpixmap.h"
 #include "bcresources.h"
+#include "bcsignals.h"
 #include "bctitle.h"
 #include "clip.h"
 #include "condition.h"
@@ -400,9 +422,9 @@ int BC_FileBoxReload::handle_event()
 
 BC_FileBox::BC_FileBox(int x, 
 		int y, 
-		char *init_path,
-		char *title,
-		char *caption,
+		const char *init_path,
+		const char *title,
+		const char *caption,
 		int show_all_files,
 		int want_directory,
 		int multiple_files,
@@ -467,7 +489,7 @@ BC_FileBox::BC_FileBox(int x,
 		{
 			column_type[i] = get_resources()->filebox_columntype[i];
 			column_width[i] = get_resources()->filebox_columnwidth[i];
-			column_titles[i] = BC_FileBox::columntype_to_text(column_type[i]);
+			column_titles[i] = (char*)BC_FileBox::columntype_to_text(column_type[i]);
 		}
 		sort_column = get_resources()->filebox_sortcolumn;
 		sort_order = get_resources()->filebox_sortorder;
@@ -511,7 +533,7 @@ BC_FileBox::~BC_FileBox()
 	recent_dirs.remove_all_objects();
 }
 
-int BC_FileBox::create_objects()
+void BC_FileBox::create_objects()
 {
 	int x = 10, y = 10;
 	BC_Resources *resources = BC_WindowBase::get_resources();
@@ -597,7 +619,6 @@ int BC_FileBox::create_objects()
 	newfolder_thread = new BC_NewFolderThread(this);
 	
 	show_window();
-	return 0;
 }
 
 int BC_FileBox::get_listbox_w()
@@ -772,7 +793,7 @@ int BC_FileBox::create_tables()
 // Date entry
 		if(!is_dir || 1)
 		{
-			static char *month_text[13] = 
+			static const char *month_text[13] = 
 			{
 				"Null",
 				"Jan",
@@ -856,7 +877,7 @@ BC_Pixmap* BC_FileBox::get_icon(char *path, int is_dir)
 	return icons[icon_type];
 }
 
-char* BC_FileBox::columntype_to_text(int type)
+const char* BC_FileBox::columntype_to_text(int type)
 {
 	switch(type)
 	{
@@ -893,8 +914,8 @@ int BC_FileBox::refresh()
 		column_titles, 
 		column_width,
 		columns, 
-		0, 
-		0,
+		listbox->get_xposition(), 
+		listbox->get_yposition(),
 		-1, 
 		1);
 
@@ -961,7 +982,7 @@ void BC_FileBox::move_column(int src, int dst)
 	{
 		get_resources()->filebox_columntype[i] = column_type[i];
 		get_resources()->filebox_columnwidth[i] = column_width[i];
-		column_titles[i] = BC_FileBox::columntype_to_text(column_type[i]);
+		column_titles[i] = (char*)BC_FileBox::columntype_to_text(column_type[i]);
 	}
 	
 
@@ -1054,37 +1075,103 @@ void BC_FileBox::update_history()
 // Look for path already in history
 	BC_Resources *resources = get_resources();
 	int new_slot = FILEBOX_HISTORY_SIZE - 1;
+
 	for(int i = FILEBOX_HISTORY_SIZE - 1; i >= 0; i--)
 	{
-		if(!strcmp(resources->filebox_history[i], directory))
+		if(resources->filebox_history[i].path[0] &&
+			!strcmp(resources->filebox_history[i].path, directory))
 		{
-// Shift down from this point
-			while(i > 0)
-			{
-				strcpy(resources->filebox_history[i], 
-					resources->filebox_history[i - 1]);
-				if(resources->filebox_history[i][0]) new_slot--;
-				i--;
-			}
-			break;
+// Got matching path.
+// Update ID.
+			resources->filebox_history[i].id = resources->get_filebox_id();
+			return;
 		}
-		else
-			if(resources->filebox_history[i][0])
-				new_slot--;
-		else
-			break;
+// // Shift down from this point.
+// 			while(i > 0)
+// 			{
+// 				strcpy(resources->filebox_history[i], 
+// 					resources->filebox_history[i - 1]);
+// 				if(resources->filebox_history[i][0]) new_slot--;
+// 				i--;
+// 			}
+// 			break;
+// 		}
+// 		else
+// 			if(resources->filebox_history[i][0])
+// 				new_slot--;
+// 		else
+// 			break;
 	}
 
-	if(new_slot < 0)
+// Remove oldest entry if full
+	if(resources->filebox_history[FILEBOX_HISTORY_SIZE - 1].path[0])
 	{
-		for(int i = FILEBOX_HISTORY_SIZE - 1; i > 0; i--)
+		int oldest_id = 0x7fffffff;
+		int oldest = 0;
+		for(int i = 0; i < FILEBOX_HISTORY_SIZE; i++)
 		{
-			strcpy(resources->filebox_history[i], 
-					resources->filebox_history[i - 1]);
+			if(resources->filebox_history[i].path[0] &&
+				resources->filebox_history[i].id < oldest_id)
+			{
+				oldest_id = resources->filebox_history[i].id;
+				oldest = i;
+			}
 		}
-		new_slot = 0;
+
+		for(int i = oldest; i < FILEBOX_HISTORY_SIZE - 1; i++)
+		{
+			strcpy(resources->filebox_history[i].path,
+				resources->filebox_history[i + 1].path);
+			resources->filebox_history[i].id = 
+				resources->filebox_history[i + 1].id;
+		}
 	}
-	strcpy(resources->filebox_history[new_slot], directory);
+
+// Create new entry
+	strcpy(resources->filebox_history[FILEBOX_HISTORY_SIZE - 1].path,
+		directory);
+	resources->filebox_history[FILEBOX_HISTORY_SIZE - 1].id = resources->get_filebox_id();
+
+// Alphabetize
+	int done = 0;
+	while(!done)
+	{
+		done = 1;
+		for(int i = 1; i < FILEBOX_HISTORY_SIZE; i++)
+		{
+			if((resources->filebox_history[i - 1].path[0] &&
+				resources->filebox_history[i].path[0] &&
+				strcasecmp(resources->filebox_history[i - 1].path,
+					resources->filebox_history[i].path) > 0) ||
+				resources->filebox_history[i - 1].path[0] == 0 &&
+				resources->filebox_history[i].path[0])
+			{
+				done = 0;
+				char temp[BCTEXTLEN];
+				int id_temp;
+				strcpy(temp, resources->filebox_history[i - 1].path);
+				id_temp = resources->filebox_history[i - 1].id;
+				strcpy(resources->filebox_history[i - 1].path,
+					resources->filebox_history[i].path);
+				resources->filebox_history[i - 1].id = 
+					resources->filebox_history[i].id;
+				strcpy(resources->filebox_history[i].path, temp);
+				resources->filebox_history[i].id = id_temp;
+			}
+		}
+	}
+
+// 	if(new_slot < 0)
+// 	{
+// 		for(int i = FILEBOX_HISTORY_SIZE - 1; i > 0; i--)
+// 		{
+// 			strcpy(resources->filebox_history[i], 
+// 					resources->filebox_history[i - 1]);
+// 		}
+// 		new_slot = 0;
+// 	}
+// 
+// 	strcpy(resources->filebox_history[new_slot], directory);
 
 	create_history();
 	recent_popup->update(&recent_dirs,
@@ -1099,9 +1186,9 @@ void BC_FileBox::create_history()
 	recent_dirs.remove_all_objects();
 	for(int i = 0; i < FILEBOX_HISTORY_SIZE; i++)
 	{
-		if(resources->filebox_history[i][0])
+		if(resources->filebox_history[i].path[0])
 		{
-			recent_dirs.append(new BC_ListBoxItem(resources->filebox_history[i]));
+			recent_dirs.append(new BC_ListBoxItem(resources->filebox_history[i].path));
 		}
 	}
 }

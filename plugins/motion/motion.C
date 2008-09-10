@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "affine.h"
 #include "bcdisplayinfo.h"
 #include "clip.h"
@@ -6,6 +27,7 @@
 #include "keyframe.h"
 #include "language.h"
 #include "motion.h"
+#include "motionscan.h"
 #include "motionwindow.h"
 #include "mutex.h"
 #include "overlayframe.h"
@@ -19,30 +41,11 @@
 
 REGISTER_PLUGIN(MotionMain)
 
-//#undef DEBUG
+#undef DEBUG
 
-#ifndef DEBUG
-#define DEBUG
-#endif
-
-static void sort(int *array, int total)
-{
-	int done = 0;
-	while(!done)
-	{
-		done = 1;
-		for(int i = 0; i < total - 1; i++)
-		{
-			if(array[i] > array[i + 1])
-			{
-				array[i] ^= array[i + 1];
-				array[i + 1] ^= array[i];
-				array[i] ^= array[i + 1];
-				done = 0;
-			}
-		}
-	}
-}
+// #ifndef DEBUG
+// #define DEBUG
+// #endif
 
 
 
@@ -51,6 +54,7 @@ MotionConfig::MotionConfig()
 	global_range_w = 5;
 	global_range_h = 5;
 	rotation_range = 5;
+	rotation_center = 0;
 	block_count = 1;
 	global_block_w = MIN_BLOCK;
 	global_block_h = MIN_BLOCK;
@@ -80,6 +84,7 @@ void MotionConfig::boundaries()
 	CLAMP(global_range_w, MIN_RADIUS, MAX_RADIUS);
 	CLAMP(global_range_h, MIN_RADIUS, MAX_RADIUS);
 	CLAMP(rotation_range, MIN_ROTATION, MAX_ROTATION);
+	CLAMP(rotation_center, -MAX_ROTATION, MAX_ROTATION);
 	CLAMP(block_count, MIN_BLOCKS, MAX_BLOCKS);
 	CLAMP(global_block_w, MIN_BLOCK, MAX_BLOCK);
 	CLAMP(global_block_h, MIN_BLOCK, MAX_BLOCK);
@@ -92,6 +97,7 @@ int MotionConfig::equivalent(MotionConfig &that)
 	return global_range_w == that.global_range_w &&
 		global_range_h == that.global_range_h &&
 		rotation_range == that.rotation_range &&
+		rotation_center == that.rotation_center &&
 		mode1 == that.mode1 &&
 		global == that.global &&
 		rotate == that.rotate &&
@@ -120,6 +126,7 @@ void MotionConfig::copy_from(MotionConfig &that)
 	global_range_w = that.global_range_w;
 	global_range_h = that.global_range_h;
 	rotation_range = that.rotation_range;
+	rotation_center = that.rotation_center;
 	mode1 = that.mode1;
 	global = that.global;
 	rotate = that.rotate;
@@ -157,6 +164,7 @@ void MotionConfig::interpolate(MotionConfig &prev,
 	global_range_w = prev.global_range_w;
 	global_range_h = prev.global_range_h;
 	rotation_range = prev.rotation_range;
+	rotation_center = prev.rotation_center;
 	mode1 = prev.mode1;
 	global = prev.global;
 	rotate = prev.rotate;
@@ -200,7 +208,7 @@ void MotionConfig::interpolate(MotionConfig &prev,
 MotionMain::MotionMain(PluginServer *server)
  : PluginVClient(server)
 {
-	PLUGIN_CONSTRUCTOR_MACRO
+	
 	engine = 0;
 	rotate_engine = 0;
 	motion_rotate = 0;
@@ -226,7 +234,7 @@ MotionMain::MotionMain(PluginServer *server)
 
 MotionMain::~MotionMain()
 {
-	PLUGIN_DESTRUCTOR_MACRO
+	
 	delete engine;
 	delete overlayer;
 	delete [] search_area;
@@ -246,17 +254,13 @@ MotionMain::~MotionMain()
 	delete rotate_target_dst;
 }
 
-char* MotionMain::plugin_title() { return N_("Motion"); }
+const char* MotionMain::plugin_title() { return N_("Motion"); }
 int MotionMain::is_realtime() { return 1; }
 int MotionMain::is_multichannel() { return 1; }
 
 NEW_PICON_MACRO(MotionMain)
 
-SHOW_GUI_MACRO(MotionMain, MotionThread)
-
-SET_STRING_MACRO(MotionMain)
-
-RAISE_WINDOW_MACRO(MotionMain)
+NEW_WINDOW_MACRO(MotionMain, MotionWindow)
 
 LOAD_CONFIGURATION_MACRO(MotionMain, MotionConfig)
 
@@ -272,42 +276,44 @@ void MotionMain::update_gui()
 			
 			char string[BCTEXTLEN];
 			sprintf(string, "%d", config.global_positions);
-			thread->window->global_search_positions->set_text(string);
+			((MotionWindow*)thread->window)->global_search_positions->set_text(string);
 			sprintf(string, "%d", config.rotate_positions);
-			thread->window->rotation_search_positions->set_text(string);
+			((MotionWindow*)thread->window)->rotation_search_positions->set_text(string);
 
-			thread->window->global_block_w->update(config.global_block_w);
-			thread->window->global_block_h->update(config.global_block_h);
-			thread->window->rotation_block_w->update(config.rotation_block_w);
-			thread->window->rotation_block_h->update(config.rotation_block_h);
-			thread->window->block_x->update(config.block_x);
-			thread->window->block_y->update(config.block_y);
-			thread->window->block_x_text->update((float)config.block_x);
-			thread->window->block_y_text->update((float)config.block_y);
-			thread->window->magnitude->update(config.magnitude);
-			thread->window->return_speed->update(config.return_speed);
+			((MotionWindow*)thread->window)->global_block_w->update(config.global_block_w);
+			((MotionWindow*)thread->window)->global_block_h->update(config.global_block_h);
+			((MotionWindow*)thread->window)->rotation_block_w->update(config.rotation_block_w);
+			((MotionWindow*)thread->window)->rotation_block_h->update(config.rotation_block_h);
+			((MotionWindow*)thread->window)->block_x->update(config.block_x);
+			((MotionWindow*)thread->window)->block_y->update(config.block_y);
+			((MotionWindow*)thread->window)->block_x_text->update((float)config.block_x);
+			((MotionWindow*)thread->window)->block_y_text->update((float)config.block_y);
+			((MotionWindow*)thread->window)->magnitude->update(config.magnitude);
+			((MotionWindow*)thread->window)->return_speed->update(config.return_speed);
+			((MotionWindow*)thread->window)->rotation_range->update(config.rotation_range);
+			((MotionWindow*)thread->window)->rotation_center->update(config.rotation_center);
 
 
-			thread->window->track_single->update(config.mode3 == MotionConfig::TRACK_SINGLE);
-			thread->window->track_frame_number->update(config.track_frame);
-			thread->window->track_previous->update(config.mode3 == MotionConfig::TRACK_PREVIOUS);
-			thread->window->previous_same->update(config.mode3 == MotionConfig::PREVIOUS_SAME_BLOCK);
+			((MotionWindow*)thread->window)->track_single->update(config.mode3 == MotionConfig::TRACK_SINGLE);
+			((MotionWindow*)thread->window)->track_frame_number->update(config.track_frame);
+			((MotionWindow*)thread->window)->track_previous->update(config.mode3 == MotionConfig::TRACK_PREVIOUS);
+			((MotionWindow*)thread->window)->previous_same->update(config.mode3 == MotionConfig::PREVIOUS_SAME_BLOCK);
 			if(config.mode3 != MotionConfig::TRACK_SINGLE)
-				thread->window->track_frame_number->disable();
+				((MotionWindow*)thread->window)->track_frame_number->disable();
 			else
-				thread->window->track_frame_number->enable();
+				((MotionWindow*)thread->window)->track_frame_number->enable();
 
-			thread->window->mode1->set_text(
+			((MotionWindow*)thread->window)->mode1->set_text(
 				Mode1::to_text(config.mode1));
-			thread->window->mode2->set_text(
+			((MotionWindow*)thread->window)->mode2->set_text(
 				Mode2::to_text(config.mode2));
-			thread->window->mode3->set_text(
+			((MotionWindow*)thread->window)->mode3->set_text(
 				Mode3::to_text(config.horizontal_only, config.vertical_only));
-			thread->window->master_layer->set_text(
+			((MotionWindow*)thread->window)->master_layer->set_text(
 				MasterLayer::to_text(config.bottom_is_master));
 
 
-			thread->window->update_mode();
+			((MotionWindow*)thread->window)->update_mode();
 			thread->window->unlock_window();
 		}
 	}
@@ -336,6 +342,7 @@ int MotionMain::load_defaults()
 	config.global_range_w = defaults->get("GLOBAL_RANGE_W", config.global_range_w);
 	config.global_range_h = defaults->get("GLOBAL_RANGE_H", config.global_range_h);
 	config.rotation_range = defaults->get("ROTATION_RANGE", config.rotation_range);
+	config.rotation_center = defaults->get("ROTATION_CENTER", config.rotation_center);
 	config.magnitude = defaults->get("MAGNITUDE", config.magnitude);
 	config.return_speed = defaults->get("RETURN_SPEED", config.return_speed);
 	config.mode1 = defaults->get("MODE1", config.mode1);
@@ -367,6 +374,7 @@ int MotionMain::save_defaults()
 	defaults->update("GLOBAL_RANGE_W", config.global_range_w);
 	defaults->update("GLOBAL_RANGE_H", config.global_range_h);
 	defaults->update("ROTATION_RANGE", config.rotation_range);
+	defaults->update("ROTATION_CENTER", config.rotation_center);
 	defaults->update("MAGNITUDE", config.magnitude);
 	defaults->update("RETURN_SPEED", config.return_speed);
 	defaults->update("MODE1", config.mode1);
@@ -390,7 +398,7 @@ void MotionMain::save_data(KeyFrame *keyframe)
 	FileXML output;
 
 // cause data to be stored directly in text
-	output.set_shared_string(keyframe->data, MESSAGESIZE);
+	output.set_shared_string(keyframe->get_data(), MESSAGESIZE);
 	output.tag.set_title("MOTION");
 
 	output.tag.set_property("BLOCK_COUNT", config.block_count);
@@ -405,6 +413,7 @@ void MotionMain::save_data(KeyFrame *keyframe)
 	output.tag.set_property("GLOBAL_RANGE_W", config.global_range_w);
 	output.tag.set_property("GLOBAL_RANGE_H", config.global_range_h);
 	output.tag.set_property("ROTATION_RANGE", config.rotation_range);
+	output.tag.set_property("ROTATION_CENTER", config.rotation_center);
 	output.tag.set_property("MAGNITUDE", config.magnitude);
 	output.tag.set_property("RETURN_SPEED", config.return_speed);
 	output.tag.set_property("MODE1", config.mode1);
@@ -428,7 +437,7 @@ void MotionMain::read_data(KeyFrame *keyframe)
 {
 	FileXML input;
 
-	input.set_shared_string(keyframe->data, strlen(keyframe->data));
+	input.set_shared_string(keyframe->get_data(), strlen(keyframe->get_data()));
 
 	int result = 0;
 
@@ -452,6 +461,7 @@ void MotionMain::read_data(KeyFrame *keyframe)
 				config.global_range_w = input.tag.get_property("GLOBAL_RANGE_W", config.global_range_w);
 				config.global_range_h = input.tag.get_property("GLOBAL_RANGE_H", config.global_range_h);
 				config.rotation_range = input.tag.get_property("ROTATION_RANGE", config.rotation_range);
+				config.rotation_center = input.tag.get_property("ROTATION_CENTER", config.rotation_center);
 				config.magnitude = input.tag.get_property("MAGNITUDE", config.magnitude);
 				config.return_speed = input.tag.get_property("RETURN_SPEED", config.return_speed);
 				config.mode1 = input.tag.get_property("MODE1", config.mode1);
@@ -493,15 +503,31 @@ void MotionMain::allocate_temp(int w, int h, int color_model)
 }
 
 
-
 void MotionMain::process_global()
 {
-	if(!engine) engine = new MotionScan(this,
-		PluginClient::get_project_smp() + 1,
+	if(!engine) engine = new MotionScan(PluginClient::get_project_smp() + 1,
 		PluginClient::get_project_smp() + 1);
 
-// Get the current motion vector between the previous and current frame
-	engine->scan_frame(current_global_ref, prev_global_ref);
+// Determine if frames changed
+	engine->scan_frame(current_global_ref, 
+		prev_global_ref,
+		config.global_range_w,
+		config.global_range_h,
+		config.global_block_w,
+		config.global_block_h,
+		config.block_x,
+		config.block_y,
+		config.mode3,
+		config.mode2,
+		config.mode1,
+		config.horizontal_only,
+		config.vertical_only,
+		get_source_position(),
+		config.global_positions,
+		total_dx,
+		total_dy,
+		0,
+		0);
 	current_dx = engine->dx_result;
 	current_dy = engine->dy_result;
 
@@ -846,7 +872,7 @@ int MotionMain::process_buffer(VFrame **frame,
 	
 
 #ifdef DEBUG
-printf("MotionMain::process_buffer 1 start_position=%lld\n", start_position);
+printf("MotionMain::process_buffer %d start_position=%lld\n", __LINE__, start_position);
 #endif
 
 
@@ -1102,128 +1128,9 @@ printf("MotionMain::process_buffer 1 start_position=%lld\n", start_position);
 	}
 
 #ifdef DEBUG
-printf("MotionMain::process_buffer 100\n");
+printf("MotionMain::process_buffer %d\n", __LINE__);
 #endif
 	return 0;
-}
-
-
-void MotionMain::clamp_scan(int w, 
-	int h, 
-	int *block_x1,
-	int *block_y1,
-	int *block_x2,
-	int *block_y2,
-	int *scan_x1,
-	int *scan_y1,
-	int *scan_x2,
-	int *scan_y2,
-	int use_absolute)
-{
-// printf("MotionMain::clamp_scan 1 w=%d h=%d block=%d %d %d %d scan=%d %d %d %d absolute=%d\n",
-// w,
-// h,
-// *block_x1,
-// *block_y1,
-// *block_x2,
-// *block_y2,
-// *scan_x1,
-// *scan_y1,
-// *scan_x2,
-// *scan_y2,
-// use_absolute);
-
-	if(use_absolute)
-	{
-// scan is always out of range before block.
-		if(*scan_x1 < 0)
-		{
-			int difference = -*scan_x1;
-			*block_x1 += difference;
-			*scan_x1 = 0;
-		}
-
-		if(*scan_y1 < 0)
-		{
-			int difference = -*scan_y1;
-			*block_y1 += difference;
-			*scan_y1 = 0;
-		}
-
-		if(*scan_x2 > w)
-		{
-			int difference = *scan_x2 - w;
-			*block_x2 -= difference;
-			*scan_x2 -= difference;
-		}
-
-		if(*scan_y2 > h)
-		{
-			int difference = *scan_y2 - h;
-			*block_y2 -= difference;
-			*scan_y2 -= difference;
-		}
-
-		CLAMP(*scan_x1, 0, w);
-		CLAMP(*scan_y1, 0, h);
-		CLAMP(*scan_x2, 0, w);
-		CLAMP(*scan_y2, 0, h);
-	}
-	else
-	{
-		if(*scan_x1 < 0)
-		{
-			int difference = -*scan_x1;
-			*block_x1 += difference;
-			*scan_x2 += difference;
-			*scan_x1 = 0;
-		}
-
-		if(*scan_y1 < 0)
-		{
-			int difference = -*scan_y1;
-			*block_y1 += difference;
-			*scan_y2 += difference;
-			*scan_y1 = 0;
-		}
-
-		if(*scan_x2 - *block_x1 + *block_x2 > w)
-		{
-			int difference = *scan_x2 - *block_x1 + *block_x2 - w;
-			*block_x2 -= difference;
-		}
-
-		if(*scan_y2 - *block_y1 + *block_y2 > h)
-		{
-			int difference = *scan_y2 - *block_y1 + *block_y2 - h;
-			*block_y2 -= difference;
-		}
-
-// 		CLAMP(*scan_x1, 0, w - (*block_x2 - *block_x1));
-// 		CLAMP(*scan_y1, 0, h - (*block_y2 - *block_y1));
-// 		CLAMP(*scan_x2, 0, w - (*block_x2 - *block_x1));
-// 		CLAMP(*scan_y2, 0, h - (*block_y2 - *block_y1));
-	}
-
-// Sanity checks which break the calculation but should never happen if the
-// center of the block is inside the frame.
-	CLAMP(*block_x1, 0, w);
-	CLAMP(*block_x2, 0, w);
-	CLAMP(*block_y1, 0, h);
-	CLAMP(*block_y2, 0, h);
-
-// printf("MotionMain::clamp_scan 2 w=%d h=%d block=%d %d %d %d scan=%d %d %d %d absolute=%d\n",
-// w,
-// h,
-// *block_x1,
-// *block_y1,
-// *block_x2,
-// *block_y2,
-// *scan_x1,
-// *scan_y1,
-// *scan_x2,
-// *scan_y2,
-// use_absolute);
 }
 
 
@@ -1245,6 +1152,7 @@ void MotionMain::draw_vectors(VFrame *frame)
 	int search_x2, search_y2;
 	int search_x3, search_y3;
 	int search_x4, search_y4;
+
 
 	if(config.global)
 	{
@@ -1330,7 +1238,7 @@ void MotionMain::draw_vectors(VFrame *frame)
 // search_x2,
 // search_y2);
 
-		clamp_scan(w, 
+		MotionScan::clamp_scan(w, 
 			h, 
 			&block_x1,
 			&block_y1,
@@ -2452,7 +2360,7 @@ void RotateScanUnit::process_package(LoadPackage *package)
 // Scan reduced block size
 //plugin->output_frame->copy_from(server->current_frame);
 //plugin->output_frame->copy_from(temp);
-		pkg->difference = plugin->abs_diff(
+		pkg->difference = MotionScan::abs_diff(
 			temp->get_rows()[server->scan_y] + server->scan_x * pixel_size,
 			server->current_frame->get_rows()[server->scan_y] + server->scan_x * pixel_size,
 			row_bytes,
@@ -2549,7 +2457,7 @@ float RotateScan::scan_frame(VFrame *previous_frame,
 	switch(plugin->config.mode2)
 	{
 		case MotionConfig::NO_CALCULATE:
-			result = 0;
+			result = plugin->config.rotation_center;
 			skip = 1;
 			break;
 
@@ -2673,15 +2581,27 @@ float RotateScan::scan_frame(VFrame *previous_frame,
 	min_angle = MAX(min_angle, MIN_ANGLE);
 
 #ifdef DEBUG
-printf("RotateScan::scan_frame min_angle=%f\n", min_angle * 360 / 2 / M_PI);
+printf("RotateScan::scan_frame %d min_angle=%f\n", __LINE__, min_angle * 360 / 2 / M_PI);
 #endif
 
 	cache.remove_all_objects();
+	
+
+	if(!skip)
+	{
+		if(previous_frame->data_matches(current_frame))
+		{
+printf("RotateScan::scan_frame: frames match.  Skipping.\n");
+			result = plugin->config.rotation_center;
+			skip = 1;
+		}
+	}
+
 	if(!skip)
 	{
 // Initial search range
-		float angle_range = (float)plugin->config.rotation_range;
-		result = 0;
+		float angle_range = max_angle;
+		result = plugin->config.rotation_center;
 		total_steps = plugin->config.rotate_positions;
 
 
@@ -2713,6 +2633,7 @@ printf("RotateScan::scan_frame min_angle=%f\n", min_angle * 360 / 2 / M_PI);
 		}
 	}
 
+//printf("RotateScan::scan_frame %d\n", __LINE__);
 
 	if(!skip && plugin->config.mode2 == MotionConfig::SAVE)
 	{
@@ -2733,9 +2654,7 @@ printf("RotateScan::scan_frame min_angle=%f\n", min_angle * 360 / 2 / M_PI);
 		}
 	}
 
-#ifdef DEBUG
-printf("RotateScan::scan_frame 10 angle=%f\n", result);
-#endif
+printf("RotateScan::scan_frame %d angle=%f\n", __LINE__, result);
 	
 
 

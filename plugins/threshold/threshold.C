@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "clip.h"
 #include "bchash.h"
 #include "filexml.h"
@@ -95,14 +116,14 @@ REGISTER_PLUGIN(ThresholdMain)
 ThresholdMain::ThresholdMain(PluginServer *server)
  : PluginVClient(server)
 {
-	PLUGIN_CONSTRUCTOR_MACRO
+	
 	engine = 0;
 	threshold_engine = 0;
 }
 
 ThresholdMain::~ThresholdMain()
 {
-	PLUGIN_DESTRUCTOR_MACRO
+	
 	delete engine;
 	delete threshold_engine;
 }
@@ -112,7 +133,7 @@ int ThresholdMain::is_realtime()
 	return 1;
 }
 
-char* ThresholdMain::plugin_title() 
+const char* ThresholdMain::plugin_title() 
 { 
 	return N_("Threshold"); 
 }
@@ -121,11 +142,7 @@ char* ThresholdMain::plugin_title()
 #include "picon_png.h"
 NEW_PICON_MACRO(ThresholdMain)
 
-SHOW_GUI_MACRO(ThresholdMain, ThresholdThread)
-
-SET_STRING_MACRO(ThresholdMain)
-
-RAISE_WINDOW_MACRO(ThresholdMain)
+NEW_WINDOW_MACRO(ThresholdMain, ThresholdWindow)
 
 LOAD_CONFIGURATION_MACRO(ThresholdMain, ThresholdConfig)
 
@@ -191,7 +208,7 @@ int ThresholdMain::save_defaults()
 void ThresholdMain::save_data(KeyFrame *keyframe)
 {
 	FileXML file;
-	file.set_shared_string(keyframe->data, MESSAGESIZE);
+	file.set_shared_string(keyframe->get_data(), MESSAGESIZE);
 	file.tag.set_title("THRESHOLD");
 	file.tag.set_property("MIN", config.min);
 	file.tag.set_property("MAX", config.max);
@@ -208,7 +225,7 @@ void ThresholdMain::save_data(KeyFrame *keyframe)
 void ThresholdMain::read_data(KeyFrame *keyframe)
 {
 	FileXML file;
-	file.set_shared_string(keyframe->data, strlen(keyframe->data));
+	file.set_shared_string(keyframe->get_data(), strlen(keyframe->get_data()));
 	int result = 0;
 	while(!result)
 	{
@@ -230,20 +247,20 @@ void ThresholdMain::update_gui()
 {
 	if(thread)
 	{
-		thread->window->lock_window("ThresholdMain::update_gui");
+		((ThresholdWindow*)thread->window)->lock_window("ThresholdMain::update_gui");
 		if(load_configuration())
 		{
-			thread->window->min->update(config.min);
-			thread->window->max->update(config.max);
-			thread->window->plot->update(config.plot);
-			thread->window->update_low_color();
-			thread->window->update_mid_color();
-			thread->window->update_high_color();
-			thread->window->low_color_thread->update_gui(config.low_color.getRGB(), config.low_color.a);
-			thread->window->mid_color_thread->update_gui(config.mid_color.getRGB(), config.mid_color.a);
-			thread->window->high_color_thread->update_gui(config.high_color.getRGB(), config.high_color.a);
+			((ThresholdWindow*)thread->window)->min->update(config.min);
+			((ThresholdWindow*)thread->window)->max->update(config.max);
+			((ThresholdWindow*)thread->window)->plot->update(config.plot);
+			((ThresholdWindow*)thread->window)->update_low_color();
+			((ThresholdWindow*)thread->window)->update_mid_color();
+			((ThresholdWindow*)thread->window)->update_high_color();
+			((ThresholdWindow*)thread->window)->low_color_thread->update_gui(config.low_color.getRGB(), config.low_color.a);
+			((ThresholdWindow*)thread->window)->mid_color_thread->update_gui(config.mid_color.getRGB(), config.mid_color.a);
+			((ThresholdWindow*)thread->window)->high_color_thread->update_gui(config.high_color.getRGB(), config.high_color.a);
 		}
-		thread->window->unlock_window();
+		((ThresholdWindow*)thread->window)->unlock_window();
 	}
 }
 
@@ -252,9 +269,9 @@ void ThresholdMain::render_gui(void *data)
 	if(thread)
 	{
 		calculate_histogram((VFrame*)data);
-		thread->window->lock_window("ThresholdMain::render_gui");
-		thread->window->canvas->draw();
-		thread->window->unlock_window();
+		((ThresholdWindow*)thread->window)->lock_window("ThresholdMain::render_gui");
+		((ThresholdWindow*)thread->window)->canvas->draw();
+		((ThresholdWindow*)thread->window)->unlock_window();
 	}
 }
 
@@ -600,22 +617,58 @@ void ThresholdUnit::process_package(LoadPackage *package)
 	{
 		case BC_RGB888:
 			render_data<unsigned char, 3, false>(package);
+/*
+			THRESHOLD_HEAD(unsigned char)
+			r = (in_row[0] << 8) | in_row[0];
+			g = (in_row[1] << 8) | in_row[1];
+			b = (in_row[2] << 8) | in_row[2];
+			THRESHOLD_TAIL(3, 0xff, 0xff, 0xff, 0xff, 0x0, 0x0, 0x0, 0xff);
+*/
 			break;
 
 		case BC_RGB_FLOAT:
 			render_data<float, 3, false>(package);
+/*
+			THRESHOLD_HEAD(float)
+			r = (int)(in_row[0] * 0xffff);
+			g = (int)(in_row[1] * 0xffff);
+			b = (int)(in_row[2] * 0xffff);
+			THRESHOLD_TAIL(3, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+*/
 			break;
 
 		case BC_RGBA8888:
 			render_data<unsigned char, 4, false>(package);
+/*
+			THRESHOLD_HEAD(unsigned char)
+			r = (in_row[0] << 8) | in_row[0];
+			g = (in_row[1] << 8) | in_row[1];
+			b = (in_row[2] << 8) | in_row[2];
+			THRESHOLD_TAIL(4, 0xff, 0xff, 0xff, 0xff, 0x0, 0x0, 0x0, 0xff);
+*/
 			break;
 
 		case BC_RGBA_FLOAT:
 			render_data<float, 4, false>(package);
+/*
+			THRESHOLD_HEAD(float)
+			r = (int)(in_row[0] * 0xffff);
+			g = (int)(in_row[1] * 0xffff);
+			b = (int)(in_row[2] * 0xffff);
+			THRESHOLD_TAIL(4, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, 1.0);
+*/
 			break;
 
 		case BC_YUV888:
 			render_data<unsigned char, 3, true>(package);
+/*
+			THRESHOLD_HEAD(unsigned char)
+			y = (in_row[0] << 8) | in_row[0];
+			u = (in_row[1] << 8) | in_row[1];
+			v = (in_row[2] << 8) | in_row[2];
+			server->yuv->yuv_to_rgb_16(r, g, b, y, u, v);
+			THRESHOLD_TAIL(3, 0xff, 0x80, 0x80, 0xff, 0x0, 0x80, 0x80, 0xff)
+*/
 			break;
 
 		case BC_YUVA8888:
@@ -628,6 +681,14 @@ void ThresholdUnit::process_package(LoadPackage *package)
 
 		case BC_YUVA16161616:
 			render_data<uint16_t, 4, true>(package);
+/*
+			THRESHOLD_HEAD(unsigned char)
+			y = (in_row[0] << 8) | in_row[0];
+			u = (in_row[1] << 8) | in_row[1];
+			v = (in_row[2] << 8) | in_row[2];
+			server->yuv->yuv_to_rgb_16(r, g, b, y, u, v);
+			THRESHOLD_TAIL(4, 0xff, 0x80, 0x80, 0xff, 0x0, 0x80, 0x80, 0xff)
+*
 			break;
 	}
 }

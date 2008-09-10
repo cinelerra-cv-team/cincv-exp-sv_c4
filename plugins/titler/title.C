@@ -1,8 +1,32 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 // Originally developed by Heroine Virtual Ltd.
 // Support for multiple encodings, outline (stroke) by 
 // Andraz Tori <Andraz.tori1@guest.arnes.si>
 
 
+
+
+#include "bcsignals.h"
 #include "clip.h"
 #include "colormodels.h"
 #include "filexml.h"
@@ -37,15 +61,20 @@
 #define FONT_SEARCHPATH "fonts"
 //#define FONT_SEARCHPATH "/usr/X11R6/lib/X11/fonts"
 
+#define FONT_SEARCHPATH "/fonts"
 
 REGISTER_PLUGIN(TitleMain)
 
+static YUV yuv;
 
 TitleConfig::TitleConfig()
 {
 	style = 0;
 	color = BLACK;
 	color_stroke = 0xff0000;
+	outline_color = WHITE;
+	alpha = 0xff;
+	outline_alpha = 0xff;
 	size = 24;
 	motion_strategy = NO_MOTION;
 	loop = 0;
@@ -65,6 +94,7 @@ TitleConfig::TitleConfig()
 	pixels_per_second = 1.0;
 	timecode = 0;
 	stroke_width = 1.0;
+	outline_size = 0;
 }
 
 // Does not test equivalency but determines if redrawing text is necessary.
@@ -78,6 +108,10 @@ int TitleConfig::equivalent(TitleConfig &that)
 		stroke_width == that.stroke_width &&
 		timecode == that.timecode && 
 		!strcasecmp(timecodeformat, that.timecodeformat) &&
+		outline_color == that.outline_color &&
+		alpha == that.alpha &&
+		outline_alpha == that.outline_alpha &&
+		outline_size == that.outline_size && 
 		hjustification == that.hjustification &&
 		vjustification == that.vjustification &&
 		EQUIV(pixels_per_second, that.pixels_per_second) &&
@@ -94,6 +128,9 @@ void TitleConfig::copy_from(TitleConfig &that)
 	color = that.color;
 	color_stroke = that.color_stroke;
 	stroke_width = that.stroke_width;
+	outline_color = that.outline_color;
+	alpha = that.alpha;
+	outline_alpha = that.outline_alpha;
 	pixels_per_second = that.pixels_per_second;
 	motion_strategy = that.motion_strategy;
 	loop = that.loop;
@@ -106,6 +143,7 @@ void TitleConfig::copy_from(TitleConfig &that)
 	dropshadow = that.dropshadow;
 	timecode = that.timecode;
 	strcpy(timecodeformat, that.timecodeformat);
+	outline_size = that.outline_size;
 	strcpy(text, that.text);
 	strcpy(encoding, that.encoding);
 }
@@ -123,12 +161,16 @@ void TitleConfig::interpolate(TitleConfig &prev,
 	color = prev.color;
 	color_stroke = prev.color_stroke;
 	stroke_width = prev.stroke_width;
+	outline_color = prev.outline_color;
+	alpha = prev.alpha;
+	outline_alpha = prev.outline_alpha;
 	motion_strategy = prev.motion_strategy;
 	loop = prev.loop;
 	hjustification = prev.hjustification;
 	vjustification = prev.vjustification;
 	fade_in = prev.fade_in;
 	fade_out = prev.fade_out;
+	outline_size = prev.outline_size;
 	pixels_per_second = prev.pixels_per_second;
 	strcpy(text, prev.text);
 
@@ -540,6 +582,7 @@ TitleUnit::TitleUnit(TitleMain *plugin, TitleEngine *server)
  : LoadClient(server)
 {
 	this->plugin = plugin;
+	this->engine = server;
 }
 
 void TitleUnit::draw_glyph(VFrame *output, TitleGlyph *glyph, int x, int y)
@@ -550,6 +593,10 @@ void TitleUnit::draw_glyph(VFrame *output, TitleGlyph *glyph, int x, int y)
 	int output_h = output->get_h();
 	unsigned char **in_rows = glyph->data->get_rows();
 	unsigned char **out_rows = output->get_rows();
+	int r, g, b, a;
+	plugin->get_color_components(&r, &g, &b, &a, 0);
+	int outline = plugin->config.outline_size;
+	if(outline) a = 0xff;
 
 //printf("TitleUnit::draw_glyph 1 %c %d %d\n", glyph->c, x, y);
 	for(int in_y = 0; in_y < glyph_h; in_y++)
@@ -557,19 +604,55 @@ void TitleUnit::draw_glyph(VFrame *output, TitleGlyph *glyph, int x, int y)
 //		int y_out = y + plugin->ascent + in_y - glyph->top;
 		int y_out = y + plugin->get_char_height() + in_y - glyph->top;
 
-//printf("TitleUnit::draw_glyph 1 %d\n", y_out);
 		if(y_out >= 0 && y_out < output_h)
 		{
-			unsigned char *out_row = out_rows[y_out];
 			unsigned char *in_row = in_rows[in_y];
-			for(int in_x = 0; in_x < glyph_w; in_x++)
+			int x1 = x + glyph->left;
+			int y1 = y_out;
+
+			if(engine->do_dropshadow)
 			{
-				int x_out = x + glyph->left + in_x;
-				if(x_out >= 0 && x_out < output_w)
+// Direct copy glyph value to black alpha
+				x1 += plugin->config.dropshadow;
+				y1 += plugin->config.dropshadow;
+
+				if(y1 < output_h)
 				{
-					if(in_row[in_x] > 0)
-						out_row[x_out] = in_row[in_x];
-//out_row[x_out] = 0xff;
+					unsigned char *out_row = out_rows[y1];
+					for(int in_x = 0; in_x < glyph_w; in_x++)
+					{
+						int x_out = x1 + in_x;
+						if(x_out >= 0 && x_out < output_w)
+						{
+							if(in_row[in_x] > 0)
+								out_row[x_out * 4 + 3] = in_row[in_x];
+						}
+					}
+				}
+			}
+			else
+			{
+				unsigned char *out_row = out_rows[y1];
+// Blend color value with shadow using glyph alpha.
+				for(int in_x = 0; in_x < glyph_w; in_x++)
+				{
+					int x_out = x1 + in_x;
+					if(x_out >= 0 && x_out < output_w)
+					{
+						int opacity = in_row[in_x] * a / 0xff;
+						int transparency = out_row[x_out * 4 + 3] * (0xff - opacity) / 0xff;
+						if(in_row[in_x] > 0)
+						{
+							out_row[x_out * 4 + 0] = (r * opacity + 
+								out_row[x_out * 4 + 0] * transparency) / 0xff;
+							out_row[x_out * 4 + 1] = (g * opacity + 
+								out_row[x_out * 4 + 1] * transparency) / 0xff;
+							out_row[x_out * 4 + 2] = (b * opacity + 
+								out_row[x_out * 4 + 2] * transparency) / 0xff;
+							out_row[x_out * 4 + 3] = MAX(opacity,
+								out_row[x_out * 4 + 3]);
+						}
+					}
 				}
 			}
 		}
@@ -611,21 +694,15 @@ TitleEngine::TitleEngine(TitleMain *plugin, int cpus)
 
 void TitleEngine::init_packages()
 {
-//printf("TitleEngine::init_packages 1\n");
 	int visible_y1 = plugin->visible_row1 * plugin->get_char_height();
-//printf("TitleEngine::init_packages 1\n");
 	int current_package = 0;
 	for(int i = plugin->visible_char1; i < plugin->visible_char2; i++)
 	{
 		title_char_position_t *char_position = plugin->char_positions + i;
 		TitlePackage *pkg = (TitlePackage*)get_package(current_package);
-//printf("TitleEngine::init_packages 1\n");
-		pkg->x = char_position->x;
-//printf("TitleEngine::init_packages 1\n");
-		pkg->y = char_position->y - visible_y1;
-//printf("TitleEngine::init_packages 1\n");
+		pkg->x = char_position->x + plugin->config.outline_size;
+		pkg->y = char_position->y - visible_y1 + plugin->config.outline_size;
 		pkg->c = plugin->config.text[i];
-//printf("TitleEngine::init_packages 2\n");
 		current_package++;
 	}
 }
@@ -638,6 +715,147 @@ LoadClient* TitleEngine::new_client()
 LoadPackage* TitleEngine::new_package()
 {
 	return new TitlePackage;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Copy a single character to the text mask
+TitleOutlinePackage::TitleOutlinePackage()
+ : LoadPackage()
+{
+}
+
+
+TitleOutlineUnit::TitleOutlineUnit(TitleMain *plugin, TitleOutlineEngine *server)
+ : LoadClient(server)
+{
+	this->plugin = plugin;
+	this->engine = server;
+}
+
+void TitleOutlineUnit::process_package(LoadPackage *package)
+{
+	TitleOutlinePackage *pkg = (TitleOutlinePackage*)package;
+	int r, g, b, outline_a;
+	int title_r, title_g, title_b, title_a;
+	plugin->get_color_components(&r, &g, &b, &outline_a, 1);
+	plugin->get_color_components(&title_r, &title_g, &title_b, &title_a, 0);
+
+
+	if(engine->pass == 0)
+	{
+
+
+		for(int i = pkg->y1; i < pkg->y2; i++)
+		{
+			unsigned char *out_row = plugin->outline_mask->get_rows()[i];
+			for(int j = 0; j < plugin->text_mask->get_w(); j++)
+			{
+				int x1 = j - plugin->config.outline_size;
+				int x2 = j + plugin->config.outline_size;
+				int y1 = i - plugin->config.outline_size;
+				int y2 = i + plugin->config.outline_size;
+				CLAMP(x1, 0, plugin->text_mask->get_w() - 1);
+				CLAMP(x2, 0, plugin->text_mask->get_w() - 1);
+				CLAMP(y1, 0, plugin->text_mask->get_h() - 1);
+				CLAMP(y2, 0, plugin->text_mask->get_h() - 1);
+				int max_r = 0;
+				int max_g = 0;
+				int max_b = 0;
+				int max_a = 0;
+
+				for(int k = y1; k <= y2; k++)
+				{
+					unsigned char *text_row = plugin->text_mask->get_rows()[k];
+					for(int l = x1; l <= x2; l++)
+					{
+						unsigned char *pixel = text_row + l * 4;
+						if(pixel[3] > max_a)
+						{
+							max_r = pixel[0];
+							max_g = pixel[1];
+							max_b = pixel[2];
+							max_a = pixel[3];
+						}
+					}
+				}
+
+				unsigned char *out_pixel = out_row + j * 4;
+				out_pixel[0] = r;
+				out_pixel[1] = g;
+				out_pixel[2] = b;
+				out_pixel[3] = (max_a * outline_a) / 0xff;
+			}
+		}
+	}
+	else
+	{
+// Overlay text mask on top of outline mask
+		for(int i = pkg->y1; i < pkg->y2; i++)
+		{
+			unsigned char *out_row = plugin->text_mask->get_rows()[i];
+			unsigned char *in_row = plugin->outline_mask->get_rows()[i];
+			for(int j = 0; j < plugin->text_mask->get_w(); j++)
+			{
+				unsigned char *out_pixel = out_row + j * 4;
+				unsigned char *in_pixel = in_row + j * 4;
+				int out_a = out_pixel[3];
+				int in_a = in_pixel[3];
+				int transparency = in_a * (0xff - out_a) / 0xff;
+				out_pixel[0] = (out_pixel[0] * out_a + in_pixel[0] * transparency) / 0xff;
+				out_pixel[1] = (out_pixel[1] * out_a + in_pixel[1] * transparency) / 0xff;
+				out_pixel[2] = (out_pixel[2] * out_a + in_pixel[2] * transparency) / 0xff;
+				int temp = in_a - out_a;
+				if(temp < 0) temp = 0;
+				out_pixel[3] = temp + out_a * title_a / 0xff;
+			}
+		}
+	}
+}
+
+TitleOutlineEngine::TitleOutlineEngine(TitleMain *plugin, int cpus)
+ : LoadServer(cpus, cpus)
+{
+	this->plugin = plugin;
+}
+
+void TitleOutlineEngine::init_packages()
+{
+	for(int i = 0; i < get_total_packages(); i++)
+	{
+		TitleOutlinePackage *pkg = (TitleOutlinePackage*)get_package(i);
+		pkg->y1 = plugin->text_mask->get_h() * i / get_total_packages();
+		pkg->y2 = plugin->text_mask->get_h() * (i + 1) / get_total_packages();
+	}
+}
+
+void TitleOutlineEngine::do_outline()
+{
+	pass = 0;
+	process_packages();
+	pass = 1;
+	process_packages();
+}
+
+LoadClient* TitleOutlineEngine::new_client()
+{
+	return new TitleOutlineUnit(plugin, this);
+}
+
+LoadPackage* TitleOutlineEngine::new_package()
+{
+	return new TitleOutlinePackage;
 }
 
 
@@ -664,7 +882,9 @@ TitleTranslateUnit::TitleTranslateUnit(TitleMain *plugin, TitleTranslate *server
 
 
 
-#define TRANSLATE(type, max, components, r, g, b) \
+
+
+#define TRANSLATE(type, max, components) \
 { \
 	unsigned char **in_rows = plugin->text_mask->get_rows(); \
 	type **out_rows = (type**)plugin->output->get_rows(); \
@@ -710,38 +930,48 @@ TitleTranslateUnit::TitleTranslateUnit(TitleMain *plugin, TitleTranslate *server
 					float fraction2 = x_fraction2 * y_fraction1; \
 					float fraction3 = x_fraction1 * y_fraction2; \
 					float fraction4 = x_fraction2 * y_fraction2; \
-					int input = (int)(in_row1[in_x1] * fraction1 +  \
-								in_row1[in_x2] * fraction2 +  \
-								in_row2[in_x1] * fraction3 +  \
-								in_row2[in_x2] * fraction4 + 0.5); \
-					input *= plugin->alpha; \
-/* Alpha is 0 - 256 */ \
-					input >>= 8; \
+					type input_r = (type)(in_row1[in_x1 * 4 + 0] * fraction1 +  \
+								in_row1[in_x2 * 4 + 0] * fraction2 +  \
+								in_row2[in_x1 * 4 + 0] * fraction3 +  \
+								in_row2[in_x2 * 4 + 0] * fraction4); \
+					type input_g = (type)(in_row1[in_x1 * 4 + 1] * fraction1 +  \
+								in_row1[in_x2 * 4 + 1] * fraction2 +  \
+								in_row2[in_x1 * 4 + 1] * fraction3 +  \
+								in_row2[in_x2 * 4 + 1] * fraction4); \
+					type input_b = (type)(in_row1[in_x1 * 4 + 2] * fraction1 +  \
+								in_row1[in_x2 * 4 + 2] * fraction2 +  \
+								in_row2[in_x1 * 4 + 2] * fraction3 +  \
+								in_row2[in_x2 * 4 + 2] * fraction4); \
+					type input_a = (type)(in_row1[in_x1 * 4 + 3] * fraction1 +  \
+								in_row1[in_x2 * 4 + 3] * fraction2 +  \
+								in_row2[in_x1 * 4 + 3] * fraction3 +  \
+								in_row2[in_x2 * 4 + 3] * fraction4); \
+/* Plugin alpha is actually 0 - 0x100 */ \
+					input_a = input_a * plugin->alpha / 0x100; \
+					type transparency; \
  \
-					int anti_input = 0xff - input; \
+ \
 					if(components == 4) \
 					{ \
+						transparency = out_row[j * components + 3] * (max - input_a) / max; \
 						out_row[j * components + 0] =  \
-							(r * input + out_row[j * components + 0] * anti_input) / 0xff; \
+							(input_r * input_a + out_row[j * components + 0] * transparency) / max; \
 						out_row[j * components + 1] =  \
-							(g * input + out_row[j * components + 1] * anti_input) / 0xff; \
+							(input_g * input_a + out_row[j * components + 1] * transparency) / max; \
 						out_row[j * components + 2] =  \
-							(b * input + out_row[j * components + 2] * anti_input) / 0xff; \
-						if(max == 0xffff) \
-							out_row[j * components + 3] =  \
-								MAX((input << 8) | input, out_row[j * components + 3]); \
-						else \
-							out_row[j * components + 3] =  \
-								MAX(input, out_row[j * components + 3]); \
+							(input_b * input_a + out_row[j * components + 2] * transparency) / max; \
+						out_row[j * components + 3] =  \
+							MAX(input_a, out_row[j * components + 3]); \
 					} \
 					else \
 					{ \
+						transparency = max - input_a; \
 						out_row[j * components + 0] =  \
-							(r * input + out_row[j * components + 0] * anti_input) / 0xff; \
+							(input_r * input_a + out_row[j * components + 0] * transparency) / max; \
 						out_row[j * components + 1] =  \
-							(g * input + out_row[j * components + 1] * anti_input) / 0xff; \
+							(input_g * input_a + out_row[j * components + 1] * transparency) / max; \
 						out_row[j * components + 2] =  \
-							(b * input + out_row[j * components + 2] * anti_input) / 0xff; \
+							(input_b * input_a + out_row[j * components + 2] * transparency) / max; \
 					} \
 				} \
 			} \
@@ -811,99 +1041,37 @@ void TitleTranslateUnit::process_package(LoadPackage *package)
 {
 	TitleTranslatePackage *pkg = (TitleTranslatePackage*)package;
 	TitleTranslate *server = (TitleTranslate*)this->server;
-	int r_in, g_in, b_in;
 
-//printf("TitleTranslateUnit::process_package 1 %d %d\n", pkg->y1, pkg->y2);
-
-	r_in = (plugin->config.color & 0xff0000) >> 16;
-	g_in = (plugin->config.color & 0xff00) >> 8;
-	b_in = plugin->config.color & 0xff;
 	switch(plugin->output->get_color_model())
 	{
 		case BC_RGB888:
 		{
-			TRANSLATE(unsigned char, 0xff, 3, r_in, g_in, b_in);
+			TRANSLATE(unsigned char, 0xff, 3);
 			break;
 		}
 		case BC_RGB_FLOAT:
 		{
-			float r, g, b;
-			r = (float)r_in / 0xff;
-			g = (float)g_in / 0xff;
-			b = (float)b_in / 0xff;
-			TRANSLATE(float, 0xff, 3, r, g, b);
+			TRANSLATE(float, 1.0, 3);
 			break;
 		}
 		case BC_YUV888:
 		{
-			unsigned char y, u, v;
-			yuv.rgb_to_yuv_8(r_in, g_in, b_in, y, u, v);
-			TRANSLATE(unsigned char, 0xff, 3, y, u, v);
-			break;
-		}
-		case BC_RGB161616:
-		{
-			uint16_t r, g, b;
-			r = (r_in << 8) | r_in;
-			g = (g_in << 8) | g_in;
-			b = (b_in << 8) | b_in;
-			TRANSLATE(uint16_t, 0xffff, 3, r, g, b);
-			break;
-		}
-		case BC_YUV161616:
-		{
-			uint16_t y, u, v;
-			yuv.rgb_to_yuv_16(
-				(r_in << 8) | r_in, 
-				(g_in << 8) | g_in, 
-				(b_in << 8) | b_in, 
-				y, 
-				u, 
-				v);
-			TRANSLATE(uint16_t, 0xffff, 3, y, u, v);
+			TRANSLATE(unsigned char, 0xff, 3);
 			break;
 		}
 		case BC_RGBA_FLOAT:
 		{
-			float r, g, b;
-			r = (float)r_in / 0xff;
-			g = (float)g_in / 0xff;
-			b = (float)b_in / 0xff;
-			TRANSLATE(float, 0xff, 4, r, g, b);
+			TRANSLATE(float, 1.0, 4);
 			break;
 		}
 		case BC_RGBA8888:
 		{	
-			TRANSLATE(unsigned char, 0xff, 4, r_in, g_in, b_in);
+			TRANSLATE(unsigned char, 0xff, 4);
 			break;
 		}
 		case BC_YUVA8888:
 		{	
-			unsigned char y, u, v;
-			yuv.rgb_to_yuv_8(r_in, g_in, b_in, y, u, v);
-			TRANSLATE(unsigned char, 0xff, 4, y, u, v);
-			break;
-		}
-		case BC_RGBA16161616:
-		{	
-			uint16_t r, g, b;
-			r = (r_in << 8) | r_in;
-			g = (g_in << 8) | g_in;
-			b = (b_in << 8) | b_in;
-			TRANSLATE(uint16_t, 0xffff, 4, r, g, b);
-			break;
-		}
-		case BC_YUVA16161616:
-		{	
-			uint16_t y, u, v;
-			yuv.rgb_to_yuv_16(
-				(r_in << 8) | r_in, 
-				(g_in << 8) | g_in, 
-				(b_in << 8) | b_in, 
-				y, 
-				u, 
-				v);
-			TRANSLATE(uint16_t, 0xffff, 4, y, u, v);
+			TRANSLATE(unsigned char, 0xff, 4);
 			break;
 		}
 	}
@@ -941,8 +1109,8 @@ void TitleTranslate::init_packages()
 
 
 	TranslateUnit::translation_array_f(x_table, 
-		plugin->text_x1, 
-		plugin->text_x1 + plugin->text_w,
+		plugin->text_x1 - plugin->config.outline_size, 
+		plugin->text_x1 + plugin->text_w - plugin->config.outline_size,
 		0,
 		plugin->text_w,
 		plugin->text_w, 
@@ -952,8 +1120,8 @@ void TitleTranslate::init_packages()
 //printf("TitleTranslate::init_packages 1 %f %f\n", plugin->mask_y1, plugin->mask_y2);
 
 	TranslateUnit::translation_array_f(y_table, 
-		plugin->mask_y1, 
-		plugin->mask_y1 + plugin->text_mask->get_h(),
+		plugin->mask_y1 + plugin->config.outline_size, 
+		plugin->mask_y1 + plugin->text_mask->get_h() + plugin->config.outline_size,
 		0,
 		plugin->text_mask->get_h(),
 		plugin->text_mask->get_h(), 
@@ -1016,12 +1184,13 @@ ArrayList<FontEntry*>* TitleMain::fonts = 0;
 TitleMain::TitleMain(PluginServer *server)
  : PluginVClient(server)
 {
-	PLUGIN_CONSTRUCTOR_MACRO
+	
 
 // Build font database
 	build_fonts();
 	text_mask = 0;
 	text_mask_stroke = 0;
+	outline_mask = 0;
 	glyph_engine = 0;
 	title_engine = 0;
 	freetype_library = 0;
@@ -1029,6 +1198,7 @@ TitleMain::TitleMain(PluginServer *server)
 	char_positions = 0;
 	rows_bottom = 0;
 	translate = 0;
+	outline_engine = 0;
 	need_reconfigure = 1;
 }
 
@@ -1037,6 +1207,9 @@ TitleMain::~TitleMain()
 	PLUGIN_DESTRUCTOR_MACRO
 	if(text_mask) delete text_mask;
 	if(text_mask_stroke) delete text_mask_stroke;
+//printf("TitleMain::~TitleMain 1\n");
+	
+	if(outline_mask) delete outline_mask;
 	if(char_positions) delete [] char_positions;
 	if(rows_bottom) delete [] rows_bottom;
 	clear_glyphs();
@@ -1044,9 +1217,10 @@ TitleMain::~TitleMain()
 	if(title_engine) delete title_engine;
 	if(freetype_library) FT_Done_FreeType(freetype_library);
 	if(translate) delete translate;
+	if(outline_engine) delete outline_engine;
 }
 
-char* TitleMain::plugin_title() { return N_("Title"); }
+const char* TitleMain::plugin_title() { return N_("Title"); }
 int TitleMain::is_realtime() { return 1; }
 int TitleMain::is_synthesis() { return 1; }
 
@@ -1055,27 +1229,19 @@ VFrame* TitleMain::new_picon()
 	return new VFrame(picon_png);
 }
 
+NEW_WINDOW_MACRO(TitleMain, TitleWindow);
 
 void TitleMain::build_fonts()
 {
 	if(!fonts)
 	{
 		fonts = new ArrayList<FontEntry*>;
-// Construct path from location of the plugin
-		char search_path[BCTEXTLEN];
-		strcpy(search_path, PluginClient::get_path());
-		char *ptr = strrchr(search_path, '/');
-		strcpy(ptr + 1, FONT_SEARCHPATH);
-		char command_line[BCTEXTLEN];
-
-		sprintf(command_line, 
-			"find %s -name 'fonts.dir' -print -exec cat {} \\;", 
-			search_path);
-//printf("TitleMain::build_fonts %s\n", command_line);
-
-		FILE *in = popen(command_line, "r");
-
-
+		char find_command[BCTEXTLEN];
+		sprintf(find_command, 
+			"find %s%s -name 'fonts.dir' -print -exec cat {} \\;", 
+			PluginClient::get_plugin_dir(),
+			FONT_SEARCHPATH);
+		FILE *in = popen(find_command, "r");
 		char current_dir[BCTEXTLEN];
 		FT_Library freetype_library = 0;      	// Freetype library
 		FT_Face freetype_face = 0;
@@ -1547,6 +1713,7 @@ void TitleMain::get_total_extents()
 // Determine extents of total text
 	int current_w = 0;
 	int row_start = 0;
+	int max_char_w = 0;
 	text_len = strlen(config.text);
 	if(!char_positions) char_positions = new title_char_position_t[text_len];
 	text_rows = 0;
@@ -1573,7 +1740,6 @@ void TitleMain::get_total_extents()
 	{
 		char_positions[i].x = current_w;
 		char_positions[i].y = text_rows * get_char_height();
-		char_positions[i].w = get_char_advance(config.text[i], config.text[i + 1]);
 		TitleGlyph *current_glyph = 0;
 		for(int j = 0; j < glyphs.total; j++)
 		{
@@ -1586,6 +1752,10 @@ void TitleMain::get_total_extents()
 		int current_bottom = current_glyph->top - current_glyph->height;
 		if (current_bottom < rows_bottom[text_rows])
 			rows_bottom[text_rows] = current_bottom ;
+		int char_advance = get_char_advance(config.text[i], config.text[i + 1]);
+		char_positions[i].w = char_advance;
+		if(char_advance > max_char_w) max_char_w = char_advance;
+
 
 // printf("TitleMain::get_total_extents 1 %c %d %d %d\n", 
 // 	config.text[i], 
@@ -1602,9 +1772,10 @@ void TitleMain::get_total_extents()
 			current_w = 0;
 		}
 	}
-	text_w += config.dropshadow;
-	text_h = text_rows * get_char_height();
-	text_h += config.dropshadow;
+	text_w += config.dropshadow + config.outline_size * 4 + max_char_w;
+	text_h = text_rows * get_char_height() + 
+		config.dropshadow + 
+		config.outline_size * 4;
 
 // Now that text_w is known
 // Justify rows based on configuration
@@ -1797,46 +1968,115 @@ int TitleMain::draw_mask()
 
 	if(!text_mask)
 	{
+// Always use 8 bit because the glyphs are 8 bit
+// Need to set YUV to get clear_frame to set the right chroma.
+		int color_model = BC_RGBA8888;
+		if(cmodel_is_yuv(get_output()->get_color_model()))
+			color_model = BC_YUVA8888;
 		text_mask = new VFrame(0,
 			text_w,
-			visible_rows * get_char_height() - rows_bottom[visible_row2-1],
-			BC_A8);
+			text_h,
+			color_model);
 		text_mask_stroke = new VFrame(0,
 			text_w,
-			visible_rows * get_char_height() - rows_bottom[visible_row2-1],
-			BC_A8);
+			text_h,
+			color_model);
 
 		need_redraw = 1;
 	}
 
-//printf("TitleMain::draw_mask %d %d\n", text_w, visible_rows * get_char_height());
 
 
-//printf("TitleMain::draw_mask 1\n");
-// Draw on text mask if different
+// Draw on text mask if it has changed
 	if(old_visible_row1 != visible_row1 ||
 		old_visible_row2 != visible_row2 ||
 		need_redraw)
 	{
-//printf("TitleMain::draw_mask 2\n");
 		text_mask->clear_frame();
 		text_mask_stroke->clear_frame();
 
 
-//printf("TitleMain::draw_mask 2\n");
 		if(!title_engine)
 			title_engine = new TitleEngine(this, PluginClient::smp + 1);
-//printf("TitleMain::draw_mask 2\n");
 
+
+// Draw dropshadow first
+		if(config.dropshadow)
+		{
+			title_engine->do_dropshadow = 1;
+			title_engine->set_package_count(visible_char2 - visible_char1);
+			title_engine->process_packages();
+		}
+
+// Then draw foreground
+		title_engine->do_dropshadow = 0;
 		title_engine->set_package_count(visible_char2 - visible_char1);
-//printf("TitleMain::draw_mask 2\n");
 		title_engine->process_packages();
-//printf("TitleMain::draw_mask 3\n");
+
+
+
+
+// Convert to text outlines
+		if(config.outline_size > 0)
+		{
+			if(outline_mask &&
+				(text_mask->get_w() != outline_mask->get_w() ||
+				text_mask->get_h() != outline_mask->get_h()))
+			{
+				delete outline_mask;
+				outline_mask = 0;
+			}
+
+			if(!outline_mask)
+			{
+				outline_mask = new VFrame(0,
+					text_mask->get_w(),
+					text_mask->get_h(),
+					text_mask->get_color_model());
+			}
+
+			if(!outline_engine) outline_engine = 
+				new TitleOutlineEngine(this, PluginClient::smp + 1);
+			outline_engine->do_outline();
+		}
 	}
 
 	return 0;
 }
 
+void TitleMain::get_color_components(int *r, int *g, int *b, int *a, int is_outline)
+{
+	int r_in, g_in, b_in, a_in;
+
+	if(is_outline)
+	{
+		r_in = (config.outline_color & 0xff0000) >> 16;
+		g_in = (config.outline_color & 0xff00) >> 8;
+		b_in = config.outline_color & 0xff;
+		a_in = config.outline_alpha;
+	}
+	else
+	{
+		r_in = (config.color & 0xff0000) >> 16;
+		g_in = (config.color & 0xff00) >> 8;
+		b_in = config.color & 0xff;
+		a_in = config.alpha;
+	}
+	*r = r_in;
+	*g = g_in;
+	*b = b_in;
+	*a = a_in;
+
+	switch(output->get_color_model())
+	{
+		case BC_YUV888:
+			yuv.rgb_to_yuv_8(r_in, g_in, b_in, *r, *g, *b);
+			break;
+		case BC_YUVA8888:
+			yuv.rgb_to_yuv_8(r_in, g_in, b_in, *r, *g, *b);
+			break;
+	}
+}
 
 void TitleMain::overlay_mask()
 {
@@ -1846,7 +2086,8 @@ void TitleMain::overlay_mask()
 	if(!EQUIV(config.fade_in, 0))
 	{
 		int fade_len = lroundf(config.fade_in * PluginVClient::project_frame_rate);
-		int fade_position = get_source_position() - config.prev_keyframe_position;
+		int fade_position = get_source_position() - 
+			config.prev_keyframe_position;
 
 
 		if(fade_position >= 0 && fade_position < fade_len)
@@ -1869,28 +2110,6 @@ void TitleMain::overlay_mask()
 	}
 //printf("TitleMain::overlay_mask 1\n");
 
-	if(config.dropshadow)
-	{
-		text_x1 += config.dropshadow;
-		text_x2 += config.dropshadow;
-		mask_y1 += config.dropshadow;
-		mask_y2 += config.dropshadow;
-		if(text_x1 < input->get_w() && text_x1 + text_w > 0 &&
-			mask_y1 < input->get_h() && mask_y2 > 0)
-		{
-			if(!translate) translate = new TitleTranslate(this, PluginClient::smp + 1);
-// Do 2 passes if dropshadow.
-			int temp_color = config.color;
-			config.color = 0x0;
-			translate->process_packages();
-			config.color = temp_color;
-		}
-		text_x1 -= config.dropshadow;
-		text_x2 -= config.dropshadow;
-		mask_y1 -= config.dropshadow;
-		mask_y2 -= config.dropshadow;
-	}
-//printf("TitleMain::overlay_mask 1\n");
 
 	if(text_x1 < input->get_w() && text_x1 + text_w > 0 &&
 		mask_y1 < input->get_h() && mask_y2 > 0)
@@ -1919,7 +2138,7 @@ void TitleMain::clear_glyphs()
 	glyphs.remove_all_objects();
 }
 
-char* TitleMain::motion_to_text(int motion)
+const char* TitleMain::motion_to_text(int motion)
 {
 	switch(motion)
 	{
@@ -1953,7 +2172,6 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 	output = output_ptr;
 
 	need_reconfigure |= load_configuration();
-//printf("TitleMain::process_realtime 1\n");
 
 
 // Always synthesize text and redraw it for timecode
@@ -1989,7 +2207,6 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 // Handle reconfiguration
 	if(need_reconfigure)
 	{
-//printf("TitleMain::process_realtime 2\n");
 		if(text_mask) delete text_mask;
 		if(text_mask_stroke) delete text_mask_stroke;
 		text_mask = 0;
@@ -1997,17 +2214,14 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 //printf("TitleMain::process_realtime 2\n");
 		if(freetype_face) FT_Done_Face(freetype_face);
 		freetype_face = 0;
-//printf("TitleMain::process_realtime 2\n");
 		if(glyph_engine) delete glyph_engine;
 		glyph_engine = 0;
-//printf("TitleMain::process_realtime 2\n");
 		if(char_positions) delete [] char_positions;
 		char_positions = 0;
 		if(rows_bottom) delete [] rows_bottom;
 		rows_bottom = 0;
 //printf("TitleMain::process_realtime 2\n");
 		clear_glyphs();
-//printf("TitleMain::process_realtime 2\n");
 		visible_row1 = 0;
 		visible_row2 = 0;
 		ascent = 0;
@@ -2015,11 +2229,9 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 		if(!freetype_library) 
 			FT_Init_FreeType(&freetype_library);
 
-//printf("TitleMain::process_realtime 2\n");
 		if(!freetype_face)
 		{
 			FontEntry *font = get_font();
-//printf("TitleMain::process_realtime 2.1 %s\n", font->path);
 			if(load_freetype_face(freetype_library,
 				freetype_face,
 				font->path))
@@ -2028,31 +2240,24 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 					font->fixed_title);
 				result = 1;
 			}
-//printf("TitleMain::process_realtime 2.2\n");
 
 			if(!result) FT_Set_Pixel_Sizes(freetype_face, config.size, 0);
-//printf("TitleMain::process_realtime 2.3\n");
 		}
 
-//printf("TitleMain::process_realtime 3\n");
 
 		if(!result)
 		{
 			draw_glyphs();
-//printf("TitleMain::process_realtime 4\n");
 			get_total_extents();
-//printf("TitleMain::process_realtime 5\n");
 			need_reconfigure = 0;
 		}
 	}
 
 	if(!result)
 	{
-//printf("TitleMain::process_realtime 4\n");
 // Determine region of text visible on the output and draw mask
 		result = draw_mask();
 	}
-//printf("TitleMain::process_realtime 50\n");
 
 
 // Overlay mask on output
@@ -2060,32 +2265,8 @@ int TitleMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 	{
 		overlay_mask();
 	}
-//printf("TitleMain::process_realtime 60 %d\n", glyphs.total);
 
 	return 0;
-}
-
-int TitleMain::show_gui()
-{
-	load_configuration();
-	thread = new TitleThread(this);
-	thread->start();
-	return 0;
-}
-
-int TitleMain::set_string()
-{
-	if(thread) thread->window->set_title(gui_string);
-	return 0;
-}
-
-void TitleMain::raise_window()
-{
-	if(thread)
-	{
-		thread->window->raise_window();
-		thread->window->flush();
-	}
 }
 
 void TitleMain::update_gui()
@@ -2095,10 +2276,11 @@ void TitleMain::update_gui()
 		int reconfigure = load_configuration();
 		if(reconfigure)
 		{
-			thread->window->lock_window();
-			thread->window->update();
+			thread->window->lock_window("TitleMain::update_gui");
+			((TitleWindow*)thread->window)->update();
+			((TitleWindow*)thread->window)->unlock_window();
+			((TitleWindow*)thread->window)->color_thread->update_gui(config.color, 0);
 			thread->window->unlock_window();
-			thread->window->color_thread->update_gui(config.color, 0);
 		}
 	}
 }
@@ -2106,7 +2288,8 @@ void TitleMain::update_gui()
 
 int TitleMain::load_defaults()
 {
-	char directory[1024], text_path[1024];
+//printf("TitleMain::load_defaults %d\n", __LINE__);
+	char directory[BCTEXTLEN], text_path[BCTEXTLEN];
 // set the default directory
 	sprintf(directory, "%stitle.rc", BCASTDIR);
 
@@ -2121,6 +2304,9 @@ int TitleMain::load_defaults()
 	config.color = defaults->get("COLOR", config.color);
 	config.color_stroke = defaults->get("COLOR_STROKE", config.color_stroke);
 	config.stroke_width = defaults->get("STROKE_WIDTH", config.stroke_width);
+	config.outline_color = defaults->get("OUTLINE_COLOR", config.outline_color);
+	config.alpha = defaults->get("ALPHA", config.alpha);
+	config.outline_alpha = defaults->get("OUTLINE_ALPHA", config.outline_alpha);
 	config.motion_strategy = defaults->get("MOTION_STRATEGY", config.motion_strategy);
 	config.loop = defaults->get("LOOP", config.loop);
 	config.pixels_per_second = defaults->get("PIXELS_PER_SECOND", config.pixels_per_second);
@@ -2131,10 +2317,13 @@ int TitleMain::load_defaults()
 	config.x = defaults->get("TITLE_X", config.x);
 	config.y = defaults->get("TITLE_Y", config.y);
 	config.dropshadow = defaults->get("DROPSHADOW", config.dropshadow);
+	config.outline_size = defaults->get("OUTLINE_SIZE", config.outline_size);
 	config.timecode = defaults->get("TIMECODE", config.timecode);
 	defaults->get("TIMECODEFORMAT", config.timecodeformat);
 	window_w = defaults->get("WINDOW_W", 660);
 	window_h = defaults->get("WINDOW_H", 480);
+	if(window_w < 100) window_w = 100;
+	if(window_h < 100) window_h = 100;
 
 // Store text in separate path to isolate special characters
 	FileSystem fs;
@@ -2153,12 +2342,14 @@ int TitleMain::load_defaults()
 	}
 	else
 		config.text[0] = 0;
+//printf("TitleMain::load_defaults %d\n", __LINE__);
 	return 0;
 }
 
 int TitleMain::save_defaults()
 {
-	char text_path[1024];
+//printf("TitleMain::save_defaults %d\n", __LINE__);
+	char text_path[BCTEXTLEN];
 
 	defaults->update("FONT", config.font);
 	defaults->update("ENCODING", config.encoding);
@@ -2167,6 +2358,9 @@ int TitleMain::save_defaults()
 	defaults->update("COLOR", config.color);
 	defaults->update("COLOR_STROKE", config.color_stroke);
 	defaults->update("STROKE_WIDTH", config.stroke_width);
+	defaults->update("OUTLINE_COLOR", config.outline_color);
+	defaults->update("ALPHA", config.alpha);
+	defaults->update("OUTLINE_ALPHA", config.outline_alpha);
 	defaults->update("MOTION_STRATEGY", config.motion_strategy);
 	defaults->update("LOOP", config.loop);
 	defaults->update("PIXELS_PER_SECOND", config.pixels_per_second);
@@ -2177,6 +2371,7 @@ int TitleMain::save_defaults()
 	defaults->update("TITLE_X", config.x);
 	defaults->update("TITLE_Y", config.y);
 	defaults->update("DROPSHADOW", config.dropshadow);
+	defaults->update("OUTLINE_SIZE", config.outline_size);
 	defaults->update("TIMECODE", config.timecode);
 	defaults->update("TIMECODEFORMAT", config.timecodeformat);
 	defaults->update("WINDOW_W", window_w);
@@ -2195,6 +2390,7 @@ int TitleMain::save_defaults()
 	}
 //	else
 //		perror("TitleMain::save_defaults");
+//printf("TitleMain::save_defaults %d\n", __LINE__);
 	return 0;
 }
 
@@ -2264,7 +2460,7 @@ void TitleMain::save_data(KeyFrame *keyframe)
 	FileXML output;
 
 // cause data to be stored directly in text
-	output.set_shared_string(keyframe->data, MESSAGESIZE);
+	output.set_shared_string(keyframe->get_data(), MESSAGESIZE);
 	output.tag.set_title("TITLE");
 	output.tag.set_property("FONT", config.font);
 	output.tag.set_property("ENCODING", config.encoding);
@@ -2273,6 +2469,9 @@ void TitleMain::save_data(KeyFrame *keyframe)
 	output.tag.set_property("COLOR", config.color);
 	output.tag.set_property("COLOR_STROKE", config.color_stroke);
 	output.tag.set_property("STROKE_WIDTH", config.stroke_width);
+	output.tag.set_property("OUTLINE_COLOR", config.outline_color);
+	output.tag.set_property("ALPHA", config.alpha);
+	output.tag.set_property("OUTLINE_ALPHA", config.outline_alpha);
 	output.tag.set_property("MOTION_STRATEGY", config.motion_strategy);
 	output.tag.set_property("LOOP", config.loop);
 	output.tag.set_property("PIXELS_PER_SECOND", config.pixels_per_second);
@@ -2283,6 +2482,7 @@ void TitleMain::save_data(KeyFrame *keyframe)
 	output.tag.set_property("TITLE_X", config.x);
 	output.tag.set_property("TITLE_Y", config.y);
 	output.tag.set_property("DROPSHADOW", config.dropshadow);
+	output.tag.set_property("OUTLINE_SIZE", config.outline_size);
 	output.tag.set_property("TIMECODE", config.timecode);
 	output.tag.set_property("TIMECODEFORMAT", config.timecodeformat);
 	output.append_tag();
@@ -2294,15 +2494,13 @@ void TitleMain::save_data(KeyFrame *keyframe)
 	output.append_tag();
 	output.append_newline();
 	output.terminate_string();
-//printf("TitleMain::save_data 1\n%s\n", output.string);
-//printf("TitleMain::save_data 2\n%s\n", config.text);
 }
 
 void TitleMain::read_data(KeyFrame *keyframe)
 {
 	FileXML input;
 
-	input.set_shared_string(keyframe->data, strlen(keyframe->data));
+	input.set_shared_string(keyframe->get_data(), strlen(keyframe->get_data()));
 
 	int result = 0;
 	int new_interlace = 0;
@@ -2325,6 +2523,9 @@ void TitleMain::read_data(KeyFrame *keyframe)
 				config.color = input.tag.get_property("COLOR", config.color);
 				config.color_stroke = input.tag.get_property("COLOR_STROKE", config.color_stroke);
 				config.stroke_width = input.tag.get_property("STROKE_WIDTH", config.stroke_width);
+				config.outline_color = input.tag.get_property("OUTLINE_COLOR", config.outline_color);
+				config.alpha = input.tag.get_property("ALPHA", config.alpha);
+				config.outline_alpha = input.tag.get_property("OUTLINE_ALPHA", config.outline_alpha);
 				config.motion_strategy = input.tag.get_property("MOTION_STRATEGY", config.motion_strategy);
 				config.loop = input.tag.get_property("LOOP", config.loop);
 				config.pixels_per_second = input.tag.get_property("PIXELS_PER_SECOND", config.pixels_per_second);
@@ -2335,11 +2536,10 @@ void TitleMain::read_data(KeyFrame *keyframe)
 				config.x = input.tag.get_property("TITLE_X", config.x);
 				config.y = input.tag.get_property("TITLE_Y", config.y);
 				config.dropshadow = input.tag.get_property("DROPSHADOW", config.dropshadow);
+				config.outline_size = input.tag.get_property("OUTLINE_SIZE", config.outline_size);
 				config.timecode = input.tag.get_property("TIMECODE", config.timecode);
 				input.tag.get_property("TIMECODEFORMAT", config.timecodeformat);
 				strcpy(config.text, input.read_text());
-//printf("TitleMain::read_data 1\n%s\n", input.string);
-//printf("TitleMain::read_data 2\n%s\n", config.text);
 			}
 			else
 			if(input.tag.title_is("/TITLE"))

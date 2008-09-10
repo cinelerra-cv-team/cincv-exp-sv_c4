@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "channelpicker.h"
@@ -51,7 +72,7 @@ RecordMonitor::~RecordMonitor()
 	delete window;
 }
 
-int RecordMonitor::create_objects()
+void RecordMonitor::create_objects()
 {
 	int min_w = 150;
 	mwindow->session->rwindow_fullscreen = 0;
@@ -101,7 +122,6 @@ SET_TRACE
 SET_TRACE
 
 	Thread::start();
-	return 0;
 }
 
 
@@ -233,7 +253,7 @@ RecordMonitorGUI::~RecordMonitorGUI()
 #endif
 }
 
-int RecordMonitorGUI::create_objects()
+void RecordMonitorGUI::create_objects()
 {
 // y offset for video canvas if we have the transport controls
 	int do_channel = (mwindow->edl->session->vconfig_in->driver == VIDEO4LINUX ||
@@ -369,7 +389,6 @@ int RecordMonitorGUI::create_objects()
 			1);
 		meters->create_objects();
 	}
-	return 0;
 }
 
 int RecordMonitorGUI::button_press_event()
@@ -428,6 +447,7 @@ SET_TRACE
 int RecordMonitorGUI::keypress_event()
 {
 	int result = 0;
+
 	switch(get_keypress())
 	{
 		case LEFT:
@@ -481,14 +501,16 @@ int RecordMonitorGUI::keypress_event()
 		case 'w':
 			close_event();
 			break;
+
 		default:
-			result = canvas->keypress_event(this);
 #ifdef HAVE_FIREWIRE
+			if(canvas) result = canvas->keypress_event(this);
 			if(!result && avc1394_transport)
 				result = avc1394_transport->keypress_event(get_keypress());
 #endif
 			break;
 	}
+
 	return result;
 }
 

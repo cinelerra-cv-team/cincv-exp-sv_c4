@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "assets.h"
 #include "autoconf.h"
@@ -42,6 +63,7 @@ EDLSession::EDLSession(EDL *edl)
 	autos_follow_edits = 1; // this is needed for predictability
 	labels_follow_edits = 1;
 	plugins_follow_edits = 1;
+	single_standalone = 1;
 	audio_tracks = -10;	// these insane values let us crash early if something is forgotten to be set
 	audio_channels = -10;
 	video_tracks = -10;
@@ -162,6 +184,10 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	crop_x2 = defaults->get("CROP_X2", 320);
 	crop_y1 = defaults->get("CROP_Y1", 0);
 	crop_y2 = defaults->get("CROP_Y2", 240);
+	ruler_x1 = defaults->get("RULER_X1", 0.0);
+	ruler_x2 = defaults->get("RULER_X2", 0.0);
+	ruler_y1 = defaults->get("RULER_Y1", 0.0);
+	ruler_y2 = defaults->get("RULER_Y2", 0.0);
 	sprintf(current_folder, MEDIA_FOLDER);
 	defaults->get("CURRENT_FOLDER", current_folder);
 	cursor_on_frames = defaults->get("CURSOR_ON_FRAMES", 1);
@@ -191,6 +217,7 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	white_balance_raw = defaults->get("WHITE_BALANCE_RAW", white_balance_raw);
 	labels_follow_edits = defaults->get("LABELS_FOLLOW_EDITS", 1);
 	plugins_follow_edits = defaults->get("PLUGINS_FOLLOW_EDITS", 1);
+	single_standalone = defaults->get("SINGLE_STANDALONE", 1);
 	auto_keyframes = defaults->get("AUTO_KEYFRAMES", 0);
 	meter_format = defaults->get("METER_FORMAT", METER_DB);
 	min_meter_db = defaults->get("MIN_METER_DB", -85);
@@ -297,6 +324,10 @@ int EDLSession::save_defaults(BC_Hash *defaults)
 	defaults->update("CROP_X2", crop_x2);
 	defaults->update("CROP_Y1", crop_y1);
 	defaults->update("CROP_Y2", crop_y2);
+	defaults->update("RULER_X1", ruler_x1);
+	defaults->update("RULER_X2", ruler_x2);
+	defaults->update("RULER_Y1", ruler_y1);
+	defaults->update("RULER_Y2", ruler_y2);
 	defaults->update("CURRENT_FOLDER", current_folder);
 	defaults->update("CURSOR_ON_FRAMES", cursor_on_frames);
 	defaults->update("CWINDOW_DEST", cwindow_dest);
@@ -324,6 +355,7 @@ int EDLSession::save_defaults(BC_Hash *defaults)
     defaults->update("WHITE_BALANCE_RAW", white_balance_raw);
 	defaults->update("LABELS_FOLLOW_EDITS", labels_follow_edits);
 	defaults->update("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+	defaults->update("SINGLE_STANDALONE", single_standalone);
 	defaults->update("AUTO_KEYFRAMES", auto_keyframes);
     defaults->update("METER_FORMAT", meter_format);
     defaults->update("MIN_METER_DB", min_meter_db);
@@ -418,6 +450,10 @@ void EDLSession::boundaries()
 	Workarounds::clamp(crop_x2, 0, output_w);
 	Workarounds::clamp(crop_y1, 0, output_h);
 	Workarounds::clamp(crop_y2, 0, output_h);
+	Workarounds::clamp(ruler_x1, 0.0, output_w);
+	Workarounds::clamp(ruler_x2, 0.0, output_w);
+	Workarounds::clamp(ruler_y1, 0.0, output_h);
+	Workarounds::clamp(ruler_y2, 0.0, output_h);
 	if(brender_start < 0) brender_start = 0.0;
 
 	Workarounds::clamp(subtitle_number, 0, 31);
@@ -505,6 +541,10 @@ int EDLSession::load_xml(FileXML *file,
 		crop_y1 = file->tag.get_property("CROP_Y1", crop_y1);
 		crop_x2 = file->tag.get_property("CROP_X2", crop_x2);
 		crop_y2 = file->tag.get_property("CROP_Y2", crop_y2);
+		ruler_x1 = file->tag.get_property("RULER_X1", ruler_x1);
+		ruler_y1 = file->tag.get_property("RULER_Y1", ruler_y1);
+		ruler_x2 = file->tag.get_property("RULER_X2", ruler_x2);
+		ruler_y2 = file->tag.get_property("RULER_Y2", ruler_y2);
 		file->tag.get_property("CURRENT_FOLDER", current_folder);
 		cursor_on_frames = file->tag.get_property("CURSOR_ON_FRAMES", cursor_on_frames);
 		cwindow_dest = file->tag.get_property("CWINDOW_DEST", cwindow_dest);
@@ -524,6 +564,7 @@ int EDLSession::load_xml(FileXML *file,
 		labels_follow_edits = file->tag.get_property("LABELS_FOLLOW_EDITS", labels_follow_edits);
 		mpeg4_deblock = file->tag.get_property("MPEG4_DEBLOCK", mpeg4_deblock);
 		plugins_follow_edits = file->tag.get_property("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+		single_standalone = file->tag.get_property("SINGLE_STANDALONE", single_standalone);
 		playback_preload = file->tag.get_property("PLAYBACK_PRELOAD", playback_preload);
 		safe_regions = file->tag.get_property("SAFE_REGIONS", safe_regions);
 		show_assets = file->tag.get_property("SHOW_ASSETS", 1);
@@ -569,6 +610,10 @@ int EDLSession::save_xml(FileXML *file)
 	file->tag.set_property("CROP_Y1", crop_y1);
 	file->tag.set_property("CROP_X2", crop_x2);
 	file->tag.set_property("CROP_Y2", crop_y2);
+	file->tag.set_property("RULER_X1", ruler_x1);
+	file->tag.set_property("RULER_Y1", ruler_y1);
+	file->tag.set_property("RULER_X2", ruler_x2);
+	file->tag.set_property("RULER_Y2", ruler_y2);
 	file->tag.set_property("CURRENT_FOLDER", current_folder);
 	file->tag.set_property("CURSOR_ON_FRAMES", cursor_on_frames);
 	file->tag.set_property("CWINDOW_DEST", cwindow_dest);
@@ -588,6 +633,7 @@ int EDLSession::save_xml(FileXML *file)
 	file->tag.set_property("LABELS_FOLLOW_EDITS", labels_follow_edits);
 	file->tag.set_property("MPEG4_DEBLOCK", mpeg4_deblock);
 	file->tag.set_property("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+	file->tag.set_property("SINGLE_STANDALONE", single_standalone);
 	file->tag.set_property("PLAYBACK_PRELOAD", playback_preload);
 	file->tag.set_property("SAFE_REGIONS", safe_regions);
 	file->tag.set_property("SHOW_ASSETS", show_assets);
@@ -704,6 +750,10 @@ int EDLSession::copy(EDLSession *session)
 	crop_y1 = session->crop_y1;
 	crop_x2 = session->crop_x2;
 	crop_y2 = session->crop_y2;
+	ruler_x1 = session->ruler_x1;
+	ruler_y1 = session->ruler_y1;
+	ruler_x2 = session->ruler_x2;
+	ruler_y2 = session->ruler_y2;
 	strcpy(current_folder, session->current_folder);
 	cursor_on_frames = session->cursor_on_frames;
 	cwindow_dest = session->cwindow_dest;
@@ -731,6 +781,7 @@ int EDLSession::copy(EDLSession *session)
 	white_balance_raw = session->white_balance_raw;
 	labels_follow_edits = session->labels_follow_edits;
 	plugins_follow_edits = session->plugins_follow_edits;
+	single_standalone = session->single_standalone;
 	auto_keyframes = session->auto_keyframes;
 //	last_playback_position = session->last_playback_position;
 	meter_format = session->meter_format;

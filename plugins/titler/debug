@@ -1,0 +1,71 @@
+g++ -c `cat ../x86_64/c_flags`  title.C -o x86_64/title.o
+g++ -c `cat ../x86_64/c_flags`  titlewindow.C -o x86_64/titlewindow.o
+In file included from title.h:40,
+                 from titlewindow.h:13,
+                 from titlewindow.C:2:
+/usr/include/ft2build.h:56:38: error: freetype/config/ftheader.h: No such file or directory
+In file included from titlewindow.h:13,
+                 from titlewindow.C:2:
+title.h:41:10: error: #include expects "FILENAME" or <FILENAME>
+In file included from title.h:40,
+                 from title.C:17:
+/usr/include/ft2build.h:56:38: error: freetype/config/ftheader.h: No such file or directory
+In file included from title.C:17:
+title.h:41:10: error: #include expects "FILENAME" or <FILENAME>
+title.h:153: error: ‘FT_ULong’ does not name a type
+title.h:183: error: ‘FT_Library’ does not name a type
+title.h:184: error: ‘FT_Face’ does not name a type
+title.h:376: error: ‘FT_Library’ has not been declared
+title.h:377: error: ‘FT_Face’ has not been declared
+title.h:409: error: ‘FT_Library’ does not name a type
+title.h:410: error: ‘FT_Face’ does not name a type
+make: *** [x86_64/titlewindow.o] Error 1
+make: *** Waiting for unfinished jobs....
+title.h:153: error: ‘FT_ULong’ does not name a type
+title.h:183: error: ‘FT_Library’ does not name a type
+title.h:184: error: ‘FT_Face’ does not name a type
+title.h:376: error: ‘FT_Library’ has not been declared
+title.h:377: error: ‘FT_Face’ has not been declared
+title.h:409: error: ‘FT_Library’ does not name a type
+title.h:410: error: ‘FT_Face’ does not name a type
+title.C: In constructor ‘TitleGlyph::TitleGlyph()’:
+title.C:212: error: ‘char_code’ was not declared in this scope
+title.C: In constructor ‘GlyphUnit::GlyphUnit(TitleMain*, GlyphEngine*)’:
+title.C:247: error: ‘freetype_library’ was not declared in this scope
+title.C:248: error: ‘freetype_face’ was not declared in this scope
+title.C: In destructor ‘virtual GlyphUnit::~GlyphUnit()’:
+title.C:253: error: ‘freetype_library’ was not declared in this scope
+title.C:253: error: ‘FT_Done_FreeType’ was not declared in this scope
+title.C: In member function ‘virtual void GlyphUnit::process_package(LoadPackage*)’:
+title.C:262: error: ‘freetype_library’ was not declared in this scope
+title.C:267: error: ‘freetype_face’ was not declared in this scope
+title.C:275: error: ‘FT_Set_Pixel_Sizes’ was not declared in this scope
+title.C:282: error: ‘freetype_face’ was not declared in this scope
+title.C:282: error: ‘class TitleGlyph’ has no member named ‘char_code’
+title.C:282: error: ‘FT_LOAD_RENDER’ was not declared in this scope
+title.C:282: error: ‘FT_Load_Char’ was not declared in this scope
+title.C:306: error: ‘class TitleGlyph’ has no member named ‘char_code’
+title.C:306: error: ‘FT_Get_Char_Index’ was not declared in this scope
+title.C: In constructor ‘TitleMain::TitleMain(PluginServer*)’:
+title.C:918: error: ‘freetype_library’ was not declared in this scope
+title.C:919: error: ‘freetype_face’ was not declared in this scope
+title.C: In destructor ‘virtual TitleMain::~TitleMain()’:
+title.C:936: error: ‘freetype_library’ was not declared in this scope
+title.C:936: error: ‘FT_Done_FreeType’ was not declared in this scope
+title.C: In member function ‘void TitleMain::build_fonts()’:
+title.C:958: error: ‘FT_Library’ was not declared in this scope
+title.C:958: error: expected `;' before ‘freetype_library’
+title.C:959: error: ‘FT_Face’ was not declared in this scope
+title.C:959: error: expected `;' before ‘freetype_face’
+title.C:1206: error: ‘freetype_library’ was not declared in this scope
+title.C:1206: error: ‘FT_Done_FreeType’ was not declared in this scope
+title.C: At global scope:
+title.C:1216: error: ‘int TitleMain::load_freetype_face’ is not a static member of ‘class TitleMain’
+title.C:1216: error: ‘FT_Library’ was not declared in this scope
+title.C:1216: error: ‘freetype_library’ was not declared in this scope
+title.C:1217: error: ‘FT_Face’ was not declared in this scope
+title.C:1217: error: ‘freetype_face’ was not declared in this scope
+title.C:1218: error: expected primary-expression before ‘char’
+title.C:1218: error: initializer expression list treated as compound expression
+title.C:1219: error: expected ‘,’ or ‘;’ before ‘{’ token
+make: *** [x86_64/title.o] Error 1

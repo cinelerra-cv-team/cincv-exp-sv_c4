@@ -1,0 +1,22 @@
+include ../../global_config
+
+OBJS = $(OBJDIR)/title.o  \
+	$(OBJDIR)/titlewindow.o \
+	../colors/$(OBJDIR)/colorpicker.o \
+	../colors/$(OBJDIR)/plugincolors.o
+
+
+
+OUTPUT = ../$(OBJDIR)/titler.plugin
+CFLAGS += -I$(FREETYPE_DIR)/include -I../../thirdparty/
+LFLAGS += $(FREETYPE_DIR)/$(OBJDIR)/libfreetype.a
+
+include ../../plugin_config
+
+
+
+$(OBJDIR)/title.o: title.C
+$(OBJDIR)/titlewindow.o: titlewindow.C
+
+
+
