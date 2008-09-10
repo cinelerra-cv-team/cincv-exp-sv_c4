@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 /*
  * dv1394.h - DV input/output over IEEE 1394 on OHCI chips
  *   Copyright (C)2001 Daniel Maas <dmaas@dcine.com>
@@ -123,67 +144,6 @@
    frame 0. Then call DV1394_SUBMIT_FRAMES to inform the device that
    it may transmit the new frames.
 
-   ERROR HANDLING
-
-   An error (buffer underflow/overflow or a break in the DV stream due
-   to a 1394 bus reset) can be detected by checking the dropped_frames
-   field of struct dv1394_status (obtained through the
-   DV1394_GET_STATUS ioctl).
-
-   The best way to recover from such an error is to re-initialize
-   dv1394, either by using the DV1394_INIT ioctl call, or closing the
-   file descriptor and opening it again. (note that you must unmap all
-   ringbuffer mappings when closing the file descriptor, or else
-   dv1394 will still be considered 'in use').
-
-   MAIN LOOP
-
-   For maximum efficiency and robustness against bus errors, you are
-   advised to model the main loop of your application after the
-   following pseudo-code example:
-
-   (checks of system call return values omitted for brevity; always
-   check return values in your code!)
-   
-   while ( frames left ) {
-   
-    struct pollfd *pfd = ...;
-
-    pfd->fd = dv1394_fd;
-    pfd->revents = 0;
-    pfd->events = POLLOUT | POLLIN; (OUT for transmit, IN for receive)
-
-    (add other sources of I/O here)
-    
-    poll(pfd, 1, -1); (or select(); add a timeout if you want)
-
-    if (pfd->revents) {
-         struct dv1394_status status;
-	 
-         ioctl(dv1394_fd, DV1394_GET_STATUS, &status);
-
-	 if (status.dropped_frames > 0) {
-	      reset_dv1394();
-         } else {
-              for (int i = 0; i < status.n_clear_frames; i++) {
-	          copy_DV_frame();
-              }
-         }
-    }
-   }
-
-   where copy_DV_frame() reads or writes on the dv1394 file descriptor
-   (read/write mode) or copies data to/from the mmap ringbuffer and
-   then calls ioctl(DV1394_SUBMIT_FRAMES) to notify dv1394 that new
-   frames are availble (mmap mode).
-
-   reset_dv1394() is called in the event of a buffer
-   underflow/overflow or a halt in the DV stream (e.g. due to a 1394
-   bus reset). To guarantee recovery from the error, this function
-   should close the dv1394 file descriptor (and munmap() all
-   ringbuffer mappings, if you are using them), then re-open the
-   dv1394 device (and re-map the ringbuffer).
-   
 */
 
 
@@ -200,7 +160,48 @@
 
 
 /* ioctl() commands */
-#include "ieee1394-ioctl.h"
+
+enum {
+	/* I don't like using 0 as a valid ioctl() */
+	DV1394_INVALID = 0,
+
+
+	/* get the driver ready to transmit video.
+	   pass a struct dv1394_init* as the parameter (see below),
+	   or NULL to get default parameters */
+	DV1394_INIT,
+
+
+	/* stop transmitting video and free the ringbuffer */
+	DV1394_SHUTDOWN,
+
+
+	/* submit N new frames to be transmitted, where
+	   the index of the first new frame is first_clear_buffer,
+	   and the index of the last new frame is
+	   (first_clear_buffer + N) % n_frames */
+	DV1394_SUBMIT_FRAMES,
+
+
+	/* block until N buffers are clear (pass N as the parameter)
+	   Because we re-transmit the last frame on underrun, there
+	   will at most be n_frames - 1 clear frames at any time */
+	DV1394_WAIT_FRAMES,
+
+	/* capture new frames that have been received, where
+	   the index of the first new frame is first_clear_buffer,
+	   and the index of the last new frame is
+	   (first_clear_buffer + N) % n_frames */
+	DV1394_RECEIVE_FRAMES,
+
+
+	DV1394_START_RECEIVE,
+
+
+	/* pass a struct dv1394_status* as the parameter (see below) */
+	DV1394_GET_STATUS,
+};
+
 
 
 enum pal_or_ntsc {
@@ -238,13 +239,6 @@ struct dv1394_init {
 	unsigned int syt_offset;
 };
 
-/* NOTE: you may only allocate the DV frame ringbuffer once each time
-   you open the dv1394 device. DV1394_INIT will fail if you call it a
-   second time with different 'n_frames' or 'format' arguments (which
-   would imply a different size for the ringbuffer). If you need a
-   different buffer size, simply close and re-open the device, then
-   initialize it with your new settings. */
-   
 /* Q: What are cip_n and cip_d? */
 
 /*
@@ -289,9 +283,8 @@ struct dv1394_status {
 	   ready to be filled with data */
 	unsigned int n_clear_frames;
 
-	/* how many times the DV stream has underflowed, overflowed,
-	   or otherwise encountered an error, since the previous call
-	   to DV1394_GET_STATUS */
+	/* how many times the DV output has underflowed
+	   since the last call to DV1394_GET_STATUS */
 	unsigned int dropped_frames;
 
 	/* N.B. The dropped_frames counter is only a lower bound on the actual

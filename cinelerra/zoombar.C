@@ -1,3 +1,25 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
+#include "apatchgui.inc"
 #include "clip.h"
 #include "edl.h"
 #include "edlsession.h"
@@ -13,6 +35,7 @@
 #include "trackcanvas.h"
 #include "tracks.h"
 #include "units.h"
+#include "vpatchgui.inc"
 #include "zoombar.h"
 
 
@@ -36,7 +59,7 @@ ZoomBar::~ZoomBar()
 	delete track_zoom;
 }
 
-int ZoomBar::create_objects()
+void ZoomBar::create_objects()
 {
 	int x = 3;
 	int y = get_h() / 2 - 
@@ -59,14 +82,20 @@ int ZoomBar::create_objects()
 	track_zoom->create_objects();
 	x += track_zoom->get_w() + 10;
 
-#define DEFAULT_TEXT "000.00 to 000.00"
-	add_subwindow(auto_zoom_text = new ZoomTextBox(
+#define DEFAULT_TEXT "000.00 - 000.00"
+	add_subwindow(auto_zoom_popup = new AutoZoomPopup(
 		mwindow, 
 		this, 
 		x, 
 		y,
-		DEFAULT_TEXT));
-	x += auto_zoom_text->get_w() + 5;
+		get_text_width(MEDIUMFONT, DEFAULT_TEXT) + 20));
+	auto_zoom_popup->create_objects();
+	x += auto_zoom_popup->get_w() + 5;
+// 	add_subwindow(auto_zoom_text = new BC_Title(
+// 		x, 
+// 		get_h() / 2 - BC_Title::calculate_h(this, "0") / 2, 
+// 		DEFAULT_TEXT));
+// 	x += auto_zoom_text->get_w() + 5;
 	add_subwindow(auto_zoom = new AutoZoom(mwindow, this, x, y));
 	update_autozoom();
 	x += auto_zoom->get_w() + 5;
@@ -86,7 +115,6 @@ int ZoomBar::create_objects()
 
 	add_subwindow(zoom_value = new BC_Title(x, 100, _("--"), MEDIUMFONT, BLACK));
 	update();
-	return 0;
 }
 
 
@@ -134,10 +162,11 @@ int ZoomBar::draw()
 void ZoomBar::update_autozoom()
 {
 	char string[BCTEXTLEN];
-	sprintf(string, "%0.02f to %0.02f\n", 
+	sprintf(string, "%0.02f - %0.02f\n", 
 		mwindow->edl->local_session->automation_min, 
 		mwindow->edl->local_session->automation_max);
-	auto_zoom_text->update(string);
+//	auto_zoom_text->update(string);
+	auto_zoom_popup->set_text(string);
 }
 
 int ZoomBar::update()
@@ -388,26 +417,51 @@ int AutoZoom::handle_down_event()
 
 
 
-ZoomTextBox::ZoomTextBox(MWindow *mwindow, ZoomBar *zoombar, int x, int y, char *text)
- : BC_TextBox(x, y, 130, 1, text)
+
+
+
+
+AutoZoomPopup::AutoZoomPopup(MWindow *mwindow, 
+	ZoomBar *zoombar, 
+	int x, 
+	int y,
+	int w)
+ : BC_PopupMenu(x,
+ 	y,
+	w,
+	"",
+	1,
+	mwindow->theme->get_image_set("zoombar_menu", 0))
 {
 	this->mwindow = mwindow;
 	this->zoombar = zoombar;
 }
 
-int ZoomTextBox::handle_event()
+void AutoZoomPopup::create_objects()
 {
-	float min, max;
-	if (sscanf(this->get_text(),"%f to%f",&min, &max) == 2)
-		if (max > min) {
-			mwindow->edl->local_session->automation_min = min;
-			mwindow->edl->local_session->automation_max = max;
-			mwindow->gui->zoombar->update_autozoom();
-			mwindow->gui->canvas->draw_overlays();
-			mwindow->gui->canvas->flash();
-		}
-	return 0;
+	char string[BCTEXTLEN];
+
+	sprintf(string, "0 - %d", MAX_VIDEO_FADE);
+	add_item(new BC_MenuItem(string));
+
+	sprintf(string, "%d - %d", INFINITYGAIN, MAX_AUDIO_FADE);
+	add_item(new BC_MenuItem(string));
 }
+
+int AutoZoomPopup::handle_event()
+{
+	if(!strcmp(get_text(), get_item(0)->get_text()))
+		mwindow->zoom_autos(0, MAX_VIDEO_FADE);
+	else
+	if(!strcmp(get_text(), get_item(1)->get_text()))
+		mwindow->zoom_autos(INFINITYGAIN, MAX_AUDIO_FADE);
+	return 1;
+}
+
+
+
+
+
 
 
 
@@ -432,8 +486,6 @@ int FromTextBox::handle_event()
 
 int FromTextBox::update_position(double new_position)
 {
-	new_position += mwindow->edl->session->get_frame_offset() / 
-						 mwindow->edl->session->frame_rate;;
 	Units::totext(string, 
 		new_position, 
 		mwindow->edl->session->time_format, 
@@ -502,8 +554,6 @@ int ToTextBox::handle_event()
 
 int ToTextBox::update_position(double new_position)
 {
-	new_position += mwindow->edl->session->get_frame_offset() /
-						 mwindow->edl->session->frame_rate;
 	Units::totext(string, 
 		new_position, 
 		mwindow->edl->session->time_format, 

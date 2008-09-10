@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcbitmap.h"
 #include "bcipc.h"
 #include "bcresources.h"
@@ -607,12 +628,6 @@ int BC_Bitmap::read_frame(VFrame *frame,
 				bg_color,
 				frame->get_w(),
 				w);
-// color model transfer_*_to_TRANSPARENCY don't care about endianness
-// so buffer bitswaped here if needed.
-				if ((color_model == BC_TRANSPARENCY) && (!top_level->server_byte_order))
-					transparency_bitswap();
-
-
 //if(color_model == 6 && frame->get_color_model() == 19)
 //printf("BC_Bitmap::read_frame 2\n");
 			break;
@@ -753,58 +768,6 @@ int BC_Bitmap::hardware_scaling()
 int BC_Bitmap::get_w() { return w; }
 
 int BC_Bitmap::get_h() { return h; }
-
-char BC_Bitmap::byte_bitswap(char src) {
-	int i;
-	char dst;
-
-	dst = 0;
-	if (src & 1) dst |= ((unsigned char)1 << 7);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 6);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 5);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 4);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 3);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 2);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 1);
-	src = src >> 1;
-	if (src & 1) dst |= ((unsigned char)1 << 0);
-
-	return(dst);
-}
-
-void BC_Bitmap::transparency_bitswap() {
-	unsigned char *buf;
-	int i, width, height;
-	int len;
-
-	buf = *row_data[current_ringbuffer];
-
-	width = w;
-	height = h;
-	if (width % 8)
-		width = width + 8 - (width % 8);
-	len = width * height / 8;
-
-	for(i=0 ; i+8<=len ; i+=8){
-		buf[i+0] = byte_bitswap(buf[i+0]);
-		buf[i+1] = byte_bitswap(buf[i+1]);
-		buf[i+2] = byte_bitswap(buf[i+2]);
-		buf[i+3] = byte_bitswap(buf[i+3]);
-		buf[i+4] = byte_bitswap(buf[i+4]);
-		buf[i+5] = byte_bitswap(buf[i+5]);
-		buf[i+6] = byte_bitswap(buf[i+6]);
-		buf[i+7] = byte_bitswap(buf[i+7]);
-	}
-	for( ; i<len ; i++){
-		buf[i+0] = byte_bitswap(buf[i+0]);
-	}
-}
 
 int BC_Bitmap::get_color_model() { return color_model; }
 

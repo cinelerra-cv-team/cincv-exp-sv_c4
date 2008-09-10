@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "apatchgui.h"
 #include "automation.h"
 #include "floatauto.h"
@@ -128,7 +149,7 @@ int PatchBay::delete_all_patches()
     return 0;
 }
 
-int PatchBay::create_objects()
+void PatchBay::create_objects()
 {
 	draw_top_background(get_parent(), 0, 0, get_w(), get_h());
 	flash();
@@ -159,7 +180,6 @@ int PatchBay::create_objects()
 	add_subwindow(nudge_popup = new NudgePopup(mwindow, this));
 	nudge_popup->create_objects();
 
-	return 0;
 }
 
 BC_Pixmap* PatchBay::mode_to_icon(int mode)
@@ -190,36 +210,6 @@ int PatchBay::button_press_event()
 	int result = 0;
 // Too much junk to support the wheel
 	return result;
-}
-
-
-Track *PatchBay::is_over_track()     // called from mwindow
-{
-	int cursor_x = get_relative_cursor_x();
-	int cursor_y = get_relative_cursor_y();
-	Track *over_track = 0;
-
-	if(get_cursor_over_window() &&
-		cursor_x >= 0 && 
-		cursor_y >= 0 && 
-		cursor_x < get_w() && 
-		cursor_y < get_h())
-	{
-// Get track we're inside of
-		for(Track *track = mwindow->edl->tracks->first;
-			track;
-			track = track->next)
-		{
-			int y = track->y_pixel;
-			int h = track->vertical_span(mwindow->theme);
-			if(cursor_y >= y && cursor_y < y + h)
-			{	
-				over_track = track;
-			}
-		}
-	}				
-	return (over_track);
-
 }
 
 int PatchBay::cursor_motion_event()
@@ -297,11 +287,12 @@ int PatchBay::cursor_motion_event()
 							if(current->value != new_status)
 							{
 
+//								mwindow->undo->update_undo_before(_("keyframe"), this);
 								current = (IntAuto*)mute_autos->get_auto_for_editing(position);
 
 								current->value = new_status;
 
-								mwindow->undo->update_undo(_("keyframe"), LOAD_AUTOMATION);
+//								mwindow->undo->update_undo_after(_("keyframe"), LOAD_AUTOMATION);
 
 								mwindow->gui->unlock_window();
 								mwindow->restart_brender();

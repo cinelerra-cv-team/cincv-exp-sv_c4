@@ -1,4 +1,24 @@
-#include "asset.h"
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "automation.h"
 #include "bcsignals.h"
 #include "clip.h"
@@ -10,11 +30,12 @@
 #include "floatautos.h"
 #include "intauto.h"
 #include "intautos.h"
+#include "maskauto.h"
+#include "maskautos.h"
 #include "maskengine.h"
 #include "mwindow.h"
 #include "module.h"
 #include "overlayframe.h"
-#include "playabletracks.h"
 #include "plugin.h"
 #include "preferences.h"
 #include "renderengine.h"
@@ -48,11 +69,13 @@ VirtualVNode::VirtualVNode(RenderEngine *renderengine,
 {
 	VRender *vrender = ((VirtualVConsole*)vconsole)->vrender;
 	fader = new FadeEngine(renderengine->preferences->processors);
+	masker = new MaskEngine(renderengine->preferences->processors);
 }
 
 VirtualVNode::~VirtualVNode()
 {
 	delete fader;
+	delete masker;
 }
 
 VirtualNode* VirtualVNode::create_module(Plugin *real_plugin, 
@@ -252,14 +275,7 @@ int VirtualVNode::render_as_module(VFrame *video_out,
 				track->automation->autos[AUTOMATION_FADE],
 				direction);
 
-// Apply mask to output
-	((VModule *)real_module)->masker->do_mask(output_temp, 
-		start_position,
-		frame_rate,
-		edl_rate,
-		(MaskAutos*)track->automation->autos[AUTOMATION_MASK], 
-		direction,
-		0);      // we are not before plugins
+	render_mask(output_temp, start_position_project, use_opengl);
 
 
 // overlay on the final output
@@ -289,12 +305,6 @@ int VirtualVNode::render_as_module(VFrame *video_out,
 	output_temp->push_prev_effect("VirtualVNode::render_as_module");
 //printf("VirtualVNode::render_as_module\n");
 //output_temp->dump_stacks();
-
-	Edit *edit = 0;
-	if(renderengine->show_tc)
-		renderengine->vrender->insert_timecode(edit,
-			start_position,
-			output_temp);
 
 	return 0;
 }
@@ -344,6 +354,65 @@ int VirtualVNode::render_fade(VFrame *output,
 	return 0;
 }
 
+
+
+void VirtualVNode::render_mask(VFrame *output_temp,
+	int64_t start_position_project,
+	int use_opengl)
+{
+	MaskAutos *keyframe_set = 
+		(MaskAutos*)track->automation->autos[AUTOMATION_MASK];
+
+	Auto *current = 0;
+//	MaskAuto *default_auto = (MaskAuto*)keyframe_set->default_auto;
+	MaskAuto *keyframe = (MaskAuto*)keyframe_set->get_prev_auto(start_position_project, 
+		PLAY_FORWARD,
+		current);
+
+	int total_points = 0;
+	for(int i = 0; i < keyframe->masks.total; i++)
+	{
+		SubMask *mask = keyframe->get_submask(i);
+		int submask_points = mask->points.total;
+		if(submask_points > 1) total_points += submask_points;
+	}
+
+//printf("VirtualVNode::render_mask 1 %d %d\n", total_points, keyframe->value);
+// Ignore certain masks
+	if(total_points <= 2 || 
+		(keyframe->value == 0 && keyframe->mode == MASK_SUBTRACT_ALPHA))
+	{
+		return;
+	}
+
+// Fake certain masks
+	if(keyframe->value == 0 && keyframe->mode == MASK_MULTIPLY_ALPHA)
+	{
+		output_temp->clear_frame();
+		return;
+	}
+
+	if(((VirtualVConsole*)vconsole)->use_opengl)
+	{
+		((VDeviceX11*)((VirtualVConsole*)vconsole)->get_vdriver())->do_mask(
+			output_temp, 
+			start_position_project,
+			keyframe_set, 
+			keyframe,
+			keyframe);
+	}
+	else
+	{
+// Revert to software
+		masker->do_mask(output_temp, 
+			start_position_project,
+			keyframe_set, 
+			keyframe,
+			keyframe);
+	}
+}
+
+
 // Start of input fragment in project if forward.  End of input fragment if reverse.
 int VirtualVNode::render_projector(VFrame *input,
 			VFrame *output,
@@ -358,8 +427,8 @@ int VirtualVNode::render_projector(VFrame *input,
 		frame_rate);
 	VRender *vrender = ((VirtualVConsole*)vconsole)->vrender;
 	if(vconsole->debug_tree) 
-		printf("  VirtualVNode::render_projector input=%p output=%p title=%s\n", 
-			input, output, track->title);
+		printf("  VirtualVNode::render_projector input=%p output=%p cmodel=%d title=%s\n", 
+			input, output, output->get_color_model(), track->title);
 
 	if(output)
 	{

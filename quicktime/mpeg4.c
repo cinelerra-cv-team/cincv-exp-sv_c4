@@ -671,7 +671,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 
         	context->b_quant_factor = 1.25;
         	context->b_quant_offset = 1.25;
-			context->error_resilience = FF_ER_CAREFULL;
+			context->error_resilience = FF_ER_CAREFUL;
 			context->error_concealment = 3;
 			context->frame_skip_cmp = FF_CMP_DCTMAX;
 			context->ildct_cmp = FF_CMP_VSAD;
@@ -704,7 +704,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 			if(file->cpus > 1)
 			{
 				avcodec_thread_init(context, file->cpus);
-				context->thread_count = file->cpus;
+//				context->thread_count = file->cpus;
 			}
 
 			if(!codec->fix_bitrate)

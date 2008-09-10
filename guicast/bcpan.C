@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcpan.h"
 #include "bcpixmap.h"
 #include "bcpopup.h"
@@ -103,27 +124,10 @@ void BC_Pan::set_images(VFrame **data)
 
 int BC_Pan::button_press_event()
 {
-	// there are two modes of operation...
-	if (popup)
-	{	if (popup->is_event_win() && get_button_down() && get_buttonpress() == 1)
-		{ 
-			active = 1;
-			x_origin = popup->get_cursor_x();
-			y_origin = popup->get_cursor_y();
-			stick_x_origin = stick_x;
-			stick_y_origin = stick_y;
-			return 1;
-		} else
-		{
-			deactivate();
-			return 0;
-		}
-	}
-	if(is_event_win() && get_button_down() && get_buttonpress() == 1)
+	if(is_event_win() && get_buttonpress() == 1)
 	{
 		hide_tooltip();
 		activate();
-		active = 1;
 		x_origin = get_cursor_x();
 		y_origin = get_cursor_y();
 		stick_x_origin = stick_x;
@@ -136,7 +140,7 @@ int BC_Pan::button_press_event()
 
 int BC_Pan::cursor_motion_event()
 {
-	if(popup && get_button_down() && get_buttonpress() == 1)
+	if(active)
 	{
 		stick_x = stick_x_origin + get_cursor_x() - x_origin;
 		stick_y = stick_y_origin + get_cursor_y() - y_origin;
@@ -152,7 +156,7 @@ int BC_Pan::cursor_motion_event()
 
 int BC_Pan::button_release_event()
 {
-	if(popup)
+	if(active)
 	{
 		hide_tooltip();
 		deactivate();
@@ -209,15 +213,13 @@ int BC_Pan::deactivate()
 	return 0;
 }
 
-int BC_Pan::activate(int popup_x, int popup_y)
+int BC_Pan::activate()
 {
 	int x, y;
 	Window tempwin;
 
-	active = 0;
-	if (popup_x < 0 || popup_y < 0)
-	{
-		XTranslateCoordinates(top_level->display, 
+	active = 1;
+	XTranslateCoordinates(top_level->display, 
 			win, 
 			top_level->rootwin, 
 			0, 
@@ -226,26 +228,10 @@ int BC_Pan::activate(int popup_x, int popup_y)
 			&y, 
 			&tempwin);
 
-		x -= (images[PAN_POPUP]->get_w() - get_w()) / 2;
-		y -= (images[PAN_POPUP]->get_h() - get_h()) / 2;
-		if (x < 0) x = 0;
-	} else
-	{
-		XTranslateCoordinates(top_level->display, 
-			top_level->win, 
-			top_level->rootwin, 
-			popup_x, 
-			popup_y, 
-			&x, 
-			&y, 
-			&tempwin);
-		x -= images[PAN_POPUP]->get_w() / 2;
-		y -= images[PAN_POPUP]->get_h() / 2;
-		if (x < 0) x = 0;
-	}
-	
-	
-	if (popup) delete popup;
+	x -= (images[PAN_POPUP]->get_w() - get_w()) / 2;
+	y -= (images[PAN_POPUP]->get_h() - get_h()) / 2;
+	if (x < 0) x = 0;
+
 	popup = new BC_Popup(this, 
 				x, 
 				y, 
@@ -254,7 +240,6 @@ int BC_Pan::activate(int popup_x, int popup_y)
 				0, 
 				0, 
 				images[PAN_POPUP]);
-	draw_popup();
 	flush();
 	return 0;
 }

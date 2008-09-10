@@ -1,9 +1,29 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "edit.h"
 #include "file.h"
 #include "filejpeg.h"
-#include "interlacemodes.h"
 #include "jpegwrapper.h"
 #include "language.h"
 #include "libmjpeg.h"
@@ -199,8 +219,6 @@ int FileJPEG::read_frame_header(char *path)
 	asset->width = jpeg_decompress.image_width;
 	asset->height = jpeg_decompress.image_height;
 
-	asset->interlace_mode = BC_ILACE_MODE_NOTINTERLACED;
-
 	jpeg_destroy((j_common_ptr)&jpeg_decompress);
 	fclose(stream);
 	
@@ -226,7 +244,6 @@ int FileJPEG::read_frame(VFrame *output, VFrame *input)
 		output->get_v(),
 		output->get_color_model(),
 		1);
-
 
 	return 0;
 }
@@ -273,7 +290,7 @@ JPEGConfigVideo::~JPEGConfigVideo()
 {
 }
 
-int JPEGConfigVideo::create_objects()
+void JPEGConfigVideo::create_objects()
 {
 	int x = 10, y = 10;
 
@@ -291,7 +308,6 @@ int JPEGConfigVideo::create_objects()
 		&asset->jpeg_quality));
 
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 int JPEGConfigVideo::close_event()

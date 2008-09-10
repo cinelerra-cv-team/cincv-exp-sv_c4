@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "assets.h"
 #include "autoconf.h"
@@ -6,7 +27,6 @@
 #include "edl.h"
 #include "edlsession.h"
 #include "filexml.h"
-#include "interlacemodes.h"
 #include "overlayframe.inc"
 #include "playbackconfig.h"
 #include "recordconfig.h"
@@ -42,6 +62,7 @@ EDLSession::EDLSession(EDL *edl)
 	autos_follow_edits = 1; // this is needed for predictability
 	labels_follow_edits = 1;
 	plugins_follow_edits = 1;
+	single_standalone = 1;
 	audio_tracks = -10;	// these insane values let us crash early if something is forgotten to be set
 	audio_channels = -10;
 	video_tracks = -10;
@@ -55,7 +76,6 @@ EDLSession::EDLSession(EDL *edl)
 	output_h = -1000;
 	video_write_length = -1000;
 	color_model = -100;
-	interlace_mode = BC_ILACE_MODE_UNDETECTED;
 	record_speed = 24;
 	decode_subtitles = 0;
 	subtitle_number = 0;
@@ -156,15 +176,17 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	brender_start = defaults->get("BRENDER_START", brender_start);
 	cmodel_to_text(string, BC_RGBA8888);
 	color_model = cmodel_from_text(defaults->get("COLOR_MODEL", string));
-	ilacemode_to_xmltext(string, BC_ILACE_MODE_NOTINTERLACED);
-	interlace_mode = ilacemode_from_xmltext(defaults->get("INTERLACE_MODE",string), BC_ILACE_MODE_NOTINTERLACED);
 	crop_x1 = defaults->get("CROP_X1", 0);
 	crop_x2 = defaults->get("CROP_X2", 320);
 	crop_y1 = defaults->get("CROP_Y1", 0);
 	crop_y2 = defaults->get("CROP_Y2", 240);
+	ruler_x1 = defaults->get("RULER_X1", 0.0);
+	ruler_x2 = defaults->get("RULER_X2", 0.0);
+	ruler_y1 = defaults->get("RULER_Y1", 0.0);
+	ruler_y2 = defaults->get("RULER_Y2", 0.0);
 	sprintf(current_folder, MEDIA_FOLDER);
 	defaults->get("CURRENT_FOLDER", current_folder);
-	cursor_on_frames = defaults->get("CURSOR_ON_FRAMES", 1);
+	cursor_on_frames = defaults->get("CURSOR_ON_FRAMES", 0);
 	cwindow_dest = defaults->get("CWINDOW_DEST", 0);
 	cwindow_mask = defaults->get("CWINDOW_MASK", 0);
 	cwindow_meter = defaults->get("CWINDOW_METER", 1);
@@ -191,6 +213,7 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	white_balance_raw = defaults->get("WHITE_BALANCE_RAW", white_balance_raw);
 	labels_follow_edits = defaults->get("LABELS_FOLLOW_EDITS", 1);
 	plugins_follow_edits = defaults->get("PLUGINS_FOLLOW_EDITS", 1);
+	single_standalone = defaults->get("SINGLE_STANDALONE", 1);
 	auto_keyframes = defaults->get("AUTO_KEYFRAMES", 0);
 	meter_format = defaults->get("METER_FORMAT", METER_DB);
 	min_meter_db = defaults->get("MIN_METER_DB", -85);
@@ -220,18 +243,10 @@ int EDLSession::load_defaults(BC_Hash *defaults)
 	safe_regions = defaults->get("SAFE_REGIONS", 1);
 	sample_rate = defaults->get("SAMPLERATE", 48000);
 	scrub_speed = defaults->get("SCRUB_SPEED", (float)2);
-	si_useduration = defaults->get("SI_USEDURATION",0);
-	si_duration = defaults->get("SI_DURATION",5);
-	
 	show_assets = defaults->get("SHOW_ASSETS", 1);
 	show_titles = defaults->get("SHOW_TITLES", 1);
 //	test_playback_edits = defaults->get("TEST_PLAYBACK_EDITS", 1);
 	time_format = defaults->get("TIME_FORMAT", TIME_HMS);
-	for(int i = 0; i < 4; i++)
-	{
-		sprintf(string, "TIMECODE_OFFSET_%d", i);
-	   timecode_offset[i] = defaults->get(string, 0);
-	}
 	nudge_seconds = defaults->get("NUDGE_FORMAT", 1);
 	tool_window = defaults->get("TOOL_WINDOW", 0);
 	vconfig_in->load_defaults(defaults);
@@ -291,12 +306,14 @@ int EDLSession::save_defaults(BC_Hash *defaults)
 	defaults->update("BRENDER_START", brender_start);
 	cmodel_to_text(string, color_model);
 	defaults->update("COLOR_MODEL", string);
-	ilacemode_to_xmltext(string, interlace_mode);
-	defaults->update("INTERLACE_MODE", string);
 	defaults->update("CROP_X1", crop_x1);
 	defaults->update("CROP_X2", crop_x2);
 	defaults->update("CROP_Y1", crop_y1);
 	defaults->update("CROP_Y2", crop_y2);
+	defaults->update("RULER_X1", ruler_x1);
+	defaults->update("RULER_X2", ruler_x2);
+	defaults->update("RULER_Y1", ruler_y1);
+	defaults->update("RULER_Y2", ruler_y2);
 	defaults->update("CURRENT_FOLDER", current_folder);
 	defaults->update("CURSOR_ON_FRAMES", cursor_on_frames);
 	defaults->update("CWINDOW_DEST", cwindow_dest);
@@ -324,6 +341,7 @@ int EDLSession::save_defaults(BC_Hash *defaults)
     defaults->update("WHITE_BALANCE_RAW", white_balance_raw);
 	defaults->update("LABELS_FOLLOW_EDITS", labels_follow_edits);
 	defaults->update("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+	defaults->update("SINGLE_STANDALONE", single_standalone);
 	defaults->update("AUTO_KEYFRAMES", auto_keyframes);
     defaults->update("METER_FORMAT", meter_format);
     defaults->update("MIN_METER_DB", min_meter_db);
@@ -351,17 +369,10 @@ int EDLSession::save_defaults(BC_Hash *defaults)
 	defaults->update("SAFE_REGIONS", safe_regions);
 	defaults->update("SAMPLERATE", sample_rate);
     defaults->update("SCRUB_SPEED", scrub_speed);
-    	defaults->update("SI_USEDURATION",si_useduration);
-	defaults->update("SI_DURATION",si_duration);
 	defaults->update("SHOW_ASSETS", show_assets);
 	defaults->update("SHOW_TITLES", show_titles);
 //	defaults->update("TEST_PLAYBACK_EDITS", test_playback_edits);
 	defaults->update("TIME_FORMAT", time_format);
-	for(int i = 0; i < 4; i++)
-	{
-		sprintf(string, "TIMECODE_OFFSET_%d", i);
-	   defaults->update(string, timecode_offset[i]);
-	}
 	defaults->update("NUDGE_FORMAT", nudge_seconds);
 	defaults->update("TOOL_WINDOW", tool_window);
     vconfig_in->save_defaults(defaults);
@@ -418,6 +429,10 @@ void EDLSession::boundaries()
 	Workarounds::clamp(crop_x2, 0, output_w);
 	Workarounds::clamp(crop_y1, 0, output_h);
 	Workarounds::clamp(crop_y2, 0, output_h);
+	Workarounds::clamp(ruler_x1, 0.0, output_w);
+	Workarounds::clamp(ruler_x2, 0.0, output_w);
+	Workarounds::clamp(ruler_y1, 0.0, output_h);
+	Workarounds::clamp(ruler_y2, 0.0, output_h);
 	if(brender_start < 0) brender_start = 0.0;
 
 	Workarounds::clamp(subtitle_number, 0, 31);
@@ -441,7 +456,6 @@ int EDLSession::load_video_config(FileXML *file, int append_mode, uint32_t load_
 	white_balance_raw = file->tag.get_property("WHITE_BALANCE_RAW", white_balance_raw);
 	cmodel_to_text(string, color_model);
 	color_model = cmodel_from_text(file->tag.get_property("COLORMODEL", string));
-	interlace_mode = ilacemode_from_xmltext(file->tag.get_property("INTERLACE_MODE"), BC_ILACE_MODE_NOTINTERLACED);
 	video_channels = file->tag.get_property("CHANNELS", video_channels);
 	for(int i = 0; i < video_channels; i++)
 	{
@@ -505,6 +519,10 @@ int EDLSession::load_xml(FileXML *file,
 		crop_y1 = file->tag.get_property("CROP_Y1", crop_y1);
 		crop_x2 = file->tag.get_property("CROP_X2", crop_x2);
 		crop_y2 = file->tag.get_property("CROP_Y2", crop_y2);
+		ruler_x1 = file->tag.get_property("RULER_X1", ruler_x1);
+		ruler_y1 = file->tag.get_property("RULER_Y1", ruler_y1);
+		ruler_x2 = file->tag.get_property("RULER_X2", ruler_x2);
+		ruler_y2 = file->tag.get_property("RULER_Y2", ruler_y2);
 		file->tag.get_property("CURRENT_FOLDER", current_folder);
 		cursor_on_frames = file->tag.get_property("CURSOR_ON_FRAMES", cursor_on_frames);
 		cwindow_dest = file->tag.get_property("CWINDOW_DEST", cwindow_dest);
@@ -524,17 +542,13 @@ int EDLSession::load_xml(FileXML *file,
 		labels_follow_edits = file->tag.get_property("LABELS_FOLLOW_EDITS", labels_follow_edits);
 		mpeg4_deblock = file->tag.get_property("MPEG4_DEBLOCK", mpeg4_deblock);
 		plugins_follow_edits = file->tag.get_property("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+		single_standalone = file->tag.get_property("SINGLE_STANDALONE", single_standalone);
 		playback_preload = file->tag.get_property("PLAYBACK_PRELOAD", playback_preload);
 		safe_regions = file->tag.get_property("SAFE_REGIONS", safe_regions);
 		show_assets = file->tag.get_property("SHOW_ASSETS", 1);
 		show_titles = file->tag.get_property("SHOW_TITLES", 1);
 //		test_playback_edits = file->tag.get_property("TEST_PLAYBACK_EDITS", test_playback_edits);
 		time_format = file->tag.get_property("TIME_FORMAT", time_format);
-		for(int i = 0; i < 4; i++)
-		{
-			sprintf(string, "TIMECODE_OFFSET_%d", i);
-			timecode_offset[i] = file->tag.get_property(string, timecode_offset[i]);
-		}
 		nudge_seconds = file->tag.get_property("NUDGE_FORMAT", nudge_seconds);
 		tool_window = file->tag.get_property("TOOL_WINDOW", tool_window);
 		vwindow_meter = file->tag.get_property("VWINDOW_METER", vwindow_meter);
@@ -569,6 +583,10 @@ int EDLSession::save_xml(FileXML *file)
 	file->tag.set_property("CROP_Y1", crop_y1);
 	file->tag.set_property("CROP_X2", crop_x2);
 	file->tag.set_property("CROP_Y2", crop_y2);
+	file->tag.set_property("RULER_X1", ruler_x1);
+	file->tag.set_property("RULER_Y1", ruler_y1);
+	file->tag.set_property("RULER_X2", ruler_x2);
+	file->tag.set_property("RULER_Y2", ruler_y2);
 	file->tag.set_property("CURRENT_FOLDER", current_folder);
 	file->tag.set_property("CURSOR_ON_FRAMES", cursor_on_frames);
 	file->tag.set_property("CWINDOW_DEST", cwindow_dest);
@@ -588,17 +606,13 @@ int EDLSession::save_xml(FileXML *file)
 	file->tag.set_property("LABELS_FOLLOW_EDITS", labels_follow_edits);
 	file->tag.set_property("MPEG4_DEBLOCK", mpeg4_deblock);
 	file->tag.set_property("PLUGINS_FOLLOW_EDITS", plugins_follow_edits);
+	file->tag.set_property("SINGLE_STANDALONE", single_standalone);
 	file->tag.set_property("PLAYBACK_PRELOAD", playback_preload);
 	file->tag.set_property("SAFE_REGIONS", safe_regions);
 	file->tag.set_property("SHOW_ASSETS", show_assets);
 	file->tag.set_property("SHOW_TITLES", show_titles);
 	file->tag.set_property("TEST_PLAYBACK_EDITS", test_playback_edits);
 	file->tag.set_property("TIME_FORMAT", time_format);
-	for(int i = 0; i < 4; i++)
-	{
-		sprintf(string, "TIMECODE_OFFSET_%d", i);
-		file->tag.set_property(string, timecode_offset[i]);
-	}
 	file->tag.set_property("NUDGE_SECONDS", nudge_seconds);
 	file->tag.set_property("TOOL_WINDOW", tool_window);
 	file->tag.set_property("VWINDOW_METER", vwindow_meter);
@@ -612,8 +626,6 @@ int EDLSession::save_xml(FileXML *file)
 
 
 
-	file->append_tag();
-	file->tag.set_title("/SESSION");
 	file->append_tag();
 	file->append_newline();
 	file->append_newline();
@@ -630,8 +642,6 @@ int EDLSession::save_video_config(FileXML *file)
 	file->tag.set_property("WHITE_BALANCE_RAW", white_balance_raw);
 	cmodel_to_text(string, color_model);
 	file->tag.set_property("COLORMODEL", string);
-	ilacemode_to_xmltext(string, interlace_mode);
-	file->tag.set_property("INTERLACE_MODE",string);
     file->tag.set_property("CHANNELS", video_channels);
 	for(int i = 0; i < video_channels; i++)
 	{
@@ -647,8 +657,6 @@ int EDLSession::save_video_config(FileXML *file)
 	file->tag.set_property("OUTPUTH", output_h);
 	file->tag.set_property("ASPECTW", aspect_w);
 	file->tag.set_property("ASPECTH", aspect_h);
-	file->append_tag();
-	file->tag.set_title("/VIDEO");
 	file->append_tag();
 	file->append_newline();
 	file->append_newline();
@@ -668,8 +676,6 @@ int EDLSession::save_audio_config(FileXML *file)
 		file->tag.set_property(string, achannel_positions[i]);
 	}
 	
-	file->append_tag();
-	file->tag.set_title("/AUDIO");
 	file->append_tag();
 	file->append_newline();
 	file->append_newline();
@@ -699,11 +705,14 @@ int EDLSession::copy(EDLSession *session)
 	autos_follow_edits = session->autos_follow_edits;
 	brender_start = session->brender_start;
 	color_model = session->color_model;
-	interlace_mode = session->interlace_mode;
 	crop_x1 = session->crop_x1;
 	crop_y1 = session->crop_y1;
 	crop_x2 = session->crop_x2;
 	crop_y2 = session->crop_y2;
+	ruler_x1 = session->ruler_x1;
+	ruler_y1 = session->ruler_y1;
+	ruler_x2 = session->ruler_x2;
+	ruler_y2 = session->ruler_y2;
 	strcpy(current_folder, session->current_folder);
 	cursor_on_frames = session->cursor_on_frames;
 	cwindow_dest = session->cwindow_dest;
@@ -731,6 +740,7 @@ int EDLSession::copy(EDLSession *session)
 	white_balance_raw = session->white_balance_raw;
 	labels_follow_edits = session->labels_follow_edits;
 	plugins_follow_edits = session->plugins_follow_edits;
+	single_standalone = session->single_standalone;
 	auto_keyframes = session->auto_keyframes;
 //	last_playback_position = session->last_playback_position;
 	meter_format = session->meter_format;
@@ -756,16 +766,10 @@ int EDLSession::copy(EDLSession *session)
 	safe_regions = session->safe_regions;
 	sample_rate = session->sample_rate;
 	scrub_speed = session->scrub_speed;
-	si_useduration = session->si_useduration;
-	si_duration = session->si_duration;
 	show_assets = session->show_assets;
 	show_titles = session->show_titles;
 	test_playback_edits = session->test_playback_edits;
 	time_format = session->time_format;
-	for(int i = 0; i < 4; i++)
-	{
-		timecode_offset[i] = session->timecode_offset[i];
-	}
 	nudge_seconds = session->nudge_seconds;
 	tool_window = session->tool_window;
 	for(int i = 0; i < MAXCHANNELS; i++)
@@ -791,14 +795,6 @@ int EDLSession::copy(EDLSession *session)
 	return 0;
 }
 
-int64_t EDLSession::get_frame_offset()
-{
-	return int64_t((timecode_offset[3] * 3600 +
-				timecode_offset[2] * 60 +
-				timecode_offset[1]) *
-				frame_rate +
-				timecode_offset[0]);
-}
 
 void EDLSession::dump()
 {

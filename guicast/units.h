@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef UNITS_H
 #define UNITS_H
 
@@ -26,15 +47,6 @@
 #define TIME_FRAMES 4
 // fffff-ff
 #define TIME_FEET_FRAMES 5
-#define TIME_SECONDS__STR      "ssss.sss"
-#define TIME_HMS__STR          "h:mm:ss.sss"
-#define TIME_HMS2__STR         "h:mm:ss"
-#define TIME_HMS3__STR         "hh:mm:ss"
-#define TIME_HMSF__STR         "h:mm:ss:ff"
-#define TIME_SAMPLES__STR      "audio samples"
-#define TIME_SAMPLES_HEX__STR  "audio samples (hex)"
-#define TIME_FRAMES__STR       "video frames"
-#define TIME_FEET_FRAMES__STR  "video frames (feet)"
 
 class DB
 {
@@ -62,8 +74,6 @@ public:
 	static float *topower;
 	float db;
 	float infinitygain;
- private:
-	static float *allocated;
 };
 
 // Third octave frequency table
@@ -105,8 +115,6 @@ class Units
 public:
 	Units() {};
 
-	static int timeformat_totype(char *tcf);
-
 // No rounding.
 	static float toframes(int64_t samples, int sample_rate, float framerate);
 // Round up if > .5
@@ -121,7 +129,7 @@ public:
 
 // separator strings for BC_TextBox::set_separators
 // Returns 0 if the format has no separators.
-	static char* format_to_separators(int time_format);
+	static const char* format_to_separators(int time_format);
 
 	static int64_t tosamples(float frames, int sample_rate, float framerate);
 // give text representation as time

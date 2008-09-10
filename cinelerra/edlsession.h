@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef EDLSESSION_H
 #define EDLSESSION_H
 
@@ -44,9 +65,6 @@ public:
 	void equivalent_output(EDLSession *session, double *result);
 	void dump();
 
-// calculates the frame offset for programme timecode
-	int64_t get_frame_offset();
-
 // Audio
 	int achannel_positions[MAXCHANNELS];
 	AudioOutConfig *aconfig_duplex;
@@ -71,10 +89,11 @@ public:
 	double clipboard_length;
 // Colormodel for intermediate frames
 	int color_model;
-// Interlace Mode for entire project
-	int interlace_mode;
 // Coords for cropping operation
 	int crop_x1, crop_x2, crop_y1, crop_y2;
+	float ruler_x1, ruler_y1;
+	float ruler_x2, ruler_y2;
+// Ruler points relative to the output frame.
 // Current folder in resource window
 	char current_folder[BCTEXTLEN];
 // align cursor on frame boundaries
@@ -120,6 +139,9 @@ public:
 	int labels_follow_edits;
 	int mpeg4_deblock;
 	int plugins_follow_edits;
+// For main menu plugin attaching, 
+// attach 1 standalone on the first track and share it with other tracks
+	int single_standalone;
 	int meter_format;
 	int min_meter_db;
 	int max_meter_db;
@@ -147,9 +169,6 @@ public:
 	int safe_regions;
     int64_t sample_rate;
 	float scrub_speed;
-// Load files as a duration
-	int si_useduration;
-	float si_duration;
 // Show assets in track canvas
 	int show_assets;
 // Show titles in resources
@@ -158,8 +177,6 @@ public:
 	int test_playback_edits;
 // Format to display times in
 	int time_format;
-// Offset for timecode
-	int timecode_offset[4];
 // Format to display nudge in, either seconds or track units.
 	int nudge_seconds;
 // Show tool window in CWindow

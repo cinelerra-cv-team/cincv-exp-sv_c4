@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcsignals.h"
 #include "clip.h"
 #include "cplayback.h"
@@ -8,7 +29,6 @@
 #include "filexml.h"
 #include "fonts.h"
 #include "labels.h"
-#include "labeledit.h"
 #include "localsession.h"
 #include "maincursor.h"
 #include "mainundo.h"
@@ -48,7 +68,6 @@ LabelGUI::LabelGUI(MWindow *mwindow,
 	this->gui = 0;
 	this->pixel = pixel;
 	this->position = position;
-	this->label = 0;
 }
 
 LabelGUI::~LabelGUI()
@@ -70,18 +89,6 @@ int LabelGUI::translate_pixel(MWindow *mwindow, int pixel)
 void LabelGUI::reposition()
 {
 	reposition_window(translate_pixel(mwindow, pixel), BC_Toggle::get_y());
-}
-
-int LabelGUI::button_press_event()
-{
-	if (this->is_event_win() && get_buttonpress() == 3) {
-		if (label)
-			timebar->label_edit->edit_label(label);
-	} else {
-		BC_Toggle::button_press_event();
-	}
-	if (label)
-		set_tooltip(this->label->textstr);
 }
 
 int LabelGUI::handle_event()
@@ -173,25 +180,22 @@ TimeBar::TimeBar(MWindow *mwindow,
 //printf("TimeBar::TimeBar %d %d %d %d\n", x, y, w, h);
 	this->gui = gui;
 	this->mwindow = mwindow;
-	label_edit = new LabelEdit(mwindow, mwindow->awindow, 0);
 }
 
 TimeBar::~TimeBar()
 {
 	if(in_point) delete in_point;
 	if(out_point) delete out_point;
-	if(label_edit) delete label_edit;
 	labels.remove_all_objects();
 	presentations.remove_all_objects();
 }
 
-int TimeBar::create_objects()
+void TimeBar::create_objects()
 {
 	in_point = 0;
 	out_point = 0;
 	current_operation = TIMEBAR_NONE;
 	update();
-	return 0;
 }
 
 
@@ -228,8 +232,6 @@ void TimeBar::update_labels()
 							LabelGUI::get_y(mwindow, this), 
 							current->position));
 					new_label->set_cursor(ARROW_CURSOR);
-					new_label->set_tooltip(current->textstr);
-					new_label->label = current;
 					labels.append(new_label);
 				}
 				else
@@ -247,8 +249,6 @@ void TimeBar::update_labels()
 					}
 
 					labels.values[output]->position = current->position;
-					labels.values[output]->set_tooltip(current->textstr);
-					labels.values[output]->label = current;
 				}
 
 				if(edl->local_session->get_selectionstart(1) <= current->position &&
@@ -839,7 +839,6 @@ int TimeBar::button_release_event()
 	switch(current_operation)
 	{
 		case TIMEBAR_DRAG:
-			mwindow->undo->update_undo(_("select"), LOAD_SESSION, 0, 0);
 			mwindow->gui->canvas->stop_dragscroll();
 			current_operation = TIMEBAR_NONE;
 			result = 1;
@@ -923,7 +922,6 @@ int TimeBar::select_region(double position)
 	mwindow->gui->canvas->flash();
 	mwindow->gui->canvas->activate();
 	mwindow->gui->zoombar->update();
-	mwindow->undo->update_undo(_("select"), LOAD_SESSION, 0, 0);
 	update_highlights();
 	return 0;
 }

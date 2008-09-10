@@ -1,14 +1,31 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef ARRAYLIST_H
 #define ARRAYLIST_H
 
 // designed for lists of track numbers
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#define ARRAYLIST_REMOVEOBJECT_DELETE 0
-#define ARRAYLIST_REMOVEOBJECT_DELETEARRAY 1
-#define ARRAYLIST_REMOVEOBJECT_FREE 2
 
 template<class TYPE>
 class ArrayList
@@ -45,7 +62,8 @@ public:
 // Call this if the TYPE is a pointer to an array which must be
 // deleted by delete [].
 	void set_array_delete();
-	void set_free();
+	int size();
+	TYPE get(int number);
 
 	void sort();
 
@@ -54,7 +72,7 @@ public:
 
 private:
 	int available;
-	int removeobject_type;
+	int array_delete;
 };
 
 template<class TYPE>
@@ -62,7 +80,7 @@ ArrayList<TYPE>::ArrayList()
 {
 	total = 0;
 	available = 16;
-	removeobject_type = ARRAYLIST_REMOVEOBJECT_DELETE;
+	array_delete = 0;
 	values = new TYPE[available];
 }
 
@@ -78,15 +96,7 @@ ArrayList<TYPE>::~ArrayList()
 template<class TYPE>
 void ArrayList<TYPE>::set_array_delete()
 {
-    removeobject_type = ARRAYLIST_REMOVEOBJECT_DELETEARRAY;
-
-}
-
-template<class TYPE>
-void ArrayList<TYPE>::set_free()
-{
-    removeobject_type = ARRAYLIST_REMOVEOBJECT_FREE;
-
+    array_delete = 1;
 }
 
 
@@ -174,21 +184,10 @@ template<class TYPE>
 void ArrayList<TYPE>::remove_object(TYPE value)                   // remove value from anywhere in list
 {
 	remove(value);
-	switch (removeobject_type)
-	{
-		case ARRAYLIST_REMOVEOBJECT_DELETE:
-			delete value;
-			break;
-		case ARRAYLIST_REMOVEOBJECT_DELETEARRAY:
-			delete [] value;
-			break;
-		case ARRAYLIST_REMOVEOBJECT_FREE:
-			free(value);
-			break;
-		default:
-			printf("Unknown function to use to free array\n");
-			break;
-	}
+	if (array_delete) 
+		delete [] value;
+	else 
+		delete value;
 }
 
 template<class TYPE>
@@ -196,22 +195,10 @@ void ArrayList<TYPE>::remove_object_number(int number)
 {
 	if(number < total)
 	{
-		switch (removeobject_type)
-		{
-			case ARRAYLIST_REMOVEOBJECT_DELETE:
-				delete values[number];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_DELETEARRAY:
-				delete [] values[number];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_FREE:
-				free(values[number]);
-				break;
-			default:
-				printf("Unknown function to use to free array\n");
-				break;
-		}
-
+		if (array_delete) 
+			delete [] values[number];
+		else
+			delete values[number];
 		remove_number(number);
 	}
 	else
@@ -220,26 +207,14 @@ void ArrayList<TYPE>::remove_object_number(int number)
 
 
 template<class TYPE>
-void ArrayList<TYPE>::remove_object()                   // remove last object from array
+void ArrayList<TYPE>::remove_object()                   // remove value from anywhere in list
 {
 	if(total)
 	{
-		switch (removeobject_type)
-		{
-			case ARRAYLIST_REMOVEOBJECT_DELETE:
-				delete values[total - 1];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_DELETEARRAY:
-				delete [] values[total -1];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_FREE:
-				free(values[total - 1]);
-				break;
-			default:
-				printf("Unknown function to use to free array\n");
-				break;
-		}
-
+		if (array_delete) 
+			delete [] values[total - 1];
+		else 
+			delete values[total - 1];
 		remove();
 	}
 	else
@@ -276,21 +251,10 @@ void ArrayList<TYPE>::remove_all_objects()
 //printf("ArrayList<TYPE>::remove_all_objects 1 %d\n", total);
 	for(int i = 0; i < total; i++)
 	{
-		switch (removeobject_type)
-		{
-			case ARRAYLIST_REMOVEOBJECT_DELETE:
-				delete values[i];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_DELETEARRAY:
-				delete [] values[i];
-				break;
-			case ARRAYLIST_REMOVEOBJECT_FREE:
-				free(values[i]);
-				break;
-			default:
-				printf("Unknown function to use to free array\n");
-				break;
-		}
+		if(array_delete)
+			delete [] values[i];
+		else
+			delete values[i];
 	}
 	total = 0;
 }
@@ -333,6 +297,23 @@ int ArrayList<TYPE>::number_of(TYPE object)
 	}
 	return 0;
 }
+
+template<class TYPE>
+int ArrayList<TYPE>::size()
+{
+	return total;
+}
+
+template<class TYPE>
+TYPE ArrayList<TYPE>::get(int number)
+{
+	if(number < total) return values[number];
+	printf("ArrayList<TYPE>::get number=%d total=%d\n",
+		number,
+		total);
+	return 0;
+}
+
 
 
 #endif

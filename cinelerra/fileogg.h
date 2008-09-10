@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef FILEOGG_H
 #define FILEOGG_H
 
@@ -75,7 +96,6 @@ theoraframes_info_t;
 
 class FileOGG : public FileBase
 {
-friend class PackagingEngineOGG;
 public:
 	FileOGG(Asset *asset, File *file);
 	~FileOGG();
@@ -130,7 +150,6 @@ private:
 
 	int ogg_get_page_of_frame(sync_window_t *sw, long serialno, ogg_page *og, int64_t frame);
 	int ogg_seek_to_keyframe(sync_window_t *sw, long serialno, int64_t frame, int64_t *keyframe_number);
-	int ogg_seek_to_databegin(sync_window_t *sw, long serialno);
 
 
 	int64_t start_sample; // first and last sample inside this file
@@ -155,7 +174,6 @@ private:
 	int64_t ogg_frame_position;    // LAST decoded frame position
 	int64_t next_frame_position;   // what is the next sample read_frames must deliver
 	char theora_keyframe_granule_shift;
-	int final_write;
 };
 
 class OGGConfigAudio;
@@ -217,7 +235,7 @@ public:
 	OGGConfigAudio(BC_WindowBase *parent_window, Asset *asset);
 	~OGGConfigAudio();
 
-	int create_objects();
+	void create_objects();
 	int close_event();
 
 	Asset *asset;
@@ -285,7 +303,7 @@ public:
 	OGGConfigVideo(BC_WindowBase *parent_window, Asset *asset);
 	~OGGConfigVideo();
 
-	int create_objects();
+	void create_objects();
 	int close_event();
 
 	OGGTheoraFixedBitrate *fixed_bitrate;
@@ -293,45 +311,6 @@ public:
 	Asset *asset;
 private:
 	BC_WindowBase *parent_window;
-};
-
-class PackagingEngineOGG : public PackagingEngine
-{
-public:
-	PackagingEngineOGG();
-	~PackagingEngineOGG();
-	int create_packages_single_farm(
-		EDL *edl,
-		Preferences *preferences,
-		Asset *default_asset, 
-		double total_start, 
-		double total_end);
-	RenderPackage* get_package_single_farm(double frames_per_second, 
-		int client_number,
-		int use_local_rate);
-	int64_t get_progress_max();
-	void get_package_paths(ArrayList<char*> *path_list);
-	int packages_are_done();
-
-private:
-	EDL *edl;
-
-	RenderPackage **packages;
-	int total_packages;
-	double video_package_len;    // Target length of a single package
-
-	Asset *default_asset;
-	Preferences *preferences;
-	int current_package;
-	double total_start;
-	double total_end;
-	int64_t audio_position;
-	int64_t video_position;
-	int64_t audio_start;
-	int64_t video_start;
-	int64_t audio_end;
-	int64_t video_end;
-
 };
 
 

@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef FILE_H
 #define FILE_H
 
@@ -11,7 +32,6 @@
 #include "filethread.inc"
 #include "filexml.inc"
 #include "formatwindow.inc"
-#include "formattools.h"
 #include "framecache.inc"
 #include "guicast.h"
 #include "mutex.inc"
@@ -19,7 +39,6 @@
 #include "preferences.inc"
 #include "resample.inc"
 #include "vframe.inc"
-#include "packagingengine.h"
 
 // ======================================= include file types here
 
@@ -34,9 +53,12 @@ public:
 
 // Get attributes for various file formats.
 // The dither parameter is carried over from recording, where dither is done at the device.
-	int get_options(FormatTools *format, 
+	int get_options(BC_WindowBase *parent_window, 
+		ArrayList<PluginServer*> *plugindb, 
+		Asset *asset,
 		int audio_options,
-		int video_options);
+		int video_options,
+		char *locked_compressor);
 
 	int raise_window();
 // Close parameter window
@@ -146,7 +168,7 @@ public:
 // is the length in floats from the offset.
 // advances file pointer
 // return 1 if failed
-	int read_samples(double *buffer, int64_t len, int64_t base_samplerate, float *buffer_float = 0);
+	int read_samples(double *buffer, int64_t len, int64_t base_samplerate);
 
 
 // set layer for video read
@@ -190,17 +212,17 @@ public:
 	static int supports_video(ArrayList<PluginServer*> *plugindb, char *format);   // returns 1 if the format supports video or audio
 	static int supports_audio(ArrayList<PluginServer*> *plugindb, char *format);
 // Get the extension for the filename
-	static char* get_tag(int format);
+	static const char* get_tag(int format);
 	static int supports_video(int format);   // returns 1 if the format supports video or audio
 	static int supports_audio(int format);
 	static int strtoformat(char *format);
-	static char* formattostr(int format);
+	static const char* formattostr(int format);
 	static int strtoformat(ArrayList<PluginServer*> *plugindb, char *format);
-	static char* formattostr(ArrayList<PluginServer*> *plugindb, int format);
+	static const char* formattostr(ArrayList<PluginServer*> *plugindb, int format);
 	static int strtobits(char *bits);
-	static char* bitstostr(int bits);
+	static const char* bitstostr(int bits);
 	static int str_to_byteorder(char *string);
-	static char* byteorder_to_str(int byte_order);
+	static const char* byteorder_to_str(int byte_order);
 	int bytes_per_sample(int bits); // Convert the bit descriptor into a byte count.
 
 	Asset *asset;    // Copy of asset since File outlives EDL
@@ -213,7 +235,6 @@ public:
 
 // Resampling engine
 	Resample *resample;
-	Resample_float *resample_float;
 
 // Lock writes while recording video and audio.
 // A binary lock won't do.  We need a FIFO lock.
@@ -233,19 +254,18 @@ public:
 	int current_channel;
 	int current_layer;
 
-// Position information normalized
+// Position information normalized to project rates
 	int64_t normalized_sample;
 	int64_t normalized_sample_rate;
 	Preferences *preferences;
 
-	static PackagingEngine *new_packaging_engine(Asset *asset);
 
 private:
 	void reset_parameters();
 
 	int getting_options;
 	BC_WindowBase *format_window;
-	Mutex *format_completion;
+	Condition *format_completion;
 	FrameCache *frame_cache;
 // Copy read frames to the cache
 	int use_cache;

@@ -1,5 +1,0 @@
-?package(cinelerra):needs="X11" section="Apps/Graphics"\
-  title="Cinelerra"\
-  icon="/usr/share/pixmaps/cinelerra.xpm"\
-  command="/usr/bin/cinelerra"\
-  hints="advanced,video"

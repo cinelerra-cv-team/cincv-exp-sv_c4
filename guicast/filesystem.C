@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include <dirent.h>
 #include <errno.h>
 #include <pwd.h>
@@ -76,6 +97,23 @@ int FileItem::set_name(char *name)
 	return 0;
 }
 
+const char* FileItem::get_path()
+{
+	return path;
+}
+
+const char* FileItem::get_name()
+{
+	return name;
+}
+
+
+int FileItem::get_is_dir()
+{
+	return is_dir;
+}
+
+
 
 FileSystem::FileSystem()
 {
@@ -120,32 +158,6 @@ int FileSystem::set_sort_field(int field)
 	this->sort_field = field;
 }
 
-// filename.with.dots.extension
-//   becomes
-// extension.dots.with.filename
-
-int FileSystem::dot_reverse_filename(char *out, const char *in)
-{
-	int i, i2, j=0, lastdot;
-	lastdot = strlen(in);
-	for (i = strlen(in); i >= 0; i--){
-
-	if (in[i] == '.') { 
-		i2 = i+1;
-		while (i2 < lastdot) 
-			out[j++] = in[i2++];
-		out[j++] = in[i];
-		lastdot = i;
-		}
-	}
-	i++;
-	if (in[i] != '.') {
-		while (i < lastdot) out[j++] = in[i++];
-	}
-	out[j++] = '\0';
-	return 0;
-}
-
 int FileSystem::compare_items(ArrayList<FileItem*> *dir_list, 
 	int item1, 
 	int item2)
@@ -157,8 +169,6 @@ int FileSystem::compare_items(ArrayList<FileItem*> *dir_list,
 // Default to name in ascending order
 	switch(sort_field)
 	{
-		char dotreversedname1[BCTEXTLEN], dotreversedname2[BCTEXTLEN];
-
 		case SORT_PATH:
 			result = (sort_order == SORT_ASCENDING) ? 
 				strcasecmp(ptr1->name, ptr2->name) :
@@ -179,14 +189,6 @@ int FileSystem::compare_items(ArrayList<FileItem*> *dir_list,
 				result = (sort_order == SORT_ASCENDING) ?
 					(ptr1->calendar_time > ptr2->calendar_time) :
 					(ptr2->calendar_time > ptr1->calendar_time);
-			break;
-		case SORT_EXTENSION:
-			dot_reverse_filename(dotreversedname1,ptr1->name);
-			dot_reverse_filename(dotreversedname2,ptr2->name);
-
-			result = (sort_order == SORT_ASCENDING) ? 
-			strcasecmp(dotreversedname1, dotreversedname2) :
-			strcasecmp(dotreversedname2, dotreversedname1);
 			break;
 	}
 	return result;
@@ -369,7 +371,7 @@ int FileSystem::test_filter(FileItem *file)
 }
 
 
-int FileSystem::update(char *new_dir)
+int FileSystem::update(const char *new_dir)
 {
 	DIR *dirstream;
 	struct dirent64 *new_filename;
@@ -396,7 +398,9 @@ int FileSystem::update(char *new_dir)
 			!strcmp(new_filename->d_name, "..")) include_this = 0;
 
 // File is hidden and we don't want all files
-		if(include_this && !show_all_files && new_filename->d_name[0] == '.') include_this = 0;
+		if(include_this && 
+			!show_all_files && 
+			new_filename->d_name[0] == '.') include_this = 0;
 
 // file not hidden
   		if(include_this)
@@ -464,7 +468,7 @@ int FileSystem::update(char *new_dir)
 // success
 }
 
-int FileSystem::set_filter(char *new_filter)
+int FileSystem::set_filter(const char *new_filter)
 {
 	strcpy(filter, new_filter);
 	return 0;
@@ -497,7 +501,7 @@ int FileSystem::is_dir(const char *path)      // return 0 if the text is a direc
 		return 0;
 }
 
-int FileSystem::create_dir(char *new_dir_)
+int FileSystem::create_dir(const char *new_dir_)
 {
 	char new_dir[BCTEXTLEN];
 	strcpy(new_dir, new_dir_);
@@ -696,7 +700,7 @@ int FileSystem::extract_name(char *out, const char *in, int test_dir)
 	return 0;
 }
 
-int FileSystem::join_names(char *out, char *dir_in, char *name_in)
+int FileSystem::join_names(char *out, const char *dir_in, const char *name_in)
 {
 	strcpy(out, dir_in);
 	int len = strlen(out);
@@ -745,7 +749,7 @@ int FileSystem::change_dir(char *new_dir)
 	return 0;
 }
 
-int FileSystem::set_current_dir(char *new_dir)
+int FileSystem::set_current_dir(const char *new_dir)
 {
 	strcpy(current_dir, new_dir);
 	return 0;

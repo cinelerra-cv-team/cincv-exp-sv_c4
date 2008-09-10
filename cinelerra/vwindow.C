@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "assets.h"
 #include "clipedit.h"
@@ -58,7 +79,7 @@ void VWindow::load_defaults()
 {
 }
 
-int VWindow::create_objects()
+void VWindow::create_objects()
 {
 //printf("VWindow::create_objects 1\n");
 	gui = new VWindowGUI(mwindow, this);
@@ -80,7 +101,6 @@ int VWindow::create_objects()
 //printf("VWindow::create_objects 2\n");
 
 	clip_edit = new ClipEdit(mwindow, 0, this);
-	return 0;
 }
 
 void VWindow::run()
@@ -104,7 +124,7 @@ void VWindow::change_source()
 //printf("VWindow::change_source() 1 %p\n", mwindow->edl->vwindow_edl);
 	if(mwindow->edl->vwindow_edl)
 	{
-		gui->change_source(get_edl(), get_edl()->local_session->clip_title);
+		gui->change_source(get_edl(), "");
 		update_position(CHANGE_ALL, 1, 1);
 	}
 	else
@@ -278,7 +298,6 @@ void VWindow::update_position(int change_type,
 	EDL *edl = get_edl();
 	if(edl)
 	{
-		Asset *asset = edl->assets->first;
 		if(use_slider) 
 		{
 			edl->local_session->set_selectionstart(gui->slider->get_value());
@@ -295,9 +314,7 @@ void VWindow::update_position(int change_type,
 			edl,
 			1);
 
-		gui->clock->update(edl->local_session->get_selectionstart(1) +
-			asset->tcstart / 
-			(asset->video_data ? asset->frame_rate : asset->sample_rate));
+		gui->clock->update(edl->local_session->get_selectionstart(1));
 	}
 }
 

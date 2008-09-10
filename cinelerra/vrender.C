@@ -1,14 +1,33 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "cache.h"
-#include "clip.h"
 #include "condition.h"
 #include "datatype.h"
 #include "edits.h"
 #include "edl.h"
 #include "edlsession.h"
 #include "file.h"
-#include "interlacemodes.h"
 #include "localsession.h"
 #include "mainsession.h"
 #include "mwindow.h"
@@ -43,6 +62,14 @@ VRender::VRender(RenderEngine *renderengine)
 	transition_temp = 0;
 	overlayer = new OverlayFrame(renderengine->preferences->processors);
 	input_temp = 0;
+	input_length = 0;
+	vmodule_render_fragment = 0;
+	playback_buffer = 0;
+	session_frame = 0;
+	asynchronous = 0;     // render 1 frame at a time
+	framerate_counter = 0;
+	video_out = 0;
+	render_strategy = -1;
 }
 
 VRender::~VRender()
@@ -70,7 +97,10 @@ Module* VRender::new_module(Track *track)
 
 int VRender::flash_output()
 {
-	return renderengine->video->write_buffer(video_out, renderengine->edl);
+	if(video_out)
+		return renderengine->video->write_buffer(video_out, renderengine->edl);
+	else
+		return 0;
 }
 
 int VRender::process_buffer(VFrame *video_out, 
@@ -100,7 +130,6 @@ int VRender::process_buffer(VFrame *video_out,
 
 int VRender::process_buffer(int64_t input_position)
 {
-SET_TRACE
 	Edit *playable_edit = 0;
 	int colormodel;
 	int use_vconsole = 1;
@@ -109,8 +138,8 @@ SET_TRACE
 	int use_cache = renderengine->command->single_frame();
 	int use_asynchronous = 
 		renderengine->command->realtime && 
+		renderengine->edl->session->video_every_frame &&
 		renderengine->edl->session->video_asynchronous;
-SET_TRACE
 
 // Determine the rendering strategy for this frame.
 	use_vconsole = get_use_vconsole(playable_edit, 
@@ -120,9 +149,14 @@ SET_TRACE
 // Negotiate color model
 	colormodel = get_colormodel(playable_edit, use_vconsole, use_brender);
 
+
+
+
 // Get output buffer from device
 	if(renderengine->command->realtime)
+	{
 		renderengine->video->new_output_buffer(&video_out, colormodel);
+	}
 
 
 // printf("VRender::process_buffer use_vconsole=%d colormodel=%d video_out=%p\n", 
@@ -135,7 +169,6 @@ SET_TRACE
 
 		if(use_brender)
 		{
-SET_TRACE
 			Asset *asset = renderengine->preferences->brender_asset;
 			File *file = renderengine->get_vcache()->check_out(asset,
 				renderengine->edl);
@@ -157,7 +190,6 @@ SET_TRACE
 				if(use_cache) file->set_cache_frames(0);
 				renderengine->get_vcache()->check_in(asset);
 			}
-SET_TRACE
 		}
 		else
 		if(playable_edit)
@@ -169,11 +201,7 @@ SET_TRACE
 				1,
 				use_cache,
 				use_asynchronous);
-/* Insert timecode */
-			if(renderengine->show_tc)
-				insert_timecode(playable_edit,
-					input_position,
-					video_out);
+
 		}
 	}
 	else
@@ -228,104 +256,10 @@ int VRender::get_use_vconsole(Edit* &playable_edit,
 		playable_edit->asset->height != renderengine->edl->session->output_h)
 		return 1;
 
-// Asset and output device must have same resulting de-interlacing method
-	if (ilaceautofixmethod2(renderengine->edl->session->interlace_mode, 
-				playable_edit->asset->interlace_autofixoption,
-				playable_edit->asset->interlace_mode,
-				playable_edit->asset->interlace_fixmethod) 
-	    != BC_ILACE_FIXMETHOD_NONE)
-		return 1;
-
 // If we get here the frame is going to be directly copied.  Whether it is
 // decompressed in hardware depends on the colormodel.
 	return 0;
 }
-
-
-int VRender::insert_timecode(Edit* &playable_edit,
-			int64_t position,
-			VFrame *output)
-{
-	EDLSession *session = renderengine->edl->session;
-	/* Create a vframe with TC and SRC timecode in white
-	 * with a black border */
-	VFrame *input = new VFrame(0,
-								output->get_w(),
-								MIN(output->get_h(), 50),
-								output->get_color_model(),
-								output->get_bytes_per_line());
-	char etc[12];
-	char srctc[12];
-	int src_position = 0;
-
-TRACE("VRender::insert_timecode 10")
-
-	/* Edited TC */
-	Units::totext(etc,
-		(renderengine->vrender->current_position +
-			session->get_frame_offset()) / session->frame_rate,
-		session->time_format,
-		session->sample_rate,
-		session->frame_rate,
-		session->frames_per_foot);
-
-TRACE("VRender::insert_timecode 20")
-
-	if(playable_edit)
-	{
-TRACE("VRender::insert_timecode 30")
-		src_position = renderengine->vrender->current_position -
-			playable_edit->startproject +
-			playable_edit->startsource +
-			playable_edit->asset->tcstart;
-TRACE("VRender::insert_timecode 40")
-		Units::totext(srctc,
-			src_position / playable_edit->asset->frame_rate,
-			session->time_format,
-			session->sample_rate,
-			playable_edit->asset->frame_rate,
-			session->frames_per_foot);
-	}
-	else
-	{
-TRACE("VRender::insert_timecode 50")
-		Units::totext(srctc,
-			0.0,
-//			(renderengine->vrender->current_position - position) / session->frame_rate,
-			session->time_format,
-			session->sample_rate,
-			session->frame_rate,
-			session->frames_per_foot);
-	}
-TRACE("VRender::insert_timecode 60")
-
-//printf("re position %i position %i\n", 
-//	renderengine->vrender->current_position, position);
-//printf("SRC %s   TC %s\n", srctc, etc);
-
-	/* Insert the timecode data onto the input frame */
-	
-	
-
-/*
-	vrender->overlayer->overlay(output, 
-		input,
-		input->x, 
-		input->y, 
-		input->width, 
-		input->height,
-		output->x, 
-		output->y, 
-		output->width, 
-		output->height, 
-		1,
-		TRANSFER_REPLACE, 
-		renderengine->edl->session->interpolation_type);
-*/
-	delete(input);
-UNTRACE
-}
-
 
 int VRender::get_colormodel(Edit* &playable_edit, 
 	int use_vconsole,
@@ -396,6 +330,7 @@ void VRender::run()
 	start_lock->unlock();
 
 
+
 	while(!done && 
 		!renderengine->video->interrupt && 
 		!last_playback)
@@ -409,11 +344,10 @@ void VRender::run()
 			current_input_length,
 			last_playback);
 
+
 		if(reconfigure) restart_playback();
 
-SET_TRACE
 		process_buffer(current_position);
-SET_TRACE
 
 		if(renderengine->command->single_frame())
 		{
@@ -424,7 +358,6 @@ SET_TRACE
 		else
 // Perform synchronization
 		{
-SET_TRACE
 // Determine the delay until the frame needs to be shown.
 			current_sample = (int64_t)(renderengine->sync_position() * 
 				renderengine->command->get_speed());
@@ -436,14 +369,11 @@ SET_TRACE
 			start_sample = Units::tosamples(session_frame - 1, 
 				renderengine->edl->session->sample_rate, 
 				renderengine->edl->session->frame_rate);
-SET_TRACE
 
 			if(first_frame || end_sample < current_sample)
 			{
-SET_TRACE
 // Frame rendered late or this is the first frame.  Flash it now.
 				flash_output();
-SET_TRACE
 
 				if(renderengine->edl->session->video_every_frame)
 				{
@@ -474,7 +404,6 @@ SET_TRACE
 			{
 // Frame rendered early or just in time.
 				frame_step = 1;
-SET_TRACE
 
 				if(delay_countdown > 0)
 				{
@@ -486,13 +415,10 @@ SET_TRACE
 					skip_countdown = VRENDER_THRESHOLD;
 					if(start_sample > current_sample)
 					{
-SET_TRACE
 						int64_t delay_time = (int64_t)((float)(start_sample - current_sample) * 
 							1000 / 
 							renderengine->edl->session->sample_rate);
-SET_TRACE
 						timer.delay(delay_time);
-SET_TRACE
 					}
 					else
 					{
@@ -501,9 +427,7 @@ SET_TRACE
 				}
 
 // Flash frame now.
-SET_TRACE
 				flash_output();
-SET_TRACE
 			}
 		}
 
@@ -552,63 +476,11 @@ SET_TRACE
 		}
 	}
 
-SET_TRACE
+
 // In case we were interrupted before the first loop
 	renderengine->first_frame_lock->unlock();
 	stop_plugins();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-VRender::VRender(MWindow *mwindow, RenderEngine *renderengine)
- : CommonRender(mwindow, renderengine)
-{
-	input_length = 0;
-	vmodule_render_fragment = 0;
-	playback_buffer = 0;
-	session_frame = 0;
-	asynchronous = 0;     // render 1 frame at a time
-	framerate_counter = 0;
-	video_out = 0;
-	render_strategy = -1;
-}
-
-int VRender::init_device_buffers()
-{
-// allocate output buffer if there is a video device
-	if(renderengine->video)
-	{
-		video_out = 0;
-		render_strategy = -1;
-	}
-}
-
-int VRender::get_datatype()
-{
-	return TRACK_VIDEO;
-}
-
 
 int VRender::start_playback()
 {
@@ -619,16 +491,6 @@ int VRender::start_playback()
 		start();
 	}
 }
-
-int VRender::wait_for_startup()
-{
-}
-
-
-
-
-
-
 
 int64_t VRender::tounits(double position, int round)
 {
@@ -642,3 +504,28 @@ double VRender::fromunits(int64_t position)
 {
 	return (double)position / renderengine->edl->session->frame_rate;
 }
+
+int VRender::get_datatype()
+{
+	return TRACK_VIDEO;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

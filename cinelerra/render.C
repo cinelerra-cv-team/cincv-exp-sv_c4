@@ -1,8 +1,30 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "arender.h"
 #include "asset.h"
 #include "auto.h"
 #include "batchrender.h"
 #include "bcprogressbox.h"
+#include "bcsignals.h"
 #include "cache.h"
 #include "clip.h"
 #include "compresspopup.h"
@@ -242,18 +264,12 @@ void Render::start_interactive()
 	}
 	else
 	{
-		// raise the window if rendering hasn't started yet
-		if (render_window && ! in_progress) {
-			render_window->raise_window();
-		}
-		else {
-			ErrorBox error_box(PROGRAM_NAME ": Error",
-					   mwindow->gui->get_abs_cursor_x(1),
-					   mwindow->gui->get_abs_cursor_y(1));
-			error_box.create_objects("Already rendering");
-			error_box.raise_window();
-			error_box.run_window();
-		}
+		ErrorBox error_box(PROGRAM_NAME ": Error",
+			mwindow->gui->get_abs_cursor_x(1),
+			mwindow->gui->get_abs_cursor_y(1));
+		error_box.create_objects("Already rendering");
+		error_box.raise_window();
+		error_box.run_window();
 	}
 }
 
@@ -309,65 +325,61 @@ void Render::stop_operation()
 void Render::run()
 {
 	int format_error;
-
+	const int debug = 0;
 
 	result = 0;
 
 	if(mode == Render::INTERACTIVE)
 	{
 // Fix the asset for rendering
-printf("Render::run 1\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 		Asset *asset = new Asset;
 		load_defaults(asset);
-printf("Render::run 2\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 		check_asset(mwindow->edl, *asset);
-printf("Render::run 3\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 
 // Get format from user
 		if(!result)
 		{
-printf("Render::run 4\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 			do
 			{
 				format_error = 0;
 				result = 0;
 
 				{
-printf("Render::run 5\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 					RenderWindow window(mwindow, this, asset);
-printf("Render::run 6\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 					window.create_objects();
-printf("Render::run 7\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 					result = window.run_window();
-printf("Render::run 8\n");
-					if (! result) {
-						// add to recentlist only on OK
-						window.format_tools->path_recent->add_item(FILE_FORMAT_PREFIX(asset->format), asset->path);
-					}
+if(debug) printf("Render::run %d\n%", __LINE__);
 				}
 
 				if(!result)
 				{
-printf("Render::run 8.1\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 // Check the asset format for errors.
 					FormatCheck format_check(asset);
-printf("Render::run 8.2\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 					format_error = format_check.check_format();
-printf("Render::run 8.3\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 				}
 			}while(format_error && !result);
 		}
-printf("Render::run 9\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 
 		save_defaults(asset);
 		mwindow->save_defaults();
-printf("Render::run 10\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 
 		if(!result) render(1, asset, mwindow->edl, strategy);
-printf("Render::run 11\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 
 		Garbage::delete_object(asset);
-printf("Render::run 12\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 	}
 	else
 	if(mode == Render::BATCH)
@@ -395,7 +407,6 @@ printf("Render::run 12\n");
 					plugindb = mwindow->plugindb;
 				edl->load_xml(plugindb, file, LOAD_ALL);
 
-				check_asset(edl, *job->asset);
 				render(0, job->asset, edl, job->strategy);
 
 				delete edl;
@@ -431,7 +442,7 @@ printf("Render::run 12\n");
 			mwindow->batch_render->update_done(-1, 0, 0);
 		}
 	}
-printf("Render::run 100\n");
+if(debug) printf("Render::run %d\n%", __LINE__);
 }
 
 
@@ -446,20 +457,11 @@ int Render::check_asset(EDL *edl, Asset &asset)
 		asset.layers = 1;
 		asset.width = edl->session->output_w;
 		asset.height = edl->session->output_h;
-		asset.interlace_mode = edl->session->interlace_mode;
-		asset.tcstart = (int64_t) (edl->session->get_frame_offset() +
-			edl->local_session->get_selectionstart() *
-				edl->session->frame_rate);
-		asset.tcend = (int64_t) (edl->session->get_frame_offset() +
-			edl->local_session->get_selectionend() *
-				edl->session->frame_rate);
 	}
 	else
 	{
 		asset.video_data = 0;
 		asset.layers = 0;
-		asset.tcstart = 0;
-		asset.tcend = 0;
 	}
 
 	if(asset.audio_data && 
@@ -469,19 +471,11 @@ int Render::check_asset(EDL *edl, Asset &asset)
 		asset.audio_data = 1;
 		asset.channels = edl->session->audio_channels;
 		if(asset.format == FILE_MOV) asset.byte_order = 0;
-		asset.tcstart = (int64_t) (edl->session->get_frame_offset() +
-			edl->local_session->get_selectionstart() *
-				edl->session->sample_rate);
-		asset.tcend = (int64_t) (edl->session->get_frame_offset() +
-			edl->local_session->get_selectionend() *
-				edl->session->sample_rate);
 	}
 	else
 	{
 		asset.audio_data = 0;
 		asset.channels = 0;
-		asset.tcstart = 0;
-		asset.tcend = 0;
 	}
 
 	if(!asset.audio_data &&
@@ -519,8 +513,11 @@ void Render::start_progress()
 	char string[BCTEXTLEN];
 	FileSystem fs;
 
-	progress_max = packages->get_progress_max();
-
+	progress_max = Units::to_int64(default_asset->sample_rate * 
+			(total_end - total_start)) +
+		Units::to_int64(preferences->render_preroll * 
+			packages->total_allocated * 
+			default_asset->sample_rate);
 	progress_timer->update();
 	last_eta = 0;
 	if(mwindow)
@@ -795,7 +792,6 @@ printf("Render::run: Session finished.\n");
 		if(strategy == SINGLE_PASS_FARM || strategy == FILE_PER_LABEL_FARM)
 		{
 			farm_server->wait_clients();
-			result |= packages->packages_are_done();
 		}
 
 printf("Render::render 90\n");
@@ -819,11 +815,12 @@ printf("Render::render 90\n");
 				printf("Render::render: Error rendering data\n");
 			}
 		}
+printf("Render::render 91\n");
 
 // Delete the progress box
 		stop_progress();
 
-//printf("Render::render 100\n");
+printf("Render::render 100\n");
 
 
 
@@ -840,6 +837,7 @@ printf("Render::render 90\n");
 	{
 		mwindow->gui->lock_window("Render::render 3");
 
+		mwindow->undo->update_undo_before();
 
 
 
@@ -857,7 +855,7 @@ printf("Render::render 90\n");
 
 
 		mwindow->save_backup();
-		mwindow->undo->update_undo(_("render"), LOAD_ALL);
+		mwindow->undo->update_undo_after(_("render"), LOAD_ALL);
 		mwindow->update_plugin_guis();
 		mwindow->gui->update(1, 
 			2,
@@ -870,6 +868,7 @@ printf("Render::render 90\n");
 		mwindow->gui->unlock_window();
 	}
 
+printf("Render::render 110\n");
 
 // Disable hourglass
 	if(mwindow)
@@ -892,7 +891,7 @@ printf("Render::render 90\n");
 	delete packages;
 	in_progress = 0;
 	completion->unlock();
-//printf("Render::render 120\n");
+printf("Render::render 120\n");
 
 	return result;
 }
@@ -1043,15 +1042,19 @@ RenderWindow::RenderWindow(MWindow *mwindow, Render *render, Asset *asset)
 
 RenderWindow::~RenderWindow()
 {
+//printf("RenderWindow::~RenderWindow %d\n", __LINE__);
 	delete format_tools;
+//sleep(1);
+//printf("RenderWindow::~RenderWindow %d\n", __LINE__);
 	delete loadmode;
+//printf("RenderWindow::~RenderWindow %d\n", __LINE__);
 }
 
 
 
-int RenderWindow::create_objects()
+void RenderWindow::create_objects()
 {
-	int x = 5, y = 5;
+	int x = 10, y = 5;
 	add_subwindow(new BC_Title(x, 
 		y, 
 		(char*)((render->strategy == FILE_PER_LABEL || 
@@ -1082,5 +1085,4 @@ int RenderWindow::create_objects()
 	add_subwindow(new BC_OKButton(this));
 	add_subwindow(new BC_CancelButton(this));
 	show_window();
-	return 0;
 }

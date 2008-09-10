@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "aedit.h"
 #include "asset.h"
 #include "assets.h"
@@ -20,18 +41,11 @@
 
 #include <string.h>
 
-Edits::Edits(EDL *edl, Track *track, Edit *default_edit)
+Edits::Edits(EDL *edl, Track *track)
  : List<Edit>()
 {
 	this->edl = edl;
 	this->track = track;
-
-	List<Edit>::List<Edit>();
-	default_edit->track = track;
-	default_edit->startproject = 0;
-	default_edit->length = LAST_VIRTUAL_LENGTH;
-	insert_after(0, default_edit);
-	loaded_length = 0;
 }
 
 Edits::~Edits()
@@ -52,7 +66,7 @@ void Edits::equivalent_output(Edits *edits, int64_t *result)
 //printf("Edits::equivalent_output 1 %d\n", *result);
 		if(!current && that_current)
 		{
-			int64_t position1 = length();
+			int64_t position1 = (last ? last->startproject + last->length : 0);
 			int64_t position2 = that_current->startproject;
 			if(*result < 0 || *result > MIN(position1, position2))
 				*result = MIN(position1, position2);
@@ -61,7 +75,7 @@ void Edits::equivalent_output(Edits *edits, int64_t *result)
 		else
 		if(current && !that_current)
 		{
-			int64_t position1 = edits->length();
+			int64_t position1 = (edits->last ? edits->last->startproject + edits->last->length : 0);
 			int64_t position2 = current->startproject;
 			if(*result < 0 || *result > MIN(position1, position2))
 				*result = MIN(position1, position2);
@@ -84,7 +98,6 @@ void Edits::copy_from(Edits *edits)
 		Edit *new_edit = append(create_edit());
 		new_edit->copy_from(current);
 	}
-	loaded_length = edits->loaded_length;
 }
 
 
@@ -121,13 +134,22 @@ void Edits::insert_asset(Asset *asset,
 	}
 }
 
-void Edits::insert_edits(Edits *source_edits, int64_t position)
+void Edits::insert_edits(Edits *source_edits, 
+	int64_t position,
+	int64_t min_length)
 {
-	int64_t clipboard_length = 
-		track->to_units(source_edits->edl->local_session->clipboard_length, 1);
-	int64_t clipboard_end = position + clipboard_length;
+	int64_t clipboard_end = position + min_length;
+// Length pasted so far
+	int64_t source_len = 0;
 
-	int64_t total_length = 0;
+// Fill region between end of edit table and beginning of pasted segment
+// with silence.  Can't call from insert_new_edit because it's recursive.
+	if(position > length())
+	{
+		paste_silence(length(), position);
+	}
+
+
 	for(Edit *source_edit = source_edits->first;
 		source_edit;
 		source_edit = source_edit->next)
@@ -148,11 +170,6 @@ void Edits::insert_edits(Edits *source_edits, int64_t position)
 		dest_edit->shift_keyframes(position);
 
 
-		total_length += dest_edit->length;
-		if (source_edits->loaded_length && total_length > source_edits->loaded_length)
-		{
-			dest_edit->length -= (total_length - source_edits->loaded_length);
-		}
 
 // Shift following edits and keyframes in following edits by length
 // in current source edit.
@@ -163,14 +180,18 @@ void Edits::insert_edits(Edits *source_edits, int64_t position)
 			future_edit->startproject += dest_edit->length;
 			future_edit->shift_keyframes(dest_edit->length);
 		}
+		
+		source_len += source_edit->length;
+	}
 
-// Fill clipboard length with silence
-		if(!source_edit->next && 
-			dest_edit->startproject + dest_edit->length < clipboard_end)
-		{
-			paste_silence(dest_edit->startproject + dest_edit->length,
-				clipboard_end);
-		}
+
+
+
+// Fill remaining clipboard length with silence
+	if(source_len < min_length)
+	{
+//printf("Edits::insert_edits %d\n", __LINE__);
+		paste_silence(position + source_len, position + min_length);
 	}
 }
 
@@ -181,19 +202,13 @@ Edit* Edits::insert_new_edit(int64_t position)
 {
 	Edit *current = 0;
 //printf("Edits::insert_new_edit 1\n");
-	Edit *new_edit;
 	current = split_edit(position);
+	if(current) current = PREVIOUS;
 
 //printf("Edits::insert_new_edit 1\n");
-	if (current->length == 0) // when creating a split we got 0-length edit, just use it!
-		new_edit = current;
-	else      // we need to insert 
-	{
-		current = PREVIOUS;
-		new_edit = create_edit();
-		insert_after(current, new_edit);
-	}
+	Edit *new_edit = create_edit();
 //printf("Edits::insert_new_edit 1\n");
+	insert_after(current, new_edit);
 	new_edit->startproject = position;
 //printf("Edits::insert_new_edit 2\n");
 	return new_edit;
@@ -204,64 +219,40 @@ Edit* Edits::split_edit(int64_t position)
 {
 // Get edit containing position
 	Edit *edit = editof(position, PLAY_FORWARD, 0);
-// No edit found, make one - except when we are at zero position!
-	if(!edit && position != 0)
-		if (length() == position)
-		{
-			edit = last; // we do not need any edit to extend past the last one
-		} else
-		if (!last || length() < position)
-		{
 
-			// Even when track is completely empty or split is beyond last edit, return correct edit
-			Edit *empty = create_edit();
-			if (last)
-				empty->startproject = length(); // end of last edit
-			else
-				empty->startproject = 0; // empty track
-			empty->length = position - empty->startproject;
-			insert_after(last, empty);
-			edit = empty;
-		} else
-		{  // now we are now surely in situation where we have a) broken edit list or b) negative position... report error!
-			printf("ERROR!\n");       
-			printf("Trying to insert edit at position, but failed: %lli\n", position);
-			printf("Dump is here:\n");
-			track->dump();
-			return 0;
-		}	
+// No edit found
+	if(!edit)
+	{
+		return 0;
+	}
 // Split would have created a 0 length
 //	if(edit->startproject == position) return edit;
 // Create anyway so the return value comes before position
 
 	Edit *new_edit = create_edit();
 	insert_after(edit, new_edit);
-	if (edit)  // if we have actually split the edit, do the funky stuff!
-	{
-		new_edit->copy_from(edit);
-		new_edit->length = new_edit->startproject + new_edit->length - position;
-		edit->length = position - edit->startproject;
-		new_edit->startsource += edit->length;
+	new_edit->copy_from(edit);
+	new_edit->length = new_edit->startproject + new_edit->length - position;
+	edit->length = position - edit->startproject;
+	new_edit->startproject = edit->startproject + edit->length;
+	new_edit->startsource += edit->length;
 
 
 // Decide what to do with the transition
-		if(edit->length && edit->transition)
-		{
-			delete new_edit->transition;
-			new_edit->transition = 0;
-		}
+	if(edit->length && edit->transition)
+	{
+		delete new_edit->transition;
+		new_edit->transition = 0;
+	}
 
-		if(edit->transition && edit->transition->length > edit->length) 
-			edit->transition->length = edit->length;
-		if(new_edit->transition && new_edit->transition->length > new_edit->length)
-			new_edit->transition->length = new_edit->length;
-	} else
-		new_edit->length = 0;
-	new_edit->startproject = position;
+	if(edit->transition && edit->transition->length > edit->length) 
+		edit->transition->length = edit->length;
+	if(new_edit->transition && new_edit->transition->length > new_edit->length)
+		new_edit->transition->length = new_edit->length;
 	return new_edit;
 }
 
-int Edits::save(FileXML *xml, char *output_path)
+int Edits::save(FileXML *xml, const char *output_path)
 {
 	copy(0, length(), xml, output_path);
 	return 0;
@@ -363,18 +354,11 @@ int Edits::optimize()
 
 // delete 0 length edits
 		for(current = first; 
-			current != last && !result; )
+			current && !result; )
 		{
 			if(current->length == 0)
 			{
 				Edit* next = current->next;
-				// Be smart with transitions!
-				if (next && current->transition && !next->transition)
-				{
-					next->transition = current->transition;
-					next->transition->edit = next;
-					current->transition = 0;
-				}
 				delete current;
 				result = 1;
 				current = next;
@@ -406,20 +390,13 @@ int Edits::optimize()
 		}
 
 // delete last edit of 0 length or silence
-	}
-	if (!last || !last->silence())
-	{
-// No last empty edit available... create one
-		Edit *empty_edit = create_edit();
-		if (!last) 
-			empty_edit->startproject = 0;
-		else
-			empty_edit->startproject = last->startproject + last->length;
-		empty_edit->length = LAST_VIRTUAL_LENGTH;
-		insert_after(last, empty_edit);
-	} else
-	{
-		last->length = LAST_VIRTUAL_LENGTH;
+		if(last && 
+			(last->silence() || 
+			!last->length))
+		{
+			delete last;
+			result = 1;
+		}
 	}
 
 //track->dump();
@@ -451,8 +428,7 @@ int Edits::load(FileXML *file, int track_offset)
 {
 	int result = 0;
 	int64_t startproject = 0;
-	while (last) 
-		delete last;
+
 	do{
 		result = file->read_tag();
 
@@ -471,10 +447,6 @@ int Edits::load(FileXML *file, int track_offset)
 		}
 	}while(!result);
 
-	if (last)
-		loaded_length = last->startproject + last->length;
-	else 
-		loaded_length = 0;
 //track->dump();
 	optimize();
 }
@@ -503,7 +475,7 @@ int Edits::load_edit(FileXML *file, int64_t &startproject, int track_offset)
 		{
 			if(file->tag.title_is("FILE"))
 			{
-				char filename[1024];
+				char filename[BCTEXTLEN];
 				sprintf(filename, SILENCE);
 				file->tag.get_property("SRC", filename);
 // Extend path
@@ -568,6 +540,17 @@ int64_t Edits::length()
 	else 
 		return 0;
 }
+// 
+// int64_t Edits::total_length() 
+// {
+// 	int64_t total = 0;
+// 	Edit* current;
+// 	for(current = first; current; current = NEXT)
+// 	{
+// 		total += current->length;
+// 	}
+// 	return total; 
+// };
 
 Edit* Edits::editof(int64_t position, int direction, int use_nudge)
 {
@@ -622,7 +605,7 @@ Edit* Edits::get_playable_edit(int64_t position, int use_nudge)
 
 
 
-int Edits::copy(int64_t start, int64_t end, FileXML *file, char *output_path)
+int Edits::copy(int64_t start, int64_t end, FileXML *file, const char *output_path)
 {
 	Edit *current_edit;
 
@@ -762,8 +745,7 @@ int Edits::clear_handle(double start,
 // Lengthen effects
 					if(edit_plugins)
 						track->shift_effects(current_edit->next->startproject, 
-							length,
-							0);
+							length);
 
 					for(current_edit = current_edit->next; current_edit; current_edit = current_edit->next)
 					{
@@ -887,37 +869,8 @@ int Edits::modify_handles(double oldposition,
 }
 
 
-// Paste silence should not return anything - since pasting silence to an empty track should produce no edits
-// If we need rutine to create new edit by pushing others forward, write new rutine and call it properly
-// This are two distinctive functions
-// This rutine leaves edits in optimized state!
-void Edits::paste_silence(int64_t start, int64_t end)
-{
-	// paste silence does not do anything if 
-	// a) paste silence is on empty track
-	// b) paste silence is after last edit
-	// in both cases editof returns NULL
-	Edit *new_edit = editof(start, PLAY_FORWARD, 0);
-	if (!new_edit) return;
-
-	if (!new_edit->asset)
-	{ // in this case we extend already existing edit
-		new_edit->length += end - start;
-	} else
-	{ // we are in fact creating a new edit
-		new_edit = insert_new_edit(start);
-		new_edit->length = end - start;
-	}
-	for(Edit *current = new_edit->next; current; current = NEXT)
-	{
-		current->startproject += end - start;
-	}
-	return;
-}
-
 // Used by other editing commands so don't optimize
-// This is separate from paste_silence, since it has to wrok also on empty tracks/beyond end of track
-Edit *Edits::create_and_insert_edit(int64_t start, int64_t end)
+Edit* Edits::paste_silence(int64_t start, int64_t end)
 {
 	Edit *new_edit = insert_new_edit(start);
 	new_edit->length = end - start;
@@ -947,11 +900,11 @@ Edit* Edits::shift(int64_t position, int64_t difference)
 
 void Edits::shift_keyframes_recursive(int64_t position, int64_t length)
 {
-	track->shift_keyframes(position, length, 0);
+	track->shift_keyframes(position, length);
 }
 
 void Edits::shift_effects_recursive(int64_t position, int64_t length)
 {
-	track->shift_effects(position, length, 0);
+	track->shift_effects(position, length);
 }
 

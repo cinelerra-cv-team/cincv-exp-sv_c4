@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "attachmentpoint.h"
 #include "bcsignals.h"
 #include "commonrender.h"
@@ -227,7 +248,7 @@ void Module::update_transition(int64_t current_position,
 	transition = track->get_current_transition(current_position,
 		direction,
 		0,
-		0); // position is already nudged in amodule.C and vmodule.C before calling update_transition!
+		0);
 
 // For situations where we had a transition but not anymore, 
 // keep the server open.

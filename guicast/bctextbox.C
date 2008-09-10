@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcclipboard.h"
 #include "bclistboxitem.h"
 #include "bcresources.h"
@@ -23,7 +44,7 @@ BC_TextBox::BC_TextBox(int x,
 	int y, 
 	int w, 
 	int rows, 
-	char *text, 
+	const char *text, 
 	int has_border, 
 	int font)
  : BC_SubWindow(x, y, w, 0, -1)
@@ -174,7 +195,7 @@ void BC_TextBox::set_selection(int char1, int char2, int ibeam)
 	draw();
 }
 
-int BC_TextBox::update(char *text)
+int BC_TextBox::update(const char *text)
 {
 //printf("BC_TextBox::update 1 %d %s %s\n", strcmp(text, this->text), text, this->text);
 	int text_len = strlen(text);
@@ -314,10 +335,10 @@ void BC_TextBox::draw_border()
 	{
 		if(highlighted)
 			draw_3d_border(0, 0, w, h,
-				resources->button_shadow, 
-				resources->button_uphighlighted,
-			        resources->button_highlighted,
-			        resources->button_light);
+				resources->text_border1, 
+				resources->text_border2_hi, 
+				resources->text_border3_hi,
+				resources->text_border4);
 		else
 			draw_3d_border(0, 0, w, h, 
 				resources->text_border1, 
@@ -676,34 +697,6 @@ void BC_TextBox::default_keypress(int &dispatch_event, int &result)
 	}
 }
 
-int BC_TextBox::select_whole_text(int select)
-{
-	if (select == 1) 
-	{
-		highlight_letter1 = 0;
-		highlight_letter2 = strlen(text);
-		text_selected = word_selected = 0;	
-		ibeam_letter = highlight_letter1;
-		find_ibeam(1);
-		if(keypress_draw) draw();
-	} else
-	if (select == -1)
-	{
-		ibeam_letter = strlen(text);
-		highlight_letter1 = ibeam_letter;
-		highlight_letter2 = ibeam_letter;
-		text_selected = word_selected = 0;
-		find_ibeam(1);
-		if(keypress_draw) draw();
-	}
-	return highlight_letter2 - highlight_letter1;
-}
-
-void BC_TextBox::cycle_textboxes(int amout)
-{
-	top_level->cycle_textboxes(amout);
-}
-
 int BC_TextBox::keypress_event()
 {
 // Result == 2 contents changed
@@ -739,12 +732,12 @@ int BC_TextBox::keypress_event()
 // Handle like a default keypress
 
 		case TAB:
-			cycle_textboxes(1);
+			top_level->cycle_textboxes(1);
 			result = 1;
 			break;
 
 		case LEFTTAB:
-			cycle_textboxes(-1);
+			top_level->cycle_textboxes(-1);
 			result = 1;
 			break;
 
@@ -1515,9 +1508,9 @@ void BC_TextBox::set_ibeam_letter(int number, int redraw)
 	}
 }
 
-void BC_TextBox::set_separators(char *separators)
+void BC_TextBox::set_separators(const char *separators)
 {
-	this->separators = separators;
+	this->separators = (char*)separators;
 }
 
 
@@ -1598,7 +1591,7 @@ char* BC_ScrollTextBox::get_text()
 	return text->get_text();
 }
 
-void BC_ScrollTextBox::update(char *text)
+void BC_ScrollTextBox::update(const char *text)
 {
 	this->text->update(text);
 	yscroll->update_length(this->text->get_text_rows(),
@@ -1757,7 +1750,7 @@ int BC_PopupTextBoxList::handle_event()
 
 BC_PopupTextBox::BC_PopupTextBox(BC_WindowBase *parent_window, 
 		ArrayList<BC_ListBoxItem*> *list_items,
-		char *default_text,
+		const char *default_text,
 		int x, 
 		int y, 
 		int text_w,
@@ -1766,7 +1759,7 @@ BC_PopupTextBox::BC_PopupTextBox(BC_WindowBase *parent_window,
 	this->x = x;
 	this->y = y;
 	this->list_h = list_h;
-	this->default_text = default_text;
+	this->default_text = (char*)default_text;
 	this->text_w = text_w;
 	this->parent_window = parent_window;
 	this->list_items = list_items;
@@ -1791,7 +1784,7 @@ int BC_PopupTextBox::create_objects()
 	return 0;
 }
 
-void BC_PopupTextBox::update(char *text)
+void BC_PopupTextBox::update(const char *text)
 {
 	textbox->update(text);
 }
@@ -1838,11 +1831,6 @@ int BC_PopupTextBox::get_h()
 int BC_PopupTextBox::handle_event()
 {
 	return 1;
-}
-
-int BC_PopupTextBox::reposition_widget(int x, int y, int w, int h) {
-	reposition_window(x, y);
-	return(0);
 }
 
 void BC_PopupTextBox::reposition_window(int x, int y)
@@ -2080,7 +2068,7 @@ char* BC_TumbleTextBox::get_text()
 	return textbox->get_text();
 }
 
-int BC_TumbleTextBox::update(char *value)
+int BC_TumbleTextBox::update(const char *value)
 {
 	textbox->update(value);
 	return 0;
@@ -2122,11 +2110,6 @@ int BC_TumbleTextBox::get_h()
 int BC_TumbleTextBox::handle_event()
 {
 	return 1;
-}
-
-int BC_TumbleTextBox::reposition_widget(int x, int y, int w, int h) {
-	reposition_window(x, y);
-	return(0);
 }
 
 void BC_TumbleTextBox::reposition_window(int x, int y)

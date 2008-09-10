@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "adeviceprefs.h"
 #include "audioconfig.h"
 #include "audiodevice.inc"
@@ -29,7 +50,7 @@ PlaybackPrefs::~PlaybackPrefs()
 	delete video_device;
 }
 
-int PlaybackPrefs::create_objects()
+void PlaybackPrefs::create_objects()
 {
 	int x, y, x2;
 	char string[BCTEXTLEN];
@@ -196,20 +217,6 @@ SET_TRACE
 //	y += 30;
 //	add_subwindow(new PlaybackDeblock(pwindow, 10, y));
 
-	add_subwindow(new BC_Title(x, y, _("Timecode offset:"), MEDIUMFONT, BLACK));
-	sprintf(string, "%d", pwindow->thread->edl->session->timecode_offset[3]);
-	add_subwindow(new TimecodeOffset(x + 120, y, pwindow, this, string, 3));
-	add_subwindow(new BC_Title(x + 152, y, _(":"), MEDIUMFONT, BLACK));
-	sprintf(string, "%d", pwindow->thread->edl->session->timecode_offset[2]);
-	add_subwindow(new TimecodeOffset(x + 160, y, pwindow, this, string, 2));
-	add_subwindow(new BC_Title(x + 192, y, _(":"), MEDIUMFONT, BLACK));
-	sprintf(string, "%d", pwindow->thread->edl->session->timecode_offset[1]);
-	add_subwindow(new TimecodeOffset(x + 200, y, pwindow, this, string, 1));
-	add_subwindow(new BC_Title(x + 232, y, _(":"), MEDIUMFONT, BLACK));
-	sprintf(string, "%d", pwindow->thread->edl->session->timecode_offset[0]);
-	add_subwindow(new TimecodeOffset(x + 240, y, pwindow, this, string, 0));
-
-	y += 35;
 	add_subwindow(vdevice_title = new BC_Title(x, y, _("Video Driver:")));
 	video_device = new VDevicePrefs(x + vdevice_title->get_w() + 10, 
 		y, 
@@ -222,7 +229,6 @@ SET_TRACE
 
 SET_TRACE	
 
-	return 0;
 }
 
 
@@ -596,20 +602,6 @@ int PlaybackSubtitleNumber::handle_event()
 
 
 
-TimecodeOffset::TimecodeOffset(int x, int y, PreferencesWindow *pwindow, 
-      PlaybackPrefs *playback, char *text, int unit)
- : BC_TextBox(x, y, 30, 1, text)
-{
-   this->pwindow = pwindow;
-   this->playback = playback;
-	this->unit = unit;
-}
-
-int TimecodeOffset::handle_event()
-{
-	pwindow->thread->edl->session->timecode_offset[unit] = atol(get_text());
-	return 1;
-}
 
 
 

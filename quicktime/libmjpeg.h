@@ -30,9 +30,10 @@ extern "C" {
 
 
 #include <stdio.h>
-#include <jpeglib.h>
+#include "jpeglib.h"
 #include <png.h>              /* Need setjmp.h as included by png.h */
 #include "pthread.h"
+#include <setjmp.h>
 
 #define MAXFIELDS 2
 #define QUICKTIME_MJPA_MARKSIZE 40

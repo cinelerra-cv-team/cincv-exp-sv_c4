@@ -1,9 +1,29 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "file.h"
 #include "filelist.h"
 #include "guicast.h"
-#include "interlacemodes.h"
 #include "mutex.h"
 #include "mwindow.inc"
 #include "render.h"
@@ -20,16 +40,16 @@
 
 FileList::FileList(Asset *asset, 
 	File *file, 
-	char *list_prefix,
-	char *file_extension, 
+	const char *list_prefix,
+	const char *file_extension, 
 	int frame_type,
 	int list_type)
  : FileBase(asset, file)
 {
 	reset_parameters();
 	asset->video_data = 1;
-	this->list_prefix = list_prefix;
-	this->file_extension = file_extension;
+	this->list_prefix = (char*)list_prefix;
+	this->file_extension = (char*)file_extension;
 	this->frame_type = frame_type;
 	this->list_type = list_type;
 	table_lock = new Mutex("FileList::table_lock");
@@ -210,7 +230,6 @@ int FileList::read_list_header()
 		}while(!feof(stream) && (string[0] == '#' || string[0] == ' '));
 		asset->height = atol(string);
 
-		asset->interlace_mode = BC_ILACE_MODE_UNDETECTED;  // May be good to store the info in the list?
 		asset->layers = 1;
 		asset->audio_data = 0;
 		asset->video_data = 1;
@@ -473,7 +492,7 @@ char* FileList::create_path(int number_override)
 
 
 
-	char *path = "";
+	char *path = (char*)"";
 	char output[BCTEXTLEN];
 	if(file->current_frame >= path_list.total || !asset->use_header)
 	{

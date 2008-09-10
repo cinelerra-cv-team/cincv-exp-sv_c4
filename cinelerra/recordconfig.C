@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "audiodevice.inc"
 #include "bchash.h"
 #include "playbackconfig.h"
@@ -20,7 +41,7 @@ AudioInConfig::AudioInConfig()
 	oss_in_bits = 16;
 	firewire_port = 0;
 	firewire_channel = 63;
-	strcpy(firewire_path, "/dev/dv1394");
+	strcpy(firewire_path, "/dev/raw1394");
 	sprintf(esound_in_server, "");
 	esound_in_port = 0;
 
@@ -169,7 +190,7 @@ VideoInConfig::VideoInConfig()
 
 	firewire_port = 0;
 	firewire_channel = 63;
-	sprintf(firewire_path, "/dev/dv1394");
+	sprintf(firewire_path, "/dev/raw1394");
 // number of frames to read from device during video recording.
 //	capture_length = 15;   
 	capture_length = 2;   

@@ -1,7 +1,29 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "byteorder.h"
 #include "clip.h"
+#include "cmodel_permutation.h"
 #include "edit.h"
 #include "file.h"
 #include "fileogg.h"
@@ -12,8 +34,6 @@
 #include "quicktime.h"
 #include "vframe.h"
 #include "videodevice.inc"
-#include "cmodel_permutation.h"
-#include "interlacemodes.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -21,10 +41,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
-// Needed for packaging engine
-#include "preferences.h"
-#include "render.h"
 
 #define READ_SIZE 66000
 
@@ -39,7 +55,6 @@ FileOGG::FileOGG(Asset *asset, File *file)
 		asset->format = FILE_OGG;
 	asset->byte_order = 0;
 	reset_parameters();
-	final_write = 1;
 }
 
 FileOGG::~FileOGG()
@@ -157,10 +172,9 @@ static int take_page_out_autoadvance(FILE *in, sync_window_t *sw, ogg_page *og)
 		} else
 		{
 			// need more data for page
-			if (read_buffer(in, sw, READ_SIZE) == 0) 
+			if ((ret = read_buffer(in, sw, READ_SIZE)) == 0) 
 			{
-// FIXME We should report that just in some situations... sometimes we go to the end
-//				printf("FileOGG: There is no more data in the file we are reading from\n");
+				printf("FileOGG: There is no more data in the file we are reading from\n");
 				return 0;  // No more data
 			}
 		}
@@ -329,13 +343,11 @@ int FileOGG::open_file(int rd, int wr)
 				fprintf (stderr,
 					"The Vorbis encoder could not set up a mode according to\n"
 					"the requested quality or bitrate.\n\n");
-				fclose (stream);
-				stream = 0;
 				return 1;
 			}
 
 			vorbis_comment_init (&tf->vc); // comment is cleared lateron 
-			vorbis_comment_add_tag (&tf->vc, "ENCODER", PACKAGE_STRING);
+			vorbis_comment_add_tag (&tf->vc, (char*)"ENCODER", (char*)PACKAGE_STRING);
 			/* set up the analysis state and auxiliary encoding storage */
 			vorbis_analysis_init (&tf->vd, &tf->vi);
 			vorbis_block_init (&tf->vd, &tf->vb);
@@ -360,7 +372,7 @@ int FileOGG::open_file(int rd, int wr)
 
 			/* create the remaining theora headers */
 			theora_comment_init (&tf->tc);
-			theora_comment_add_tag (&tf->tc, "ENCODER", PACKAGE_STRING);
+			theora_comment_add_tag (&tf->tc, (char*)"ENCODER", (char*)PACKAGE_STRING);
 			theora_encode_comment (&tf->tc, &tf->op);
 			ogg_stream_packetin (&tf->to, &tf->op);
 			theora_comment_clear(&tf->tc);
@@ -558,7 +570,7 @@ int FileOGG::open_file(int rd, int wr)
 					break;
 			}
 
-			if ((!vorbis_p || vorbis_p == 3) && (!theora_p || theora_p == 3)) 
+			if (vorbis_p == 3 && theora_p == 3) 
 				break;
 			/* The header pages/packets will arrive before anything else we
 			    care about, or the stream is not obeying spec */
@@ -666,9 +678,6 @@ Not yet available in alpha4, we assume 420 for now
 // Don't want a user configured frame rate to get destroyed
 			if(!asset->frame_rate)
 				asset->frame_rate = fps;
-// All theora material is noninterlaced by definition
-			if(!asset->interlace_mode)
-				asset->interlace_mode = BC_ILACE_MODE_NOTINTERLACED;
 
 	/*		ogg_get_page_of_frame(tf->videosync, tf->to.serialno, &og, 0 +start_frame);
 			ogg_get_page_of_frame(tf->videosync, tf->to.serialno, &og, 1 +start_frame);
@@ -936,15 +945,6 @@ int FileOGG::ogg_get_first_page(sync_window_t *sw, long serialno, ogg_page *og)
 	return (ogg_get_next_page(sw, serialno, og));
 }
 
-int FileOGG::ogg_seek_to_databegin(sync_window_t *sw, long serialno)
-{
-	
-//	printf("FileOGG:: Seeking to first page at %lli\n", filedata_begin);
-	read_buffer_at(stream, sw, READ_SIZE, filedata_begin);
-// we don't even need to sync since we _know_ it is right
-	return (0);
-}
-
 int FileOGG::ogg_get_next_page(sync_window_t *sw, long serialno, ogg_page *og)
 {
 	while (take_page_out_autoadvance(stream, sw, og) > 0)
@@ -1085,8 +1085,6 @@ int FileOGG::ogg_seek_to_sample(sync_window_t *sw, long serialno, int64_t sample
 				current_comming_sample += vorbis_synthesis_pcmout(&tf->vd, NULL);
 				if (current_comming_sample > sample)
 				{
-					if (previous_comming_sample > sample)
-						printf("Ogg decoding error while seeking sample\n");
 					vorbis_synthesis_read(&tf->vd, (sample - previous_comming_sample));
 //					printf("WE GOT IT, samples already decoded: %li\n", vorbis_synthesis_pcmout(&tf->vd,NULL));
 					return 1; // YAY next sample read is going to be ours, sexy!
@@ -1301,7 +1299,7 @@ int FileOGG::check_sig(Asset *asset)
 	{
 
 		fclose(fd);
-//		printf("Yay, we have an ogg file\n");
+		printf("Yay, we have an ogg file\n");
 
 		return 1;
 	}
@@ -1317,13 +1315,11 @@ int FileOGG::close_file()
 
 	if (wr)
 	{
-		if (final_write)
-		{
-			if (asset->audio_data)
-				write_samples_vorbis(0, 0, 1); // set eos
-			if (asset->video_data)
-				write_frames_theora(0, 1, 1); // set eos
-		}
+		if (asset->audio_data)
+			write_samples_vorbis(0, 0, 1); // set eos
+		if (asset->video_data)
+			write_frames_theora(0, 1, 1); // set eos
+
 		flush_ogg(1); // flush all
 	
 		if (asset->audio_data)
@@ -1683,17 +1679,21 @@ int FileOGG::read_samples(double *buffer, int64_t len)
 
 			int i, j;
 //			printf("takeout samples: %lli, samples_read: %lli\n", takeout_samples, samples_read);
-			for(int i = 0; i < asset->channels; i++)
+
+			if(waiting_samples)
 			{
-				float *input = vorbis_buffer[i];
-				float *output = pcm_history[i] + hole_start;
-				// TODO: use memcpy
-				for(int j = 0; j < takeout_samples ; j++)
+				for(int i = 0; i < asset->channels; i++)
 				{
-					output[j] = input[j];
-				}
-			}                                                                   
-			
+					float *input = vorbis_buffer[i];
+					float *output = pcm_history[i] + hole_start;
+					// TODO: use memcpy
+					for(int j = 0; j < takeout_samples ; j++)
+					{
+						output[j] = input[j];
+					}
+				}                                                                   
+			}
+
 			vorbis_synthesis_read(&tf->vd, takeout_samples);
 			samples_read += takeout_samples;
 			ogg_sample_position += takeout_samples;
@@ -2015,7 +2015,7 @@ OGGConfigAudio::~OGGConfigAudio()
 
 }
 
-int OGGConfigAudio::create_objects()
+void OGGConfigAudio::create_objects()
 {
 //	add_tool(new BC_Title(10, 10, _("There are no audio options for this format")));
 
@@ -2045,10 +2045,6 @@ int OGGConfigAudio::create_objects()
 	add_subwindow(new BC_OKButton(this));
 	show_window();
 	flush();
-	return 0;
-
-
-
 }
 
 int OGGConfigAudio::close_event()
@@ -2145,7 +2141,7 @@ OGGConfigVideo::~OGGConfigVideo()
 
 }
 
-int OGGConfigVideo::create_objects()
+void OGGConfigVideo::create_objects()
 {
 //	add_tool(new BC_Title(10, 10, _("There are no video options for this format")));
 	int x = 10, y = 10;
@@ -2194,7 +2190,6 @@ int OGGConfigVideo::create_objects()
 	
 
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 
@@ -2305,360 +2300,5 @@ int OGGTheoraSharpness::handle_event()
 	gui->asset->theora_sharpness = atol(get_text());
 	return 1;
 }
-
-
-PackagingEngineOGG::PackagingEngineOGG()
-{
-	packages = 0;
-	default_asset = 0;
-}
-
-PackagingEngineOGG::~PackagingEngineOGG()
-{
-	if(packages)
-	{
-		for(int i = 0; i < total_packages; i++)
-			delete packages[i];
-		delete [] packages;
-	}
-	if (default_asset)
-		delete default_asset;
-}
-
-
-
-int PackagingEngineOGG::create_packages_single_farm(
-		EDL *edl,
-		Preferences *preferences,
-		Asset *default_asset, 
-		double total_start, 
-		double total_end)
-{
-	this->total_start = total_start;
-	this->total_end = total_end;
-	this->edl = edl;
-
-	this->preferences = preferences;
-
-// We make A COPY of the asset, because we set audio_data = 0 on local asset which is the same copy as default_asset... 
-// Should be taken care of somewhere else actually
-	this->default_asset = new Asset(*default_asset);
-
-	audio_start = Units::to_int64(total_start * default_asset->sample_rate);
-	video_start = Units::to_int64(total_start * default_asset->frame_rate);
-	audio_position = audio_start;
-	video_position = video_start;
-	audio_end = Units::to_int64(total_end * default_asset->sample_rate);
-	video_end = Units::to_int64(total_end * default_asset->frame_rate);
-	current_package = 0;
-
-	double total_len = total_end - total_start;
-//printf("PackageDispatcher::create_packages: %f / %d = %f\n", total_len, total_packages, package_len);
-
-	total_packages = 0;
-	if (default_asset->audio_data)
-		total_packages++;
-	if (default_asset->video_data)
-		total_packages += preferences->renderfarm_job_count;
-
-	packages = new RenderPackage*[total_packages];
-
-	int local_current_package = 0;
-	if (default_asset->audio_data)
-	{
-		packages[local_current_package] = new RenderPackage;
-		sprintf(packages[current_package]->path, "%s.audio", default_asset->path);
-		local_current_package++;
-	}
-	
-	if (default_asset->video_data)
-	{
-		video_package_len = (total_len) / preferences->renderfarm_job_count;
-		int current_number;    // The number being injected into the filename.
-		int number_start;      // Character in the filename path at which the number begins
-		int total_digits;      // Total number of digits including padding the user specified.
-
-		Render::get_starting_number(default_asset->path, 
-			current_number,
-			number_start, 
-			total_digits,
-			3);
-
-		for(int i = 0; i < preferences->renderfarm_job_count; i++)
-		{
-			RenderPackage *package = packages[local_current_package] = new RenderPackage;
-			Render::create_filename(package->path, 
-				default_asset->path, 
-				current_number,
-				total_digits,
-				number_start);
-			current_number++;
-			local_current_package++;
-		}
-	}
-}
-
-RenderPackage* PackagingEngineOGG::get_package_single_farm(double frames_per_second, 
-		int client_number,
-		int use_local_rate)
-{
-
-//printf("PackageDispatcher::get_package %ld %ld %ld %ld\n", audio_position, video_position, audio_end, video_end);
-	if (current_package == total_packages)
-		return 0;
-
-	RenderPackage *result = 0;
-	if (current_package == 0 && default_asset->audio_data)
-	{
-		result = packages[0];
-		result->audio_start = audio_start;
-		result->video_start = video_start;
-		result->audio_end = audio_end;
-		result->video_end = video_end;
-		result->audio_do = 1;
-		result->video_do = 0;
-	} else if (default_asset->video_data)
-	{
-		// Do not do any scaling according to node speed, so we know we can get evenly distributed 'forced' keyframes
-		result = packages[current_package];
-		result->audio_do = 0;
-		result->video_do = 1;
-
-		result->audio_start = audio_position;
-		result->video_start = video_position;
-		result->audio_end = audio_position + 
-			Units::round(video_package_len * default_asset->sample_rate);
-		result->video_end = video_position + 
-			Units::round(video_package_len * default_asset->frame_rate);
-
-// Last package... take it all!
-		if (current_package == total_packages -1 ) 
-		{
-			result->audio_end = audio_end;
-			result->video_end = video_end;
-		}
-
-		audio_position = result->audio_end;
-		video_position = result->video_end;
-
-	}
-	
-	current_package ++;
-	return result;
-
-}
-
-void PackagingEngineOGG::get_package_paths(ArrayList<char*> *path_list)
-{
-	for(int i = 0; i < total_packages; i++)
-	{
-		path_list->append(strdup(packages[i]->path));
-	}
-// We will mux to the the final file at the end!
-	path_list->append(strdup(default_asset->path));
-	path_list->set_free();
-}
-
-int64_t PackagingEngineOGG::get_progress_max()
-{
-	return Units::to_int64(default_asset->sample_rate * 
-			(total_end - total_start)) * 2+
-		Units::to_int64(preferences->render_preroll * 
-			total_packages *
-			default_asset->sample_rate);
-}
-
-int PackagingEngineOGG::packages_are_done()
-{
-
-
-// Mux audio and video into one file	
-
-// First fix our asset... have to workaround the bug of corruption of local asset
-//	Render::check_asset(edl, *default_asset);
-
-	Asset *video_asset, *audio_asset;
-	File *audio_file_gen, *video_file_gen;
-	FileOGG *video_file, *audio_file;
-	ogg_stream_state audio_in_stream, video_in_stream;
-	
-	int local_current_package = 0;
-	if (default_asset->audio_data)
-	{
-		audio_asset = new Asset(packages[local_current_package]->path);
-		local_current_package++;
-
-		audio_file_gen = new File();
-		audio_file_gen->open_file(preferences, 
-			audio_asset, 
-			1, //rd 
-			0, //wr
-			0, //base sample rate
-			0); // base_frame rate
-		audio_file = (FileOGG*) audio_file_gen->file;
-		ogg_stream_init(&audio_in_stream, audio_file->tf->vo.serialno);
-		audio_file->ogg_seek_to_databegin(audio_file->tf->audiosync, audio_file->tf->vo.serialno);
-	}
-
-	if (default_asset->video_data)
-	{
-		video_asset = new Asset(packages[local_current_package]->path);
-		local_current_package++;
-
-		video_file_gen = new File();
-		video_file_gen->open_file(preferences, 
-			video_asset, 
-			1, //rd 
-			0, //wr
-			0, //base sample rate
-			0); // base_frame rate
-		video_file = (FileOGG*) video_file_gen->file;
-		ogg_stream_init(&video_in_stream, video_file->tf->to.serialno);
-		video_file->ogg_seek_to_databegin(video_file->tf->videosync, video_file->tf->to.serialno);
-	}
-
-// Output file
-	File *output_file_gen = new File();
-	output_file_gen->open_file(preferences,
-		default_asset,
-		0,
-		1,
-		default_asset->sample_rate, 
-		default_asset->frame_rate);
-	FileOGG *output_file = (FileOGG*) output_file_gen->file;
-
-	ogg_page og;    /* one Ogg bitstream page.  Vorbis packets are inside */
-	ogg_packet op;  /* one raw packet of data for decode */
-
-
-	int audio_ready = default_asset->audio_data;
-	int video_ready = default_asset->video_data;
-	int64_t video_packetno = 1;
-	int64_t audio_packetno = 1;
-	int64_t frame_offset = 0;
-	int64_t current_frame = 0;
-	while ((default_asset->audio_data && audio_ready) || (default_asset->video_data && video_ready))
-	{
-		if (video_ready)
-		{
-			while (ogg_stream_packetpeek(&video_in_stream, NULL) != 1) // get as many pages as needed for one package
-			{
-				if (!video_file->ogg_get_next_page(video_file->tf->videosync, video_file->tf->to.serialno, &video_file->tf->videopage))
-				{
-					// We are at the end of our file, see if it is more and open more if there is
-					if (local_current_package < total_packages)
-					{
-						frame_offset = current_frame +1;
-						ogg_stream_clear(&video_in_stream);
-						video_file_gen->close_file();
-						delete video_file_gen;
-						delete video_asset;
-						video_asset = new Asset(packages[local_current_package]->path);
-						local_current_package++;
-
-						video_file_gen = new File();
-						video_file_gen->open_file(preferences, 
-							video_asset, 
-							1, //rd 
-							0, //wr
-							0, //base sample rate
-							0); // base_frame rate
-						video_file = (FileOGG*) video_file_gen->file;
-						ogg_stream_init(&video_in_stream, video_file->tf->to.serialno);
-						int64_t fp   = 0;
-						video_file->ogg_seek_to_databegin(video_file->tf->videosync, video_file->tf->to.serialno);
-
-					} else
-						video_ready = 0;
-					break;
-				}
-				ogg_stream_pagein(&video_in_stream, &video_file->tf->videopage);
-			}
-			while (ogg_stream_packetpeek(&video_in_stream, NULL) == 1) // get all packets out of the page
-			{
-				ogg_stream_packetout(&video_in_stream, &op);
-				if (local_current_package != total_packages) // keep it from closing the stream
-					op.e_o_s = 0;
-				if (video_packetno != 1)		     // if this is not the first video package do not start with b_o_s
-					op.b_o_s = 0;
-				else
-					op.b_o_s = 1;
-				op.packetno = video_packetno;
-				video_packetno ++;
-				int64_t granulepos = op.granulepos;
-				if (granulepos != -1)
-				{
-				// Fix granulepos!	
-					int64_t rel_iframe = granulepos >> video_file->theora_keyframe_granule_shift;
-					int64_t rel_pframe = granulepos - (rel_iframe << video_file->theora_keyframe_granule_shift);
-					int64_t rel_current_frame = rel_iframe + rel_pframe;
-					current_frame = frame_offset + rel_current_frame;
-					int64_t abs_iframe = current_frame - rel_pframe;
-					
-					op.granulepos = (abs_iframe << video_file->theora_keyframe_granule_shift) + rel_pframe;
-					
-//					printf("iframe: %i, pframe: %i, granulepos: %i, op.packetno %lli, abs_iframe: %i\n", rel_iframe, rel_pframe, granulepos, op.packetno, abs_iframe);				
-				
-				}
-				ogg_stream_packetin (&output_file->tf->to, &op);
-				output_file->tf->v_pkg++; 
-			}
-		}
-		if (audio_ready)
-		{
-			while (ogg_stream_packetpeek(&audio_in_stream, NULL) != 1) // get as many pages as needed for one package
-			{
-				if (!audio_file->ogg_get_next_page(audio_file->tf->audiosync, audio_file->tf->vo.serialno, &audio_file->tf->audiopage))
-				{
-					audio_ready = 0;
-					break;
-				}
-				ogg_stream_pagein(&audio_in_stream, &audio_file->tf->audiopage);
-			}
-			while (ogg_stream_packetpeek(&audio_in_stream, NULL) == 1) // get all packets out of the page
-			{
-				ogg_stream_packetout(&audio_in_stream, &op);
-				ogg_stream_packetin (&output_file->tf->vo, &op);
-				audio_packetno++;
-				output_file->tf->a_pkg++; 
-			}
-		}
-		
-		output_file->flush_ogg(0);
-		
-	
-	}
-	
-// flush_ogg(1) is called on file closing time...	
-//	output_file->flush_ogg(1);
-
-// Just prevent thet write_samples and write_frames are called
-	output_file->final_write = 0;
-		
-	if (default_asset->audio_data)
-	{
-		ogg_stream_clear(&audio_in_stream);
-		audio_file_gen->close_file();
-		delete audio_file_gen;
-		delete audio_asset;
-	}
-	if (default_asset->video_data)
-	{
-		ogg_stream_clear(&video_in_stream);
-		video_file_gen->close_file();
-		delete video_file_gen;
-		delete video_asset;
-	}
-
-	output_file_gen->close_file();
-	delete output_file_gen;
-
-// Now delete the temp files
-	for(int i = 0; i < total_packages; i++)
-		unlink(packages[i]->path);
-
-	return 0;
-}
-
 
 

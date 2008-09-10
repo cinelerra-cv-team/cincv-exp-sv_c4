@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcdisplayinfo.h"
 #include "bcipc.h"
 #include "bclistbox.inc"
@@ -40,23 +61,23 @@ VFrame* BC_Resources::type_to_icon[] =
 	new VFrame(file_column_png)
 };
 
-char* BC_Resources::small_font = N_("-*-helvetica-medium-r-normal-*-10-*");
-char* BC_Resources::small_font2 = N_("-*-helvetica-medium-r-normal-*-11-*");
-char* BC_Resources::medium_font = N_("-*-helvetica-bold-r-normal-*-14-*");
-char* BC_Resources::medium_font2 = N_("-*-helvetica-bold-r-normal-*-14-*");
-char* BC_Resources::large_font = N_("-*-helvetica-bold-r-normal-*-18-*");
-char* BC_Resources::large_font2 = N_("-*-helvetica-bold-r-normal-*-20-*");
+const char* BC_Resources::small_font = N_("-*-helvetica-medium-r-normal-*-10-*");
+const char* BC_Resources::small_font2 = N_("-*-helvetica-medium-r-normal-*-11-*");
+const char* BC_Resources::medium_font = N_("-*-helvetica-bold-r-normal-*-14-*");
+const char* BC_Resources::medium_font2 = N_("-*-helvetica-bold-r-normal-*-14-*");
+const char* BC_Resources::large_font = N_("-*-helvetica-bold-r-normal-*-18-*");
+const char* BC_Resources::large_font2 = N_("-*-helvetica-bold-r-normal-*-20-*");
 
-char* BC_Resources::small_fontset = "6x12,*";
-char* BC_Resources::medium_fontset = "7x14,*";
-char* BC_Resources::large_fontset = "8x16,*";
+const char* BC_Resources::small_fontset = "6x12,*";
+const char* BC_Resources::medium_fontset = "7x14,*";
+const char* BC_Resources::large_fontset = "8x16,*";
 
-char* BC_Resources::small_font_xft = N_("-*-luxi sans-*-r-*-*-12-*-*-*-*-*-*-*");
-char* BC_Resources::small_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
-char* BC_Resources::medium_font_xft = N_("-*-luxi sans-*-r-*-*-16-*-*-*-*-*-*-*");
-char* BC_Resources::medium_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
-char* BC_Resources::large_font_xft = N_("-*-luxi sans-bold-r-*-*-20-*-*-*-*-*-*-*");
-char* BC_Resources::large_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
+const char* BC_Resources::small_font_xft = N_("-*-luxi sans-*-r-*-*-12-*-*-*-*-*-*-*");
+const char* BC_Resources::small_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
+const char* BC_Resources::medium_font_xft = N_("-*-luxi sans-*-r-*-*-16-*-*-*-*-*-*-*");
+const char* BC_Resources::medium_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
+const char* BC_Resources::large_font_xft = N_("-*-luxi sans-bold-r-*-*-20-*-*-*-*-*-*-*");
+const char* BC_Resources::large_font_xft2 = N_("-microsoft-verdana-*-*-*-*-*-*-*-*-*-*-*-*");
 
 suffix_to_type_t BC_Resources::suffix_to_type[] = 
 {
@@ -95,13 +116,14 @@ int BC_Resources::x_error_handler(Display *display, XErrorEvent *event)
 BC_Resources::BC_Resources()
 {
 	synchronous = 0;
-	display_info = new BC_DisplayInfo("", 0);
+	display_info = new BC_DisplayInfo((char*)"", 0);
 	id_lock = new Mutex("BC_Resources::id_lock");
 	create_window_lock = new Mutex("BC_Resources::create_window_lock", 1);
 	id = 0;
+	filebox_id = 0;
 
 	for(int i = 0; i < FILEBOX_HISTORY_SIZE; i++)
-		filebox_history[i][0] = 0;
+		filebox_history[i].path[0] = 0;
 
 #ifdef HAVE_XFT
 	XftInitFtLibrary();
@@ -248,13 +270,11 @@ BC_Resources::BC_Resources()
 #include "images/listbox_button_dn_png.h"
 #include "images/listbox_button_hi_png.h"
 #include "images/listbox_button_up_png.h"
-#include "images/listbox_button_disabled_png.h"
 	static VFrame* default_listbox_button[] = 
 	{
 		new VFrame(listbox_button_up_png),
 		new VFrame(listbox_button_hi_png),
-		new VFrame(listbox_button_dn_png),
-		new VFrame(listbox_button_disabled_png)
+		new VFrame(listbox_button_dn_png)
 	};
 	listbox_button = default_listbox_button;
 
@@ -308,6 +328,43 @@ BC_Resources::BC_Resources()
 	listbox_inactive = WHITE;
 	listbox_text = BLACK;
 
+
+
+
+#include "images/horizontal_slider_bg_up_png.h"
+#include "images/horizontal_slider_bg_hi_png.h"
+#include "images/horizontal_slider_bg_dn_png.h"
+#include "images/horizontal_slider_fg_up_png.h"
+#include "images/horizontal_slider_fg_hi_png.h"
+#include "images/horizontal_slider_fg_dn_png.h"
+	static VFrame *default_horizontal_slider_data[] = 
+	{
+		new VFrame(horizontal_slider_fg_up_png),
+		new VFrame(horizontal_slider_fg_hi_png),
+		new VFrame(horizontal_slider_fg_dn_png),
+		new VFrame(horizontal_slider_bg_up_png),
+		new VFrame(horizontal_slider_bg_hi_png),
+		new VFrame(horizontal_slider_bg_dn_png),
+	};
+
+#include "images/vertical_slider_bg_up_png.h"
+#include "images/vertical_slider_bg_hi_png.h"
+#include "images/vertical_slider_bg_dn_png.h"
+#include "images/vertical_slider_fg_up_png.h"
+#include "images/vertical_slider_fg_hi_png.h"
+#include "images/vertical_slider_fg_dn_png.h"
+	static VFrame *default_vertical_slider_data[] = 
+	{
+		new VFrame(vertical_slider_fg_up_png),
+		new VFrame(vertical_slider_fg_hi_png),
+		new VFrame(vertical_slider_fg_dn_png),
+		new VFrame(vertical_slider_bg_up_png),
+		new VFrame(vertical_slider_bg_hi_png),
+		new VFrame(vertical_slider_bg_dn_png),
+	};
+	horizontal_slider_data = default_horizontal_slider_data;
+	vertical_slider_data = default_vertical_slider_data;
+
 #include "images/pot_hi_png.h"
 #include "images/pot_up_png.h"
 #include "images/pot_dn_png.h"
@@ -326,7 +383,25 @@ BC_Resources::BC_Resources()
 		new VFrame(progress_hi_png)
 	};
 
-	pan_data = 0;
+
+#include "images/pan_up_png.h"
+#include "images/pan_hi_png.h"
+#include "images/pan_popup_png.h"
+#include "images/pan_channel_png.h"
+#include "images/pan_stick_png.h"
+#include "images/pan_channel_small_png.h"
+#include "images/pan_stick_small_png.h"
+	static VFrame* default_pan_data[] = 
+	{
+		new VFrame(pan_up_png),
+		new VFrame(pan_hi_png),
+		new VFrame(pan_popup_png),
+		new VFrame(pan_channel_png),
+		new VFrame(pan_stick_png),
+		new VFrame(pan_channel_small_png),
+		new VFrame(pan_stick_small_png)
+	};
+	pan_data = default_pan_data;
 	pan_text_color = YELLOW;
 
 #include "images/7seg_small/0_png.h"
@@ -373,13 +448,122 @@ BC_Resources::BC_Resources()
 		new VFrame(dash_png)
 	};
 
+#include "images/tumble_bottomdn_png.h"
+#include "images/tumble_topdn_png.h"
+#include "images/tumble_hi_png.h"
+#include "images/tumble_up_png.h"
+	static VFrame* default_tumbler_data[] = 
+	{
+		new VFrame(tumble_up_png),
+		new VFrame(tumble_hi_png),
+		new VFrame(tumble_bottomdn_png),
+		new VFrame(tumble_topdn_png)
+	};
+
+#include "images/xmeter_normal_png.h"
+#include "images/xmeter_green_png.h"
+#include "images/xmeter_red_png.h"
+#include "images/xmeter_yellow_png.h"
+#include "images/xmeter_white_png.h"
+#include "images/over_horiz_png.h"
+#include "images/ymeter_normal_png.h"
+#include "images/ymeter_green_png.h"
+#include "images/ymeter_red_png.h"
+#include "images/ymeter_yellow_png.h"
+#include "images/ymeter_white_png.h"
+#include "images/over_vertical_png.h"
+	static VFrame* default_xmeter_data[] =
+	{
+		new VFrame(xmeter_normal_png),
+		new VFrame(xmeter_green_png),
+		new VFrame(xmeter_red_png),
+		new VFrame(xmeter_yellow_png),
+		new VFrame(xmeter_white_png),
+		new VFrame(over_horiz_png)
+	};
+
+	static VFrame* default_ymeter_data[] =
+	{
+		new VFrame(ymeter_normal_png),
+		new VFrame(ymeter_green_png),
+		new VFrame(ymeter_red_png),
+		new VFrame(ymeter_yellow_png),
+		new VFrame(ymeter_white_png),
+		new VFrame(over_vertical_png)
+	};
+
+#include "images/generic_up_png.h"
+#include "images/generic_hi_png.h"
+#include "images/generic_dn_png.h"
+	
+	static VFrame* default_generic_button_data[] = 
+	{
+		new VFrame(generic_up_png),
+		new VFrame(generic_hi_png),
+		new VFrame(generic_dn_png)
+	};
+	
+	generic_button_images = default_generic_button_data;
 	generic_button_margin = 15;
-	draw_clock_background=1;
+
+
+
+#include "images/hscroll_handle_up_png.h"
+#include "images/hscroll_handle_hi_png.h"
+#include "images/hscroll_handle_dn_png.h"
+#include "images/hscroll_handle_bg_png.h"
+#include "images/hscroll_left_up_png.h"
+#include "images/hscroll_left_hi_png.h"
+#include "images/hscroll_left_dn_png.h"
+#include "images/hscroll_right_up_png.h"
+#include "images/hscroll_right_hi_png.h"
+#include "images/hscroll_right_dn_png.h"
+#include "images/vscroll_handle_up_png.h"
+#include "images/vscroll_handle_hi_png.h"
+#include "images/vscroll_handle_dn_png.h"
+#include "images/vscroll_handle_bg_png.h"
+#include "images/vscroll_left_up_png.h"
+#include "images/vscroll_left_hi_png.h"
+#include "images/vscroll_left_dn_png.h"
+#include "images/vscroll_right_up_png.h"
+#include "images/vscroll_right_hi_png.h"
+#include "images/vscroll_right_dn_png.h"
+	static VFrame *default_hscroll_data[] = 
+	{
+		new VFrame(hscroll_handle_up_png), 
+		new VFrame(hscroll_handle_hi_png), 
+		new VFrame(hscroll_handle_dn_png), 
+		new VFrame(hscroll_handle_bg_png), 
+		new VFrame(hscroll_left_up_png), 
+		new VFrame(hscroll_left_hi_png), 
+		new VFrame(hscroll_left_dn_png), 
+		new VFrame(hscroll_right_up_png), 
+		new VFrame(hscroll_right_hi_png), 
+		new VFrame(hscroll_right_dn_png)
+	};
+	static VFrame *default_vscroll_data[] = 
+	{
+		new VFrame(vscroll_handle_up_png), 
+		new VFrame(vscroll_handle_hi_png), 
+		new VFrame(vscroll_handle_dn_png), 
+		new VFrame(vscroll_handle_bg_png), 
+		new VFrame(vscroll_left_up_png), 
+		new VFrame(vscroll_left_hi_png), 
+		new VFrame(vscroll_left_dn_png), 
+		new VFrame(vscroll_right_up_png), 
+		new VFrame(vscroll_right_hi_png), 
+		new VFrame(vscroll_right_dn_png)
+	};
+	hscroll_data = default_hscroll_data;
+	vscroll_data = default_vscroll_data;
+	scroll_minhandle = 10;
+
+
 
 	use_shm = -1;
 
 // Initialize
-	bg_color = ORANGE;
+	bg_color = MEGREY;
 	bg_shadow1 = DKGREY;
 	bg_shadow2 = BLACK;
 	bg_light1 = WHITE;
@@ -389,19 +573,22 @@ BC_Resources::BC_Resources()
 	disabled_text_color = MEGREY;
 
 	button_light = WHITE;           // bright corner
-	button_highlighted = 0xffe000;  // face when highlighted
+	button_highlighted = LTGREY;  // face when highlighted
 	button_down = MDGREY;         // face when down
-	button_up = 0xffc000;           // face when up
+	button_up = MEGREY;           // face when up
 	button_shadow = DKGREY;       // dark corner
-	button_uphighlighted = RED;   // upper side when highlighted
 
-	tumble_data = 0;
+	tumble_data = default_tumbler_data;
 	tumble_duration = 150;
 
 	ok_images = default_ok_images;
 	cancel_images = default_cancel_images;
 	usethis_button_images = default_usethis_images;
 	filebox_descend_images = default_ok_images;
+
+	checkbox_images = default_checkbox_images;
+	radial_images = default_radial_images;
+	label_images = default_label_images;
 
 	menu_light = LTCYAN;
 	menu_highlighted = LTBLUE;
@@ -421,7 +608,6 @@ BC_Resources::BC_Resources()
 	menu_title_text = BLACK;
 	popup_title_text = BLACK;
 	menu_item_text = BLACK;
-	menu_highlighted_fontcolor = BLACK;
 	progress_text = BLACK;
 
 
@@ -461,11 +647,9 @@ BC_Resources::BC_Resources()
 	filebox_columntype[0] = FILEBOX_NAME;
 	filebox_columntype[1] = FILEBOX_SIZE;
 	filebox_columntype[2] = FILEBOX_DATE;
-	filebox_columntype[3] = FILEBOX_EXTENSION;
 	filebox_columnwidth[0] = 200;
 	filebox_columnwidth[1] = 100;
 	filebox_columnwidth[2] = 100;
-	filebox_columnwidth[3] = 100;
 	dirbox_columntype[0] = FILEBOX_NAME;
 	dirbox_columntype[1] = FILEBOX_DATE;
 	dirbox_columnwidth[0] = 200;
@@ -495,15 +679,14 @@ BC_Resources::BC_Resources()
 
 	progress_images = default_progress_images;
 
-	xmeter_images = 0;
-	ymeter_images = 0;
+	xmeter_images = default_xmeter_data;
+	ymeter_images = default_ymeter_data;
 	meter_font = SMALLFONT_3D;
 	meter_font_color = RED;
 	meter_title_w = 20;
 	meter_3d = 1;
 	medium_7segment = default_medium_7segment;
 
-	audiovideo_color = RED;
 
 	use_fontset = 0;
 
@@ -620,6 +803,14 @@ int BC_Resources::get_id()
 {
 	id_lock->lock("BC_Resources::get_id");
 	int result = id++;
+	id_lock->unlock();
+	return result;
+}
+
+int BC_Resources::get_filebox_id()
+{
+	id_lock->lock("BC_Resources::get_filebox_id");
+	int result = filebox_id++;
 	id_lock->unlock();
 	return result;
 }

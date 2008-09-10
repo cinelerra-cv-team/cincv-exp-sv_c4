@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef AWINDOWGUI_H
 #define AWINDOWGUI_H
 
@@ -9,7 +30,6 @@
 #include "awindowmenu.inc"
 #include "edl.inc"
 #include "guicast.h"
-#include "labels.h"
 #include "mwindow.inc"
 #include "newfolder.inc"
 #include "pluginserver.inc"
@@ -28,8 +48,6 @@ class AWindowPaste;
 class AWindowAppend;
 class AWindowView;
 
-class LabelPopup;
-class LabelPopupEdit;
 
 class AWindowGUI;
 
@@ -39,8 +57,7 @@ public:
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, Asset *asset);
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, EDL *edl);
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, PluginServer *plugin);
-	AssetPicon(MWindow *mwindow, AWindowGUI *gui, Label *plugin);
-	AssetPicon(MWindow *mwindow, AWindowGUI *gui, char *folder);
+	AssetPicon(MWindow *mwindow, AWindowGUI *gui, const char *folder);
 	virtual ~AssetPicon();
 
 	void create_objects();
@@ -64,7 +81,6 @@ public:
 
 	int persistent;
 	PluginServer *plugin;
-	Label *label;
 };
 
 
@@ -74,7 +90,7 @@ public:
 	AWindowGUI(MWindow *mwindow, AWindow *awindow);
 	~AWindowGUI();
 
-	int create_objects();
+	void create_objects();
 	int resize_event(int w, int h);
 	int translation_event();
 	int close_event();
@@ -93,7 +109,6 @@ public:
 		int do_video, 
 		int is_realtime, 
 		int is_transition);
-	void create_label_folder();
 	void copy_picons(ArrayList<BC_ListBoxItem*> *dst, 
 		ArrayList<BC_ListBoxItem*> *src, 
 		char *folder);
@@ -120,13 +135,12 @@ public:
 	ArrayList<BC_ListBoxItem*> veffects;
 	ArrayList<BC_ListBoxItem*> atransitions;
 	ArrayList<BC_ListBoxItem*> vtransitions;
-	ArrayList<BC_ListBoxItem*> labellist;
 
 // Currently displayed data for listboxes
 // Currently displayed assets + comments
 	ArrayList<BC_ListBoxItem*> displayed_assets[2];
 
-	char *asset_titles[ASSET_COLUMNS];
+	const char *asset_titles[ASSET_COLUMNS];
 
 // Persistent icons
 	BC_Pixmap *folder_icon;
@@ -138,13 +152,11 @@ public:
 
 // Popup menus
 	AssetPopup *asset_menu;
-	LabelPopup *label_menu;
 	AssetListMenu *assetlist_menu;
 	FolderListMenu *folderlist_menu;
 // Temporary for reading picons from files
 	VFrame *temp_picon;
 
-	int allow_iconlisting;
 private:
 	void update_folder_list();
 	void update_asset_list();
@@ -295,34 +307,6 @@ public:
 	MWindow *mwindow;
 	AWindowGUI *gui;
 	int x, y;
-};
-
-class LabelPopup : public BC_PopupMenu
-{
-public:
-	LabelPopup(MWindow *mwindow, AWindowGUI *gui);
-	~LabelPopup();
-
-	void create_objects();
-// Set mainsession with the current selections
-	int update();
-
-	MWindow *mwindow;
-	AWindowGUI *gui;
-
-	LabelPopupEdit *editlabel;
-};
-
-class LabelPopupEdit : public BC_MenuItem
-{
-public:
-	LabelPopupEdit(MWindow *mwindow, LabelPopup *popup);
-	~LabelPopupEdit();
-
-	int handle_event();
-
-	MWindow *mwindow;
-	LabelPopup *popup;
 };
 
 #endif

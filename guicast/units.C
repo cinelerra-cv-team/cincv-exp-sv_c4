@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "bcwindowbase.inc"
 #include "units.h"
 
@@ -5,27 +26,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-// NOTE: DB::allocated is the original allocation, to which we keep a
-// pointer so that in theory we could have a destructor. DB::topower
-// is a pointer into the middle of DB::allocated, which allows us to
-// do lookups using negative array coefficients.
 float* DB::topower = 0;
-float* DB::allocated = NULL;
-
 int* Freq::freqtable = 0;
 
 
 DB::DB(float infinitygain)
 {
 	this->infinitygain = infinitygain;
-	if(allocated == NULL)
+	if(!topower)
 	{
 		int i;
 		float value;
 
 		// db to power table
-		allocated = new float[(MAXGAIN - INFINITYGAIN) * 10 + 1];
-		topower = allocated + (-INFINITYGAIN * 10);
+		topower = new float[(MAXGAIN - INFINITYGAIN) * 10 + 1];
+		topower += -INFINITYGAIN * 10;
 		for(i = INFINITYGAIN * 10; i <= MAXGAIN * 10; i++)
 		{
 			topower[i] = pow(10, (float)i / 10 / 20);
@@ -37,7 +52,6 @@ DB::DB(float infinitygain)
 	db = 0;
 }
 
-// FUTURE: would bounds checking be possible here?  Or at least make private?
 float DB::fromdb_table() 
 { 
 	return db = topower[(int)(db * 10)]; 
@@ -409,18 +423,6 @@ double Units::text_to_seconds(char *text,
 
 
 
-int Units::timeformat_totype(char *tcf) {
-	if (!strcmp(tcf,TIME_SECONDS__STR)) return(TIME_SECONDS);
-	if (!strcmp(tcf,TIME_HMS__STR)) return(TIME_HMS);
-	if (!strcmp(tcf,TIME_HMS2__STR)) return(TIME_HMS2);
-	if (!strcmp(tcf,TIME_HMS3__STR)) return(TIME_HMS3);
-	if (!strcmp(tcf,TIME_HMSF__STR)) return(TIME_HMSF);
-	if (!strcmp(tcf,TIME_SAMPLES__STR)) return(TIME_SAMPLES);
-	if (!strcmp(tcf,TIME_SAMPLES_HEX__STR)) return(TIME_SAMPLES_HEX);
-	if (!strcmp(tcf,TIME_FRAMES__STR)) return(TIME_FRAMES);
-	if (!strcmp(tcf,TIME_FEET_FRAMES__STR)) return(TIME_FEET_FRAMES);
-	return(-1);
-}
 
 
 float Units::toframes(int64_t samples, int sample_rate, float framerate) 
@@ -635,7 +637,7 @@ uint64_t Units::ptr_to_int64(void *ptr)
 	return result;
 }
 
-char* Units::format_to_separators(int time_format)
+const char* Units::format_to_separators(int time_format)
 {
 	switch(time_format)
 	{

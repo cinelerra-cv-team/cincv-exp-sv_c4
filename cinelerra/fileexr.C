@@ -1,21 +1,40 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "clip.h"
 #include "fileexr.h"
 #include "filesystem.h"
-#include "interlacemodes.h"
-
-#include <ImathBox.h>
-#include <ImfChannelList.h>
-#include <ImfChromaticities.h>
-#include <ImfCompression.h>
-#include <ImfIO.h>
-#include <ImfInputFile.h>
-#include <ImfOutputFile.h>
-#include <ImfPixelType.h>
-#include <ImfRgbaFile.h>
-#include <ImfRgbaYca.h>
-#include <ImfVersion.h>
+#include "ImathBox.h"
+#include "ImfChannelList.h"
+#include "ImfChromaticities.h"
+#include "ImfCompression.h"
+#include "ImfIO.h"
+#include "ImfInputFile.h"
+#include "ImfOutputFile.h"
+#include "ImfPixelType.h"
+#include "ImfRgbaFile.h"
+#include "ImfRgbaYca.h"
+#include "ImfVersion.h"
 #include "mwindow.inc"
 #include "vframe.h"
 
@@ -164,7 +183,7 @@ FileEXR::~FileEXR()
 	if(temp_v) delete [] temp_v;
 }
 
-char* FileEXR::compression_to_str(int compression)
+const char* FileEXR::compression_to_str(int compression)
 {
 	switch(compression)
 	{
@@ -285,7 +304,6 @@ int FileEXR::read_frame_header(char *path)
 	
 	asset->width = dw.max.x - dw.min.x + 1;
 	asset->height = dw.max.y - dw.min.y + 1;
-	asset->interlace_mode = BC_ILACE_MODE_NOTINTERLACED;
 
 	const Imf::ChannelList &channels = file.header().channels();
 
@@ -365,8 +383,6 @@ int FileEXR::read_frame(VFrame *frame, VFrame *data)
 
 	file.setFrameBuffer(framebuffer);
 	file.readPixels (dw.min.y, dw.max.y);
-
-
 
 	if(is_yuv)
 	{
@@ -569,7 +585,7 @@ EXRConfigVideo::~EXRConfigVideo()
 {
 }
 
-int EXRConfigVideo::create_objects()
+void EXRConfigVideo::create_objects()
 {
 	int x = 10, y = 10;
 	add_subwindow(new EXRUseAlpha(this, x, y));
@@ -580,7 +596,6 @@ int EXRConfigVideo::create_objects()
 	add_subwindow(menu = new EXRCompression(this, x, y, 100));
 	menu->create_objects();
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 int EXRConfigVideo::close_event()

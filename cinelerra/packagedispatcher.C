@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "clip.h"
 #include "confirmsave.h"
@@ -10,7 +31,7 @@
 #include "packagerenderer.h"
 #include "preferences.h"
 #include "render.h"
-#include "file.h"
+
 
 
 
@@ -18,7 +39,6 @@ PackageDispatcher::PackageDispatcher()
 {
 	packages = 0;
 	package_lock = new Mutex("PackageDispatcher::package_lock");
-	packaging_engine = 0;
 }
 
 PackageDispatcher::~PackageDispatcher()
@@ -29,8 +49,6 @@ PackageDispatcher::~PackageDispatcher()
 			delete packages[i];
 		delete [] packages;
 	}
-	if (packaging_engine)
-		delete packaging_engine;
 	delete package_lock;
 }
 
@@ -81,20 +99,38 @@ int PackageDispatcher::create_packages(MWindow *mwindow,
 		packages[0]->audio_end = audio_end;
 		packages[0]->video_start = video_position;
 		packages[0]->video_end = video_end;
-		packages[0]->audio_do = default_asset->audio_data;
-		packages[0]->video_do = default_asset->video_data;
 		strcpy(packages[0]->path, default_asset->path);
 	}
 	else
 	if(strategy == SINGLE_PASS_FARM)
 	{
-		packaging_engine = File::new_packaging_engine(default_asset);
-		packaging_engine->create_packages_single_farm(
-					edl,
-					preferences,
-					default_asset, 
-					total_start, 
-					total_end);
+		total_len = this->total_end - this->total_start;
+		total_packages = preferences->renderfarm_job_count;
+		total_allocated = total_packages + nodes;
+		packages = new RenderPackage*[total_allocated];
+		package_len = total_len / total_packages;
+		min_package_len = 2.0 / edl->session->frame_rate;
+
+
+//printf("PackageDispatcher::create_packages: %f / %d = %f\n", total_len, total_packages, package_len);
+		Render::get_starting_number(default_asset->path, 
+			current_number,
+			number_start, 
+			total_digits,
+			3);
+
+		for(int i = 0; i < total_allocated; i++)
+		{
+			RenderPackage *package = packages[i] = new RenderPackage;
+
+// Create file number differently if image file sequence
+			Render::create_filename(package->path, 
+				default_asset->path, 
+				current_number,
+				total_digits,
+				number_start);
+			current_number++;
+		}
 	}
 	else
 	if(strategy == FILE_PER_LABEL || strategy == FILE_PER_LABEL_FARM)
@@ -116,8 +152,6 @@ int PackageDispatcher::create_packages(MWindow *mwindow,
 				new RenderPackage;
 			package->audio_start = audio_position;
 			package->video_start = video_position;
-			package->audio_do = default_asset->audio_data;
-			package->video_do = default_asset->video_data;
 
 
 			while(label && 
@@ -200,25 +234,14 @@ int PackageDispatcher::create_packages(MWindow *mwindow,
 		mwindow)
 	{
 		ArrayList<char*> paths;
-		get_package_paths(&paths);
+		for(int i = 0; i < total_allocated; i++)
+		{
+			paths.append(packages[i]->path);
+		}
 		result = ConfirmSave::test_files(mwindow, &paths);
-		paths.remove_all_objects();
 	}
 	
 	return result;
-}
-
-void PackageDispatcher::get_package_paths(ArrayList<char*> *path_list)
-{
-		if (strategy == SINGLE_PASS_FARM)
-			packaging_engine->get_package_paths(path_list);
-		else
-		{
-			for(int i = 0; i < total_allocated; i++)
-				path_list->append(strdup(packages[i]->path));
-			path_list->set_free();
-		}
-
 }
 
 RenderPackage* PackageDispatcher::get_package(double frames_per_second, 
@@ -248,9 +271,90 @@ RenderPackage* PackageDispatcher::get_package(double frames_per_second,
 	else
 	if(strategy == SINGLE_PASS_FARM)
 	{
-		result = packaging_engine->get_package_single_farm(frames_per_second, 
-						client_number,
-						use_local_rate);
+
+//printf("PackageDispatcher::get_package %ld %ld %ld %ld\n", audio_position, video_position, audio_end, video_end);
+
+		if(audio_position < audio_end ||
+			video_position < video_end)
+		{
+// Last package
+			double scaled_len;
+			result = packages[current_package];
+			result->audio_start = audio_position;
+			result->video_start = video_position;
+
+			if(current_package >= total_allocated - 1)
+			{
+				result->audio_end = audio_end;
+				result->video_end = video_end;
+				audio_position = result->audio_end;
+				video_position = result->video_end;
+			}
+			else
+// No useful speed data.  May get infinity for real fast jobs.
+			if(frames_per_second > 0x7fffff || frames_per_second < 0 ||
+				EQUIV(frames_per_second, 0) || 
+				EQUIV(avg_frames_per_second, 0))
+			{
+				scaled_len = MAX(package_len, min_package_len);
+
+				result->audio_end = audio_position + 
+					Units::round(scaled_len * default_asset->sample_rate);
+				result->video_end = video_position + 
+					Units::round(scaled_len * default_asset->frame_rate);
+
+// If we get here without any useful speed data render the whole thing.
+				if(current_package >= total_packages - 1)
+				{
+					result->audio_end = audio_end;
+					result->video_end = video_end;
+				}
+				else
+				{
+					result->audio_end = MIN(audio_end, result->audio_end);
+					result->video_end = MIN(video_end, result->video_end);
+				}
+
+				audio_position = result->audio_end;
+				video_position = result->video_end;
+			}
+			else
+// Useful speed data and future packages exist.  Scale the 
+// package size to fit the requestor.
+			{
+				scaled_len = package_len * 
+					frames_per_second / 
+					avg_frames_per_second;
+				scaled_len = MAX(scaled_len, min_package_len);
+
+				result->audio_end = result->audio_start + 
+					Units::to_int64(scaled_len * default_asset->sample_rate);
+				result->video_end = result->video_start +
+					Units::to_int64(scaled_len * default_asset->frame_rate);
+
+				result->audio_end = MIN(audio_end, result->audio_end);
+				result->video_end = MIN(video_end, result->video_end);
+
+				audio_position = result->audio_end;
+				video_position = result->video_end;
+
+// Package size is no longer touched between total_packages and total_allocated
+				if(current_package < total_packages - 1)
+				{
+					package_len = (double)(audio_end - audio_position) / 
+						(double)default_asset->sample_rate /
+						(double)(total_packages - current_package);
+				}
+
+			}
+
+			current_package++;
+//printf("Dispatcher::get_package 50 %lld %lld %lld %lld\n", 
+//result->audio_start, 
+//result->video_start, 
+//result->audio_end, 
+//result->video_end);
+		}
 	}
 	else
 	if(strategy == BRENDER_FARM)
@@ -306,10 +410,6 @@ RenderPackage* PackageDispatcher::get_package(double frames_per_second,
 			if(result->video_end == result->video_start) result->video_end++;
 			audio_position = result->audio_end;
 			video_position = result->video_end;
-			result->audio_do = default_asset->audio_data;
-			result->video_do = default_asset->video_data;
-
-
 // The frame numbers are read from the vframe objects themselves.
 			Render::create_filename(result->path,
 				default_asset->path,
@@ -348,16 +448,9 @@ ArrayList<Asset*>* PackageDispatcher::get_asset_list()
 	return assets;
 }
 
-int64_t PackageDispatcher::get_progress_max()
+RenderPackage* PackageDispatcher::get_package(int number)
 {
-	if (strategy == SINGLE_PASS_FARM)
-		return packaging_engine->get_progress_max();
-	else
-		return Units::to_int64(default_asset->sample_rate * 
-				(total_end - total_start)) +
-			Units::to_int64(preferences->render_preroll * 
-				total_allocated * 
-				default_asset->sample_rate);
+	return packages[number];
 }
 
 int PackageDispatcher::get_total_packages()
@@ -365,9 +458,3 @@ int PackageDispatcher::get_total_packages()
 	return total_allocated;
 }
 
-int PackageDispatcher::packages_are_done()
-{
-	if (packaging_engine)
-		return packaging_engine->packages_are_done();
-	return 0;
-}

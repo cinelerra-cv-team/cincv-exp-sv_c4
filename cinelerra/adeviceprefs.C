@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "adeviceprefs.h"
 #include "audioalsa.h"
 #include "audiodevice.inc"
@@ -425,9 +446,9 @@ int ADevicePrefs::create_firewire_objs()
 			if(driver == AUDIO_1394)
 				output_char = out_config->firewire_path;
 			break;
+// Our version of raw1394 doesn't support changing the path
 		case MODERECORD:
-			if(driver == AUDIO_DV1394 || driver == AUDIO_1394)
-				output_char = in_config->firewire_path;
+			output_char = 0;
 			break;
 	}
 
@@ -541,11 +562,9 @@ void ADriverMenu::create_objects()
 
 	if(!do_input) add_item(new ADriverItem(this, AUDIO_ESOUND_TITLE, AUDIO_ESOUND));
 //	add_item(new ADriverItem(this, AUDIO_NAS_TITLE, AUDIO_NAS));
-#ifdef HAVE_FIREWIRE
 	if(!do_input) add_item(new ADriverItem(this, AUDIO_1394_TITLE, AUDIO_1394));
 	add_item(new ADriverItem(this, AUDIO_DV1394_TITLE, AUDIO_DV1394));
 	add_item(new ADriverItem(this, AUDIO_IEC61883_TITLE, AUDIO_IEC61883));
-#endif
 	add_item(new ADriverItem(this, AUDIO_DVB_TITLE, AUDIO_DVB));
 }
 
@@ -568,7 +587,6 @@ char* ADriverMenu::adriver_to_string(int driver)
 		case AUDIO_ALSA:
 			sprintf(string, AUDIO_ALSA_TITLE);
 			break;
-#ifdef HAVE_FIREWIRE
 		case AUDIO_1394:
 			sprintf(string, AUDIO_1394_TITLE);
 			break;
@@ -578,7 +596,6 @@ char* ADriverMenu::adriver_to_string(int driver)
 		case AUDIO_IEC61883:
 			sprintf(string, AUDIO_IEC61883_TITLE);
 			break;
-#endif
 		case AUDIO_DVB:
 			sprintf(string, AUDIO_DVB_TITLE);
 			break;
@@ -586,7 +603,7 @@ char* ADriverMenu::adriver_to_string(int driver)
 	return string;
 }
 
-ADriverItem::ADriverItem(ADriverMenu *popup, char *text, int driver)
+ADriverItem::ADriverItem(ADriverMenu *popup, const char *text, int driver)
  : BC_MenuItem(text)
 {
 	this->popup = popup;

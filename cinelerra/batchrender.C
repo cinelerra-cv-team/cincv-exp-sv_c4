@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "batchrender.h"
 #include "bcsignals.h"
@@ -11,7 +32,6 @@
 #include "keys.h"
 #include "language.h"
 #include "mainsession.h"
-#include "mutex.h"
 #include "mwindow.h"
 #include "mwindowgui.h"
 #include "packagedispatcher.h"
@@ -26,12 +46,12 @@
 
 
 
-static char *list_titles[] = 
+static const char *list_titles[] = 
 {
-	N_("Enabled"), 
-	N_("Output"),
-	N_("EDL"),
-	N_("Elapsed")
+	"Enabled", 
+	"Output",
+	"EDL",
+	"Elapsed"
 };
 
 static int list_widths[] =
@@ -200,21 +220,14 @@ BatchRenderThread::BatchRenderThread()
 void BatchRenderThread::handle_close_event(int result)
 {
 // Save settings
-TRACE("BatchRenderThread::handle_close_event 1");
+
 	char path[BCTEXTLEN];
-TRACE("BatchRenderThread::handle_close_event 1");
 	path[0] = 0;
-TRACE("BatchRenderThread::handle_close_event 1");
 	save_jobs(path);
-TRACE("BatchRenderThread::handle_close_event 1");
 	save_defaults(mwindow->defaults);
-TRACE("BatchRenderThread::handle_close_event 1");
 	delete default_job;
-TRACE("BatchRenderThread::handle_close_event 1");
 	default_job = 0;
-TRACE("BatchRenderThread::handle_close_event 1");
 	jobs.remove_all_objects();
-TRACE("BatchRenderThread::handle_close_event 100");
 }
 
 BC_Window* BatchRenderThread::new_gui()
@@ -460,7 +473,11 @@ void BatchRenderThread::calculate_dest_paths(ArrayList<char*> *paths,
 				0);
 
 // Append output paths allocated to total
-			packages->get_package_paths(paths);
+			for(int j = 0; j < packages->get_total_packages(); j++)
+			{
+				RenderPackage *package = packages->get_package(j);
+				paths->append(strdup(package->path));
+			}
 
 // Delete package harness
 			delete packages;
@@ -501,8 +518,6 @@ void BatchRenderThread::start_rendering(char *config_path,
 		plugindb);
 
 	int result = ConfirmSave::test_files(0, &paths);
-	paths.remove_all_objects();
-
 // Abort on any existing file because it's so hard to set this up.
 	if(result) return;
 
@@ -664,6 +679,7 @@ void BatchRenderGUI::create_objects()
 	format_tools = new BatchFormat(mwindow,
 					this, 
 					thread->get_current_asset());
+	format_tools->set_w(get_w() / 2);
 	format_tools->create_objects(x, 
 						y, 
 						1, 
@@ -709,7 +725,7 @@ void BatchRenderGUI::create_objects()
 
 	x = x1;
 
-	y += 45;
+	y += 30;
 	add_subwindow(new_batch = new BatchRenderNew(thread, 
 		x, 
 		y));
@@ -719,17 +735,6 @@ void BatchRenderGUI::create_objects()
 		x, 
 		y));
 	x += delete_batch->get_w() + 10;
-
-	add_subwindow(savelist_batch = new BatchRenderSaveList(thread, 
-		x, 
-		y));
-	x += savelist_batch->get_w() + 10;
-
-	add_subwindow(loadlist_batch = new BatchRenderLoadList(thread, 
-		x, 
-		y));
-	x += loadlist_batch->get_w() + 10;
-
 
 	x = x2;
 	y = y2;
@@ -1001,176 +1006,8 @@ int BatchRenderDelete::handle_event()
 
 
 
-BatchRenderSaveList::BatchRenderSaveList(BatchRenderThread *thread, 
-	int x, 
-	int y)
- : BC_GenericButton(x, y, _("Save List"))
-{
-	this->thread = thread;
-	set_tooltip(_("Save a Batch Render List"));
-	gui = 0;
-	startup_lock = new Mutex("BatchRenderSaveList::startup_lock");
-}
-
-BatchRenderSaveList::~BatchRenderSaveList()
-{
-	startup_lock->lock("BatchRenderSaveList::~BrowseButton");
-	if(gui)
-	{
-		gui->lock_window();
-		gui->set_done(1);
-		gui->unlock_window();
-	}
-	startup_lock->unlock();
-	Thread::join();
-	delete startup_lock;
-}
-
-int BatchRenderSaveList::handle_event()
-{
-	if(Thread::running())
-	{
-		if(gui)
-		{
-			gui->lock_window();
-			gui->raise_window();
-			gui->unlock_window();
-		}
-		return 1;
-	}
-	startup_lock->lock("BatchRenderSaveList::handle_event 1");
-	Thread::start();
-	startup_lock->lock("BatchRenderSaveList::handle_event 2");
-	startup_lock->unlock();
-	return 1;
-}
-
-void BatchRenderSaveList::run()
-{
-	char default_path[BCTEXTLEN];
-	sprintf(default_path, "~");
-	BC_FileBox filewindow(100,
-			      100,
-			      this->thread->mwindow->defaults->get("DEFAULT_BATCHLOADPATH", default_path),
-			      _("Save Batch Render List"),
-			      _("Enter a Batch Render filename to save as:"),
-			      0,
-			      0,
-			      0,
-			      0);
-
-	gui = &filewindow;
-
-	startup_lock->unlock();
-	filewindow.create_objects();
-
-	int result2 = filewindow.run_window();
-
-	if(!result2)
-	{
-		this->thread->save_jobs(filewindow.get_submitted_path());
-		this->thread->mwindow->defaults->update("DEFAULT_BATCHLOADPATH", filewindow.get_submitted_path());
-	}
-
-	this->thread->gui->flush();
-	startup_lock->lock("BatchRenderLoadList::run");
-	gui = 0;
-	startup_lock->unlock();
-}
-
-int BatchRenderSaveList::keypress_event() {
-	if (get_keypress() == 's' || 
-	    get_keypress() == 'S') return handle_event();
-	return 0;
-}
 
 
-
-
-BatchRenderLoadList::BatchRenderLoadList(BatchRenderThread *thread, 
-	int x, 
-	int y)
-  : BC_GenericButton(x, y, _("Load List")),
-    Thread()
-{
-	this->thread = thread;
-	set_tooltip(_("Load a previously saved Batch Render List"));
-	gui = 0;
-	startup_lock = new Mutex("BatchRenderLoadList::startup_lock");
-}
-
-BatchRenderLoadList::~BatchRenderLoadList()
-{
-	startup_lock->lock("BatchRenderLoadList::~BrowseButton");
-	if(gui)
-	{
-		gui->lock_window();
-		gui->set_done(1);
-		gui->unlock_window();
-	}
-	startup_lock->unlock();
-	Thread::join();
-	delete startup_lock;
-}
-
-int BatchRenderLoadList::handle_event()
-{
-	if(Thread::running())
-	{
-		if(gui)
-		{
-			gui->lock_window();
-			gui->raise_window();
-			gui->unlock_window();
-		}
-		return 1;
-	}
-	startup_lock->lock("BatchRenderLoadList::handle_event 1");
-	Thread::start();
-	startup_lock->lock("BatchRenderLoadList::handle_event 2");
-	startup_lock->unlock();
-	return 1;
-}
-
-void BatchRenderLoadList::run()
-{
-	char default_path[BCTEXTLEN];
-	sprintf(default_path, "~");
-	BC_FileBox filewindow(100,
-			      100,
-			      this->thread->mwindow->defaults->get("DEFAULT_BATCHLOADPATH", default_path),
-			      _("Load Batch Render List"),
-			      _("Enter a Batch Render filename to load from:"),
-			      0,
-			      0,
-			      0,
-			      0);
-
-	gui = &filewindow;
-
-	startup_lock->unlock();
-	filewindow.create_objects();
-
-	int result2 = filewindow.run_window();
-
-	if(!result2)
-	{
-		this->thread->load_jobs(filewindow.get_submitted_path(),this->thread->mwindow->preferences);
-		this->thread->gui->create_list(1);
-		this->thread->mwindow->defaults->update("DEFAULT_BATCHLOADPATH", filewindow.get_submitted_path());
-	}
-
-	this->thread->gui->flush();
-	startup_lock->lock("BatchRenderLoadList::run");
-	gui = 0;
-	startup_lock->unlock();
-}
-
-int BatchRenderLoadList::keypress_event() {
-	if (get_keypress() == 'o' || 
-	    get_keypress() == 'O') return handle_event();
-	return 0;
-}
 
 BatchRenderList::BatchRenderList(BatchRenderThread *thread, 
 	int x, 

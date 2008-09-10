@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef OVERLAYFRAME_H
 #define OVERLAYFRAME_H
 
@@ -85,7 +106,7 @@ public:
 	void tabulate_bcubic_f(float* &coef_table, 
 		int* &coord_table,
 		float scale,
-		float start, 
+		int start, 
 		int pixels,
 		int total_pixels,
 		float coefficient);
@@ -96,7 +117,7 @@ public:
 		float scale,
 		int pixel1,
 		int pixel2,
-		float start,
+		int start,
 		int total_pixels);
 
 	void tabulate_bcubic_i(int* &coef_table, 
@@ -113,7 +134,7 @@ public:
 		float scale,
 		int pixel1,
 		int pixel2,
-		float start,
+		int start,
 		int total_pixels);
 	void tabulate_reduction(bilinear_table_t* &table,
 		float scale,
@@ -122,7 +143,7 @@ public:
 		int in_total);
 	void tabulate_enlarge(bilinear_table_t* &table,
 		float scale,
-		float pixel1,
+		int pixel1,
 		int out_total,
 		int in_total);
 	void dump_bilinear(bilinear_table_t *table, int total);
@@ -149,8 +170,8 @@ public:
 	VFrame *scale_input;
 	float w_scale;
 	float h_scale;
-	float in_x1_float;
-	float in_y1_float;
+	int in_x1_int;
+	int in_y1_int;
 	int out_w_int;
 	int out_h_int;
 	int interpolation_type;
@@ -269,11 +290,12 @@ public:
 	~ScaleTranslateUnit();
 
 	void process_package(LoadPackage *package);
-	void scale_array_f(int* &table, 
+	void scale_array(int* &table, 
 		int out_x1, 
 		int out_x2,
-		float in_x1,
-		float in_x2);
+		int in_x1,
+		int in_x2,
+		int is_x);
 	
 	OverlayFrame *overlay;
 	ScaleTranslateEngine *scale_translate;
@@ -295,10 +317,10 @@ public:
 // Arguments
 	VFrame *output;
 	VFrame *input;
-	float in_x1;
-	float in_y1;
-	float in_x2;
-	float in_y2;
+	int in_x1;
+	int in_y1;
+	int in_x2;
+	int in_y2;
 	int out_x1;
 	int out_y1;
 	int out_x2;

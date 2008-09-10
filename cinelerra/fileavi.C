@@ -1,10 +1,31 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 
 #ifdef USE_AVIFILE
 #include "avifile.h"
 #include "creators.h"
 #include "except.h"
-#include "avm_fourcc.h"
+#include "fourcc.h"
 #include "StreamInfo.h"
 #endif
 
@@ -12,17 +33,12 @@
 #include "file.h"
 #include "fileavi.h"
 #include "fileavi.inc"
-#include "interlacemodes.h"
+#include "language.h"
 #include "mwindow.inc"
 #include "vframe.h"
 
 
 #include <string.h>
-
-#include <libintl.h>
-#define _(String) gettext(String)
-#define gettext_noop(String) String
-#define N_(String) gettext_noop (String)
 
 
 
@@ -444,7 +460,6 @@ int FileAVI::open_avifile_in(Asset *asset)
 		vstream_in[0]->GetVideoFormatInfo(&bh, sizeof(bh));
 	    asset->width = bh.biWidth;
 	    asset->height = bh.biHeight;
-		asset->interlace_mode = BC_ILACE_MODE_UNDETECTED; // FIXME
 
 		uint32_t fourcc = stream_info->GetFormat();
 		asset->vcodec[0] = ((char*)&fourcc)[0];
@@ -753,7 +768,7 @@ int AVIConfigAudio::calculate_h(int format)
 	}
 }
 
-int AVIConfigAudio::create_objects()
+void AVIConfigAudio::create_objects()
 {
 	switch(asset->format)
 	{
@@ -778,7 +793,6 @@ int AVIConfigAudio::create_objects()
 	}
 
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 int AVIConfigAudio::close_event()
@@ -896,7 +910,7 @@ int AVIConfigVideo::calculate_h(int format)
 	}
 }
 
-int AVIConfigVideo::create_objects()
+void AVIConfigVideo::create_objects()
 {
 	switch(asset->format)
 	{
@@ -929,7 +943,6 @@ int AVIConfigVideo::create_objects()
 	}
 
 	add_subwindow(new BC_OKButton(this));
-	return 0;
 }
 
 int AVIConfigVideo::close_event()
@@ -979,7 +992,7 @@ void AVIConfigVideo::generate_attributelist()
 			avm::vector<AttributeInfo>& attributes = i->encoder_info;
 
 			for(avm::vector<AttributeInfo>::const_iterator j = attributes.begin();
-				j != attributes.end();
+				j < attributes.end();
 				j++)
 			{
 				char *name = (char*)j->GetName();
@@ -1006,12 +1019,8 @@ void AVIConfigVideo::generate_attributelist()
 					}
 
 					case AttributeInfo::String:
-					{
-						const char * temp = 0;
-						Creators::GetCodecAttr(*i, name, &temp);
-						if(temp) strncpy(value, temp, BCTEXTLEN);
+						Creators::GetCodecAttr(*i, name, value, BCTEXTLEN);
 						break;
-					}
 				}
 
 				attribute_items[0].append(new BC_ListBoxItem(name));
@@ -1029,7 +1038,7 @@ void AVIConfigVideo::generate_attributelist()
 #endif
 }
 
-char* AVIConfigVideo::get_current_attribute_text()
+const char* AVIConfigVideo::get_current_attribute_text()
 {
 	BC_ListBoxItem *item = attributes->get_selection(0, 0);
 
@@ -1041,7 +1050,7 @@ char* AVIConfigVideo::get_current_attribute_text()
 		return "";
 }
 
-char* AVIConfigVideo::get_current_attribute_value()
+const char* AVIConfigVideo::get_current_attribute_value()
 {
 	BC_ListBoxItem *item = attributes->get_selection(1, 0);
 

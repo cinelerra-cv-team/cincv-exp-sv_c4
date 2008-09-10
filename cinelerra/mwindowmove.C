@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "clip.h"
 #include "cplayback.h"
 #include "cwindow.h"
@@ -29,69 +50,39 @@ void MWindow::update_plugins()
 }
 
 
-int MWindow::expand_sample(double fixed_sample)
+int MWindow::expand_sample()
 {
 	if(gui)
 	{
 		if(edl->local_session->zoom_sample < 0x100000)
 		{
-			int64_t new_zoom_sample = edl->local_session->zoom_sample * 2;
-			int64_t view_start;
-			if (fixed_sample < 0)
-				view_start = -1;
-			else
-			{
-				double viewstart_position = (double)edl->local_session->view_start * 
-					edl->local_session->zoom_sample /
-					edl->session->sample_rate * 2 - fixed_sample;
-				view_start = Units::round(viewstart_position *
-					edl->session->sample_rate /
-					new_zoom_sample);
-			}
-
-			zoom_sample(new_zoom_sample, view_start);
+			edl->local_session->zoom_sample *= 2;
+			gui->zoombar->sample_zoom->update(edl->local_session->zoom_sample);
+			zoom_sample(edl->local_session->zoom_sample);
 		}
 	}
 	return 0;
 }
 
-int MWindow::zoom_in_sample(double fixed_sample)
+int MWindow::zoom_in_sample()
 {
 	if(gui)
 	{
 		if(edl->local_session->zoom_sample > 1)
 		{
-			int64_t new_zoom_sample = edl->local_session->zoom_sample / 2;
-			int64_t view_start;
-			if (fixed_sample < 0)
-				view_start = -1;
-			else
-			{
-				double viewstart_position = (double)edl->local_session->view_start * 
-					edl->local_session->zoom_sample /
-					edl->session->sample_rate;
-				viewstart_position = viewstart_position + (fixed_sample - viewstart_position) / 2;
-
-				view_start = Units::round(viewstart_position *
-					edl->session->sample_rate /
-					new_zoom_sample);
-			}
-			
-			zoom_sample(new_zoom_sample, view_start);
+			edl->local_session->zoom_sample /= 2;
+			gui->zoombar->sample_zoom->update(edl->local_session->zoom_sample);
+			zoom_sample(edl->local_session->zoom_sample);
 		}
 	}
 	return 0;
 }
 
-int MWindow::zoom_sample(int64_t zoom_sample, int64_t view_start)
+int MWindow::zoom_sample(int64_t zoom_sample)
 {
 	CLIP(zoom_sample, 1, 0x100000);
 	edl->local_session->zoom_sample = zoom_sample;
-	if (view_start < 0)
-		find_cursor();
-	else
-		edl->local_session->view_start = view_start;
- 			
+	find_cursor();
 	gui->get_scrollbars();
 
 	if(!gui->samplescroll) edl->local_session->view_start = 0;
@@ -226,6 +217,16 @@ void MWindow::shrink_autos()
 	float new_range = range / 4;
 	edl->local_session->automation_min = center - new_range;
 	edl->local_session->automation_max = center + new_range;
+	gui->zoombar->update_autozoom();
+	gui->canvas->draw_overlays();
+	gui->canvas->flash();
+}
+
+
+void MWindow::zoom_autos(float min, float max)
+{
+	edl->local_session->automation_min = min;
+	edl->local_session->automation_max = max;
 	gui->zoombar->update_autozoom();
 	gui->canvas->draw_overlays();
 	gui->canvas->flash();
@@ -395,8 +396,29 @@ void MWindow::select_all()
 
 int MWindow::next_label(int shift_down)
 {
-	Label *current = edl->labels->next_label(
-			edl->local_session->get_selectionstart(1));
+	Label *current;
+	Labels *labels = edl->labels;
+
+// Test for label under cursor position
+	for(current = labels->first; 
+		current && !edl->equivalent(current->position, 
+			edl->local_session->get_selectionend(1)); 
+		current = NEXT)
+		;
+
+// Test for label before cursor position
+	if(!current)
+		for(current = labels->last;
+			current && current->position > edl->local_session->get_selectionend(1);
+			current = PREVIOUS)
+			;
+
+// Test for label after cursor position
+	if(!current)
+		current = labels->first;
+	else
+// Get next label
+		current = NEXT;
 
 	if(current)
 	{
@@ -444,8 +466,30 @@ int MWindow::next_label(int shift_down)
 
 int MWindow::prev_label(int shift_down)
 {
-	Label *current = edl->labels->prev_label(
-			edl->local_session->get_selectionstart(1));;
+	Label *current;
+	Labels *labels = edl->labels;
+
+// Test for label under cursor position
+	for(current = labels->first; 
+		current && !edl->equivalent(current->position, 
+			edl->local_session->get_selectionstart(1)); 
+		current = NEXT)
+		;
+
+// Test for label after cursor position
+	if(!current)
+		for(current = labels->first;
+			current && 
+				current->position < edl->local_session->get_selectionstart(1);
+			current = NEXT)
+			;
+
+// Test for label before cursor position
+	if(!current) 
+		current = labels->last;
+	else
+// Get previous label
+		current = PREVIOUS;
 
 	if(current)
 	{

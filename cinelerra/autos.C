@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "autos.h"
 #include "clip.h"
 #include "edl.h"
@@ -277,7 +298,7 @@ Auto* Autos::get_auto_for_editing(double position)
 
 	if(edl->session->auto_keyframes)
 	{
-		result = insert_auto_for_editing(track->to_units(position, 0));
+		result = insert_auto(track->to_units(position, 0));
 	}
 	else
 		result = get_prev_auto(track->to_units(position, 0), 
@@ -370,55 +391,8 @@ Auto* Autos::insert_auto(int64_t position)
 		}
 
 		result->position = position;
-	}
-	else
-	{
-		result = current;
-	}
-
-	return result;
-}
-
-Auto* Autos::insert_auto_for_editing(int64_t position)
-{
-	Auto *current, *result;
-
-// Test for existence
-	for(current = first; 
-		current && !edl->equivalent(current->position, position); 
-		current = NEXT)
-	{
-		;
-	}
-
-//printf("Autos::insert_auto_for_editing %p\n", current);
-// Insert new
-	if(!current)
-	{
-// Get first one on or before as a template
-		for(current = last; 
-			current && current->position > position; 
-			current = PREVIOUS)
-		{
-			;
-		}
-
-		if(current)
-		{
-			Auto *next = NEXT;
-			insert_after(current, result = new_auto());
-			result->interpolate_from(current, next, position);
-		}
-		else
-		{
-			current = first;
-			if(!current) current = default_auto;
-
-			insert_before(first, result = new_auto());
-			if(current) result->copy_from(current);
-		}
-
-		result->position = position;
+// Set curve type
+		result->mode = edl->local_session->floatauto_type;
 	}
 	else
 	{
@@ -462,20 +436,20 @@ void Autos::paste(int64_t start,
 	int64_t length, 
 	double scale, 
 	FileXML *file, 
-	int default_only)
+	int default_only,
+	int active_only)
 {
 	int total = 0;
 	int result = 0;
 
-//printf("Autos::paste %ld\n", start);
+//printf("Autos::paste %d start=%lld\n", __LINE__, start);
 	do{
 		result = file->read_tag();
 
-		if(!result && !file->tag.title_is("/AUTO"))
+		if(!result)
 		{
 // End of list
-			if(/* strstr(file->tag.get_title(), "AUTOS") && */
-				file->tag.get_title()[0] == '/')
+			if(file->tag.get_title()[0] == '/')
 			{
 				result = 1;
 			}
@@ -484,19 +458,14 @@ void Autos::paste(int64_t start,
 			{
 				Auto *current = 0;
 
-// Paste first active auto into default				
-				if(default_only)
+// Paste first auto into default				
+				if(default_only && total == 0)
 				{
-					if(total == 1)
-					{
-						current = default_auto;
-					}
+					current = default_auto;
 				}
 				else
 // Paste default auto into default
-				if(total == 0)
-					current = default_auto;
-				else
+				if(!default_only)
 				{
 					int64_t position = Units::to_int64(
 						(double)file->tag.get_property("POSITION", 0) *
@@ -528,18 +497,17 @@ int Autos::copy(int64_t start,
 	int64_t end, 
 	FileXML *file, 
 	int default_only,
-	int autos_only)
+	int active_only)
 {
-// First auto is always loaded into default even if it is discarded in a paste
-// operation
-//printf("Autos::copy 1 %d %d %p\n", default_only, start, autoof(start));
-	if(!autos_only)
+// First auto always loaded with default
+//printf("Autos::copy %d %d %d\n", __LINE__, default_only, active_only);
+	if(default_only || (!active_only && !default_only))
 	{
 		default_auto->copy(0, 0, file, default_only);
 	}
 
 //printf("Autos::copy 10 %d %d %p\n", default_only, start, autoof(start));
-	if(!default_only)
+	if(active_only || (!default_only && !active_only))
 	{
 		for(Auto* current = autoof(start); 
 			current && current->position <= end; 
@@ -553,12 +521,12 @@ int Autos::copy(int64_t start,
 		}
 	}
 // Copy default auto again to make it the active auto on the clipboard
-	else
-	{
+//	else
+//	{
 // Need to force position to 0 for the case of plugins
 // and default status to 0.
-		default_auto->copy(0, 0, file, default_only);
-	}
+//		default_auto->copy(0, 0, file, default_only);
+//	}
 //printf("Autos::copy 20\n");
 
 	return 0;
@@ -617,7 +585,7 @@ void Autos::remove_nonsequential(Auto *keyframe)
 }
 
 
-void Autos::straighten(int64_t start, int64_t end)
+void Autos::set_automation_mode(int64_t start, int64_t end, int mode)
 {
 }
 
@@ -671,7 +639,7 @@ int Autos::load(FileXML *file)
 	do{
 		result = file->read_tag();
 		
-		if(!result && !file->tag.title_is("/AUTO"))
+		if(!result)
 		{
 // First tag with leading / is taken as end of autos
 			if(/* strstr(file->tag.get_title(), "AUTOS") && */

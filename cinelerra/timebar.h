@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef TIMEBAR_H
 #define TIMEBAR_H
 
@@ -5,7 +26,6 @@
 #include "guicast.h"
 #include "filexml.inc"
 #include "labels.inc"
-#include "labeledit.inc"
 #include "mwindow.inc"
 #include "recordlabel.inc"
 #include "testobject.h"
@@ -43,8 +63,6 @@ public:
 	static int get_y(MWindow *mwindow, TimeBar *timebar);
 	void reposition();
 
-	Label *label;
-	int button_press_event();
 	MWindow *mwindow;
 	VWindowGUI *gui;
 	TimeBar *timebar;
@@ -104,14 +122,12 @@ public:
 		int h);
 	virtual ~TimeBar();
 
-	int create_objects();
+	void create_objects();
 	int update_defaults();
 	int button_press_event();
 	int button_release_event();
 	int cursor_motion_event();
 	int repeat_event(int64_t duration);
-
-	LabelEdit *label_edit;
 
 // Synchronize label, in/out, presentation display with master EDL
 	void update(int do_range = 1, int do_others = 1);

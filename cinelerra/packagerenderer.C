@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "arender.h"
 #include "asset.h"
 #include "auto.h"
@@ -79,9 +100,6 @@ PackageRenderer::~PackageRenderer()
 	delete vconfig;
 }
 
-// PackageRenderer::initialize happens only once for every node when doing rendering session
-// This is not called for each package!
-
 int PackageRenderer::initialize(MWindow *mwindow,
 		EDL *edl, 
 		Preferences *preferences, 
@@ -129,7 +147,12 @@ void PackageRenderer::create_output()
 
 
 
-	strcpy(asset->path, package->path);
+// Tag output paths for VFS here.
+//	if(!mwindow && preferences->renderfarm_vfs && preferences->use_renderfarm)
+	if(!get_master() && preferences->renderfarm_vfs && preferences->use_renderfarm)
+		sprintf(asset->path, RENDERFARM_FS_PREFIX "%s", package->path);
+	else
+		strcpy(asset->path, package->path);
 
 
 	
@@ -169,7 +192,9 @@ void PackageRenderer::create_output()
 void PackageRenderer::create_engine()
 {
 	int current_achannel = 0, current_vchannel = 0;
+// Fix audio buffers to 1 second
 	audio_read_length = command->get_edl()->session->sample_rate;
+	command->get_edl()->session->playback_config->aconfig->fragment_size = audio_read_length;
 
 	aconfig->fragment_size = audio_read_length;
 
@@ -255,7 +280,6 @@ void PackageRenderer::create_engine()
 
 void PackageRenderer::do_audio()
 {
-//printf("PackageRenderer::do_audio 1\n");
 // Do audio data
 	if(asset->audio_data)
 	{
@@ -275,7 +299,6 @@ void PackageRenderer::do_audio()
 			audio_position,
 			0);
 
-//printf("PackageRenderer::do_audio 3\n");
 
 
 // Fix buffers for preroll
@@ -501,11 +524,6 @@ int PackageRenderer::render_package(RenderPackage *package)
 // 	package->video_end - package->video_start);
 
 
-// FIXME: The design that we only get EDL once does not give us neccessary flexiblity to do things the way they should be donek
-	default_asset->video_data = package->video_do;
-	default_asset->audio_data = package->audio_do;
-	Render::check_asset(edl, *default_asset);
-	
 	create_output();
 
 	if(!asset->video_data) video_done = 1;
@@ -582,13 +600,16 @@ int PackageRenderer::render_package(RenderPackage *package)
 			if(need_audio && !result) do_audio();
 
 
+//PRINT_TRACE
 			if(!result) set_progress(samples_rendered);
+//PRINT_TRACE
 
 
 
 
 
 			if(!result && progress_cancelled()) result = 1;
+//PRINT_TRACE
 
 // printf("PackageRenderer::render_package 10 %d %d %d %d\n", 
 // audio_read_length, video_read_length, samples_rendered, result);
@@ -598,25 +619,25 @@ int PackageRenderer::render_package(RenderPackage *package)
 				result = get_result();
 		}
 
-//printf("PackageRenderer::render_package 20\n");
+//PRINT_TRACE
 		stop_engine();
-//printf("PackageRenderer::render_package 30\n");
+//PRINT_TRACE
 
 		stop_output();
-//printf("PackageRenderer::render_package 40\n");
+//PRINT_TRACE
 
 
 	}
 
 
+//PRINT_TRACE
 
-//printf("PackageRenderer::render_package 50\n");
 	close_output();
-//printf("PackageRenderer::render_package 60\n");
 
+//PRINT_TRACE
 
 	set_result(result);
-//printf("PackageRenderer::render_package 70\n");
+//PRINT_TRACE
 
 
 
@@ -690,7 +711,7 @@ int PackageRenderer::direct_frame_copy(EDL *edl,
 				temp_output[0] = new VFrame*[1];
 				temp_output[0][0] = compressed_output;
 				error = file->write_frames(temp_output, 1);
-				delete [] temp_output[0];
+				delete temp_output[0];
 				delete temp_output;
 			}
 		}

@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifdef HAVE_FIREWIRE
 
 
@@ -82,7 +103,7 @@ Device1394Output::~Device1394Output()
 
 		if(get_dv1394())
 		{
-  			if(ioctl(output_fd, DV1394_IOC_WAIT_FRAMES, status.init.n_frames - 1) < 0)
+  			if(ioctl(output_fd, dv1394_wait_frames, status.init.n_frames - 1) < 0)
   			{
   				fprintf(stderr,
   					"Device1394Output::close_all: DV1394_WAIT_FRAMES %i: %s",
@@ -91,7 +112,7 @@ Device1394Output::~Device1394Output()
   			}
   			munmap(output_buffer, status.init.n_frames *
 				(is_pal ? DV1394_PAL_FRAME_SIZE : DV1394_NTSC_FRAME_SIZE));
-  			if(ioctl(output_fd, DV1394_IOC_SHUTDOWN, NULL) < 0)
+  			if(ioctl(output_fd, dv1394_shutdown, NULL) < 0)
   			{
   				perror("Device1394Output::close_all: DV1394_SHUTDOWN");
   			}
@@ -234,12 +255,12 @@ int Device1394Output::open(char *path,
 
 			if(get_dv1394())
 			{
-  				if(ioctl(output_fd, DV1394_IOC_INIT, &setup) < 0)
+  				if(ioctl(output_fd, dv1394_init, &setup) < 0)
   				{
   					perror("Device1394Output::open DV1394_INIT");
   				}
 
-  				if(ioctl(output_fd, DV1394_IOC_GET_STATUS, &status) < 0)
+  				if(ioctl(output_fd, dv1394_get_status, &status) < 0)
   				{
   					perror("Device1394Output::open DV1394_GET_STATUS");
   				}
@@ -450,15 +471,15 @@ void Device1394Output::run()
 
 			if(get_dv1394())
 			{
-  				if(ioctl(output_fd, DV1394_IOC_SUBMIT_FRAMES, 1) < 0)
+  				if(ioctl(output_fd, dv1394_submit_frames, 1) < 0)
   				{
   					perror("Device1394Output::run DV1394_SUBMIT_FRAMES");
   				}
- 				if(ioctl(output_fd, DV1394_IOC_WAIT_FRAMES, 1) < 0)
+ 				if(ioctl(output_fd, dv1394_wait_frames, 1) < 0)
 				{
 					perror("Device1394Output::run DV1394_WAIT_FRAMES");
 				}
-  				if(ioctl(output_fd, DV1394_IOC_GET_STATUS, &status) < 0)
+  				if(ioctl(output_fd, dv1394_get_status, &status) < 0)
   				{
   					perror("Device1394Output::run DV1394_GET_STATUS");
   				}
@@ -835,6 +856,15 @@ void Device1394Output::set_ioctls()
 	if(major >= 2 && minor >= 6 && point >= 0 ||
 		major >= 2 && minor >= 4 && point >= 23)
 	{
+		// dv1394
+		dv1394_init = DV1394_IOC_INIT;
+		dv1394_shutdown = DV1394_IOC_SHUTDOWN;
+		dv1394_submit_frames = DV1394_IOC_SUBMIT_FRAMES;
+		dv1394_wait_frames = DV1394_IOC_WAIT_FRAMES;
+		dv1394_receive_frames = DV1394_IOC_RECEIVE_FRAMES;
+		dv1394_start_receive = DV1394_IOC_START_RECEIVE;
+		dv1394_get_status = DV1394_IOC_GET_STATUS;
+
 		// video1394
 		video1394_listen_channel = VIDEO1394_IOC_LISTEN_CHANNEL;
 		video1394_unlisten_channel = VIDEO1394_IOC_UNLISTEN_CHANNEL;
@@ -851,6 +881,15 @@ void Device1394Output::set_ioctls()
 	}
 	else	 // we are using an older kernel
 	{
+      // dv1394
+      dv1394_init = DV1394_INIT;
+      dv1394_shutdown = DV1394_SHUTDOWN;
+      dv1394_submit_frames = DV1394_SUBMIT_FRAMES;
+      dv1394_wait_frames = DV1394_WAIT_FRAMES;
+      dv1394_receive_frames = DV1394_RECEIVE_FRAMES;
+      dv1394_start_receive = DV1394_START_RECEIVE;
+      dv1394_get_status = DV1394_GET_STATUS;
+
       // video1394
       video1394_listen_channel = VIDEO1394_LISTEN_CHANNEL;
       video1394_unlisten_channel = VIDEO1394_UNLISTEN_CHANNEL;

@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef MWINDOW_H
 #define MWINDOW_H
 
@@ -17,11 +38,11 @@
 #include "devicedvbinput.inc"
 #include "edit.inc"
 #include "edl.inc"
-#include "exportedl.inc"
 #include "filesystem.inc"
 #include "filexml.inc"
 #include "framecache.inc"
 #include "gwindow.inc"
+#include "keyframegui.inc"
 #include "levelwindow.inc"
 #include "loadmode.inc"
 #include "mainerror.inc"
@@ -89,7 +110,7 @@ public:
 
 	int load_defaults();
 	int save_defaults();
-	int set_filename(char *filename);
+	int set_filename(const char *filename);
 // Total vertical pixels in timeline
 	int get_tracks_height();
 // Total horizontal pixels in timeline
@@ -135,6 +156,7 @@ public:
 	void fit_autos();
 	void expand_autos();
 	void shrink_autos();
+	void zoom_autos(float min, float max);
 // move the window to include the cursor
 	void find_cursor();
 // Append a plugindb with pointers to the master plugindb
@@ -156,11 +178,7 @@ public:
 		int load_mode = LOAD_REPLACE,
 // Cause the project filename on the top of the window to be updated.
 // Not wanted for loading backups.
-		int update_filename = 1,
-		char *reel_name = "cin0000",
-		int reel_number = 0,
-		int overwrite_reel = 0);
-	
+		int update_filename = 1);
 
 // Print out plugins which are referenced in the EDL but not loaded.
 	void test_plugins(EDL *new_edl, char *path);
@@ -176,9 +194,9 @@ public:
 	void prev_time_format();
 	void time_format_common();
 	int reposition_timebar(int new_pixel, int new_height);
-	int expand_sample(double fixed_sample = -1);    // fixed_sample is the sample that should hold fixed position on the screen after zooming, -1 = selection
-	int zoom_in_sample(double fixed_sample = -1);
-	int zoom_sample(int64_t zoom_sample, int64_t view_start = -1); // what's the supposed view start
+	int expand_sample();
+	int zoom_in_sample();
+	int zoom_sample(int64_t zoom_sample);
 	void zoom_amp(int64_t zoom_amp);
 	void zoom_track(int64_t zoom_track);
 	int fit_sample();
@@ -211,9 +229,10 @@ public:
 	void show_plugin(Plugin *plugin);
 	void hide_plugin(Plugin *plugin, int lock);
 	void hide_plugins();
+	void delete_plugin(PluginServer *plugin);
 // Update plugins with configuration changes.
 // Called by TrackCanvas::cursor_motion_event.
-	void update_plugin_guis();
+	void update_plugin_guis(int do_keyframe_guis = 1);
 	void update_plugin_states();
 	void update_plugin_titles();
 // Called by Attachmentpoint during playback.
@@ -225,6 +244,11 @@ public:
 // Returns 1 if a GUI for the plugin is open so OpenGL routines can determine if
 // they can run.
 	int plugin_gui_open(Plugin *plugin);
+
+	void show_keyframe_gui(Plugin *plugin);
+	void hide_keyframe_guis();
+	void hide_keyframe_gui(Plugin *plugin);
+	void update_keyframe_guis();
 
 
 // ============================= editing commands ========================
@@ -269,7 +293,6 @@ public:
 	void delete_track();
 	void delete_track(Track *track);
 	void delete_tracks();
-	void detach_transition(Transition *transition);
 	int feather_edits(int64_t feather_samples, int audio, int video);
 	int64_t get_feather(int audio, int video);
 	float get_aspect_ratio();
@@ -288,6 +311,15 @@ public:
 // the drag_pluginservers array.
 	void insert_effects_cwindow(Track *dest_track);
 
+// Attach new effect to all recordable tracks
+// single_standalone - attach 1 standalone on the first track and share it with
+// other tracks
+	void insert_effect(char *title, 
+		SharedLocation *shared_location, 
+		int data_type,
+		int plugin_type,
+		int single_standalone);
+
 // This is called multiple times by the above functions.
 // It can't sync parameters.
 	void insert_effect(char *title, 
@@ -302,8 +334,7 @@ public:
 // Move edit to new position
 	void move_edits(ArrayList<Edit*> *edits,
 		Track *track,
-		double position,
-		int behaviour);       // behaviour: 0 - old style (cut and insert elswhere), 1- new style - (clear and overwrite elsewere)
+		double position);
 // Move effect to position
 	void move_effect(Plugin *plugin,
 		PluginSet *plugin_set,
@@ -336,10 +367,24 @@ public:
 				RecordLabels *new_labels);
 	void paste_silence();
 
+// Detach single transition
+	void detach_transition(Transition *transition);
+// Detach all transitions in selection
+	void detach_transitions();
+// Attach dragged transition
 	void paste_transition();
+// Attach transition to all edits in selection
+	void paste_transitions(int track_type, char *title);
+// Attach transition dragged onto CWindow
 	void paste_transition_cwindow(Track *dest_track);
+// Attach default transition to single edit
 	void paste_audio_transition();
 	void paste_video_transition();
+// Set length of single transition
+	void set_transition_length(Transition *transition, double length);
+// Set length in seconds of all transitions in active range
+	void set_transition_length(double length);
+	
 	void rebuild_indices();
 // Asset removal from caches
 	void reset_caches();
@@ -347,6 +392,9 @@ public:
 	void remove_assets_from_project(int push_undo = 0);
 	void remove_assets_from_disk();
 	void resize_track(Track *track, int w, int h);
+	
+	void set_automation_mode(int mode);
+	void set_keyframe_type(int mode);
 	void set_auto_keyframes(int value);
 // Update the editing mode
 	int set_editing_mode(int new_editing_mode);
@@ -368,7 +416,6 @@ public:
 	int copy_automation();
 	int paste_automation();
 	void clear_automation();
-	void straighten_automation();
 	int cut_default_keyframe();
 	int copy_default_keyframe();
 // Use paste_automation to paste the default keyframe in other position.
@@ -420,10 +467,6 @@ public:
 
 // Menu items
 	ArrayList<ColormodelItem*> colormodels;
-	ArrayList<InterlaceautofixoptionItem*> interlace_asset_autofixoptions;
-	ArrayList<InterlacemodeItem*>          interlace_project_modes;
-	ArrayList<InterlacemodeItem*>          interlace_asset_modes;
-	ArrayList<InterlacefixmethodItem*>     interlace_asset_fixmethods;
 
 	int reset_meters();
 
@@ -437,6 +480,10 @@ public:
 	ArrayList<PluginServer*> *plugindb;
 // Currently visible plugins
 	ArrayList<PluginServer*> *plugin_guis;
+// GUI Plugins to delete
+	ArrayList<PluginServer*> *dead_plugins;
+// Keyframe editors
+	ArrayList<KeyFrameThread*> *keyframe_threads;
 
 
 // Adjust sample position to line up with frames.
@@ -447,10 +494,6 @@ public:
 
 	BatchRenderThread *batch_render;
 	Render *render;
-
- 	ExportEDL *exportedl;
-
-
 // Master edl
 	EDL *edl;
 // Main Window GUI
@@ -469,6 +512,8 @@ public:
 	LevelWindow *lwindow;
 // Lock during creation and destruction of GUI
 	Mutex *plugin_gui_lock;
+	Mutex *dead_plugin_lock;
+	Mutex *keyframe_gui_lock;
 // Lock during creation and destruction of brender so playback doesn't use it.
 	Mutex *brender_lock;
 
@@ -485,7 +530,6 @@ public:
 // Initialize channel DB's for playback
 	void init_channeldb();
 	void init_render();
-	void init_exportedl();
 // These three happen synchronously with each other
 // Make sure this is called after synchronizing EDL's.
 	void init_brender();

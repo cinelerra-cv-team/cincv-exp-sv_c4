@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #include "asset.h"
 #include "bcsignals.h"
 #include "channelpicker.h"
@@ -51,7 +72,7 @@ RecordMonitor::~RecordMonitor()
 	delete window;
 }
 
-int RecordMonitor::create_objects()
+void RecordMonitor::create_objects()
 {
 	int min_w = 150;
 	mwindow->session->rwindow_fullscreen = 0;
@@ -101,7 +122,6 @@ SET_TRACE
 SET_TRACE
 
 	Thread::start();
-	return 0;
 }
 
 
@@ -197,13 +217,11 @@ RecordMonitorGUI::RecordMonitorGUI(MWindow *mwindow,
 	this->mwindow = mwindow;
 	this->thread = thread;
 	this->record = record;
-#ifdef HAVE_FIREWIRE
 	avc = 0;
 	avc1394_transport = 0;
 	avc1394transport_title = 0;
 	avc1394transport_timecode = 0;
 	avc1394transport_thread = 0;
-#endif
 	bitmap = 0;
 	channel_picker = 0;
 	reverse_interlace = 0;
@@ -217,7 +235,6 @@ RecordMonitorGUI::~RecordMonitorGUI()
 	delete canvas;
 	if(bitmap) delete bitmap;
 	if(channel_picker) delete channel_picker;
-#ifdef HAVE_FIREWIRE
 	if(avc1394transport_thread)
 		delete avc1394transport_thread;
 	if(avc)
@@ -230,10 +247,9 @@ RecordMonitorGUI::~RecordMonitorGUI()
 	}
 	if(avc1394transport_title)
 		delete avc1394transport_title;
-#endif
 }
 
-int RecordMonitorGUI::create_objects()
+void RecordMonitorGUI::create_objects()
 {
 // y offset for video canvas if we have the transport controls
 	int do_channel = (mwindow->edl->session->vconfig_in->driver == VIDEO4LINUX ||
@@ -260,7 +276,6 @@ int RecordMonitorGUI::create_objects()
 	{
 		int driver = mwindow->edl->session->vconfig_in->driver;
 
-#ifdef HAVE_FIREWIRE
 		if(driver == CAPTURE_FIREWIRE ||
 			driver == CAPTURE_IEC61883)
 		{
@@ -298,7 +313,6 @@ int RecordMonitorGUI::create_objects()
 
 			}
 		}
-#endif
 
 
 		if(!background_done)
@@ -369,7 +383,6 @@ int RecordMonitorGUI::create_objects()
 			1);
 		meters->create_objects();
 	}
-	return 0;
 }
 
 int RecordMonitorGUI::button_press_event()
@@ -428,6 +441,7 @@ SET_TRACE
 int RecordMonitorGUI::keypress_event()
 {
 	int result = 0;
+
 	switch(get_keypress())
 	{
 		case LEFT:
@@ -481,14 +495,14 @@ int RecordMonitorGUI::keypress_event()
 		case 'w':
 			close_event();
 			break;
+
 		default:
-			result = canvas->keypress_event(this);
-#ifdef HAVE_FIREWIRE
+			if(canvas) result = canvas->keypress_event(this);
 			if(!result && avc1394_transport)
 				result = avc1394_transport->keypress_event(get_keypress());
-#endif
 			break;
 	}
+
 	return result;
 }
 
@@ -509,10 +523,7 @@ int RecordMonitorGUI::resize_event(int w, int h)
 			mwindow->edl->session->vconfig_in->driver == VIDEO4LINUX2JPEG);
 	int do_interlace = (mwindow->edl->session->vconfig_in->driver == CAPTURE_BUZ ||
 		mwindow->edl->session->vconfig_in->driver == VIDEO4LINUX2JPEG);
-	int do_avc = 0;
-#ifdef HAVE_FIREWIRE
-	do_avc = avc1394_transport ? 1 : 0;
-#endif
+	int do_avc = avc1394_transport ? 1 : 0;
 
 	mwindow->session->rmonitor_x = get_x();
 	mwindow->session->rmonitor_y = get_y();
@@ -531,13 +542,11 @@ int RecordMonitorGUI::resize_event(int w, int h)
 
 // 	record_transport->reposition_window(mwindow->theme->rmonitor_tx_x,
 // 		mwindow->theme->rmonitor_tx_y);
-#ifdef HAVE_FIREWIRE
 	if(avc1394_transport)
 	{
 		avc1394_transport->reposition_window(mwindow->theme->rmonitor_tx_x,
 			mwindow->theme->rmonitor_tx_y);
 	}
-#endif
 	
 	if(channel_picker) channel_picker->reposition();
 	if(reverse_interlace) reverse_interlace->reposition_window(reverse_interlace->get_x(),

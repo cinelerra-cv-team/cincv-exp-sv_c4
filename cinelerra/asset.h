@@ -1,3 +1,24 @@
+
+/*
+ * CINELERRA
+ * Copyright (C) 2008 Adam Williams <broadcast at earthling dot net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ */
+
 #ifndef ASSET_H
 #define ASSET_H
 
@@ -13,11 +34,6 @@
 
 #include <stdint.h>
 
-// Time code formats
-#define TC_DROPFRAME 0
-#define TC_NONDROPFRAME 1
-#define TC_PAL 2
-#define TC_FILM 3
 
 // Asset can be one of the following:
 // 1) a pure media file
@@ -48,24 +64,23 @@ public:
 // Load and save parameters for a render dialog
 // Used by render, record, menueffects, preferences
 	void load_defaults(BC_Hash *defaults, 
-		char *prefix /* = 0 */, 
+		const char *prefix /* = 0 */, 
 		int do_format /* = 0 */,
 		int do_compression,
 		int do_path,
 		int do_data_types,
 		int do_bits);
 	void save_defaults(BC_Hash *defaults, 
-		char *prefix /* = 0 */,
+		const char *prefix /* = 0 */,
 		int do_format,     /* Don't save format which is autodetected by file loader */
 		int do_compression,    /* Don't save compression which is fixed by driver */
 		int do_path,
 		int do_data_types,
 		int do_bits);
-	char* construct_param(char *param, char *prefix, char *return_value);
+	const char* construct_param(const char *param, const char *prefix, char *return_value);
 
-// defaults which are specific to format used	
-	void load_format_defaults(BC_Hash *defaults);
-	void save_format_defaults(BC_Hash *defaults);
+
+
 
 // Executed during index building only
 	void update_index(Asset *asset);
@@ -82,17 +97,13 @@ public:
 	int read_video(FileXML *xml);
 	int read_index(FileXML *xml);
 	int reset_index();  // When the index file is wrong, reset the asset values
-
-	int set_timecode(char *tc, int format, int end);
-	int reset_timecode();
-	
 // Output path is the path of the output file if name truncation is desired.
 // It is a "" if; complete names should be used.
 	int write(FileXML *file, 
 		int include_index, 
-		char *output_path);
+		const char *output_path);
 // Write the index data and asset info.  Used by IndexThread.
-	int write_index(char *path, int data_bytes);
+	int write_index(const char *path, int data_bytes);
 
 
 // Necessary for renderfarm to get encoding parameters
@@ -103,13 +114,6 @@ public:
 
 // Path to file
 	char path[BCTEXTLEN];
-
-// Pipe command
-	char pipe[BCTEXTLEN];
-	int use_pipe;
-
-// Prefix used to generate this asset
-	char prefix[BCTEXTLEN];
 
 // Folder in resource manager
 	char folder[BCTEXTLEN];
@@ -147,14 +151,6 @@ public:
 	int video_data;       
 	int layers;
 	double frame_rate;
-
-// Timecode information. User setable, in case of errors in source
-	char reel_name[BCTEXTLEN];
-	int reel_number;
-	int64_t tcstart;
-	int64_t tcend;
-	int tcformat;
-
 	int width, height;
 // String or FourCC describing compression
 	char vcodec[BCTEXTLEN];
@@ -197,10 +193,8 @@ public:
 // Set by package render during file creation. -1 means square pixels.
 	double aspect_ratio;
 
-// for the interlace mode 
-	int interlace_autofixoption;
-	int interlace_mode;
-	int interlace_fixmethod;
+
+
 
 // for jpeg compression
 	int jpeg_quality;     
