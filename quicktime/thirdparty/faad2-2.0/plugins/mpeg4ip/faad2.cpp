@@ -76,7 +76,7 @@ static codec_data_t *aac_codec_create (const char *compressor,
   }
 
   aac->m_info = faacDecOpen();
-  unsigned long srate;
+  uint32_t srate;
   unsigned char chan;
   if ((userdata == NULL && fmtp == NULL) ||
       (faacDecInit2(aac->m_info,
@@ -97,7 +97,7 @@ static codec_data_t *aac_codec_create (const char *compressor,
       aac->m_output_frame_size = 960;
     }
   }
-  aac->m_freq = srate;
+  aac->m_freq =  srate;
   aac->m_chans = chan;
   aac->m_faad_inited = 1;
   aac->m_msec_per_frame = aac->m_output_frame_size;
@@ -188,7 +188,7 @@ static int aac_decode (codec_data_t *ptr,
      * If not initialized, do so.
      */
     abort();
-    unsigned long freq;
+    uint32_t freq;
     unsigned char chans;
 
     faacDecInit(aac->m_info,
@@ -237,9 +237,9 @@ static int aac_decode (codec_data_t *ptr,
       aac->m_vft->audio_configure(aac->m_ifptr,
                   aac->m_freq,
                   aac->m_chans,
-                  AUDIO_S16SYS,
+                  (audio_format_t) AUDIO_S16SYS,
                   aac->m_output_frame_size);
-      uint8_t *now = aac->m_vft->audio_get_buffer(aac->m_ifptr);
+      uint8_t *now = aac->m_vft->audio_get_buffer(aac->m_ifptr, aac->m_freq, aac->m_current_time);
       aac->m_audio_inited = 1;
     }
     /*
@@ -322,7 +322,7 @@ static int aac_codec_check (lib_message_func_t message,
   }
   if (userdata != NULL) {
     mpeg4_audio_config_t audio_config;
-    decode_mpeg4_audio_config(userdata, userdata_size, &audio_config);
+    decode_mpeg4_audio_config(userdata, userdata_size, &audio_config, false);
     message(LOG_DEBUG, "aac", "audio type is %d", audio_config.audio_object_type);
     if (fmtp != NULL) free_fmtp_parse(fmtp);
 
