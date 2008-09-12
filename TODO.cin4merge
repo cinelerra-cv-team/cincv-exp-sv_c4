@@ -1,0 +1,60 @@
+List of TODOs:
+---
+
+1. build system
+2. errors in cinelerra and guicast
+3. errors in shipped thirdparty software 
+4. ... more to come, add here forgotten things
+
+---
+
+1. build system
+---
+
+One should be able to compile Cin4CV by simply running the well known 
+commands to build a program out of it's sources. 
+
+Therefor several fixes seem to be necessary as many paths of "third-
+party" software included in cinelerra changed. 
+
+Furthermore there are some new files, thus just copying the files of 
+Cin4HV or Cin2CV will not work.
+
+---
+
+2. errors in cinelerra and guicast
+---
+
+Most of the C mistakes will be introduced here. Thus there is a lot 
+of work to be done, but if the merged Cin4 should compile without 
+gcc/g++ errors a big part should be done. 
+
+Nevertheless there will be some stuff left to check. 
+
+Things to look at a second time:
+ * automation_[min|max] or automation_[mins|maxs] 
+      (this could be still screwed up)
+
+---
+
+3. errors in shipped thirdparty software
+---
+
+Spot and fix errors like the following ones:
+
+ * quicktime/thirdparty/faad2-2.0/plugins/mpeg4ip/ (fixed?)
+      (Makefile has been corrupt here, near line 602 were spaces 
+       instead of tabs, there have been conflicts in aa_file.cpp 
+       and faad2.cpp which have been fixed, see history of this 
+       repo)
+ 
+ * add other found errors here, mark them as fixed when done
+
+---
+
+4. ... more to come, add here forgotten things
+---
+
+Just do what the title says.
+
+---
