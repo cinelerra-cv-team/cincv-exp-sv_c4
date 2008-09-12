@@ -62,8 +62,8 @@ public:
 	int get_synchronous();
 	int get_tid();
 
-private:
 	int synchronous;         // set to 1 to force join() to end
+private:
 	int realtime;            // set to 1 to schedule realtime
 	int autodelete;          // set to 1 to autodelete when run() finishes
 	int thread_running;

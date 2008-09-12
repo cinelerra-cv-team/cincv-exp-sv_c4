@@ -123,7 +123,7 @@ public:
 	ReelWindow(MWindow *mwindow);
 	~ReelWindow();
 
-	int create_objects();
+	void create_objects();
 	int resize_event(int w, int h);
 
 	BC_OKButton *ok_button;

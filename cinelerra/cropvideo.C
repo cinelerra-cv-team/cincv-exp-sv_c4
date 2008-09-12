@@ -104,7 +104,7 @@ CropVideoWindow::~CropVideoWindow()
 {
 }
 
-int CropVideoWindow::create_objects()
+void CropVideoWindow::create_objects()
 {
 	int x = 10, y = 10;
 	add_subwindow(new BC_Title(x, y, _("Select a region to crop in the video output window")));

@@ -389,7 +389,7 @@ ReelWindow::~ReelWindow()
 	delete checkbox;
 }
 
-int ReelWindow::create_objects()
+void ReelWindow::create_objects()
 {
 	int y = 10;
 	int x = 0;

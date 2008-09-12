@@ -164,7 +164,7 @@ JPEGConfigVideo::~JPEGConfigVideo()
 {
 }
 
-int JPEGConfigVideo::create_objects()
+void JPEGConfigVideo::create_objects()
 {
 	int x = 10, y = 10;
 

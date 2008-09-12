@@ -35,7 +35,7 @@ APluginThread::~APluginThread()
 	delete plugin_server;
 }
 
-APluginThread::attach()
+void APluginThread::attach()
 {
 // open the plugin
 	plugin_server->open_plugin();
@@ -44,7 +44,7 @@ APluginThread::attach()
 	plugin_server->start_gui();
 }
 
-APluginThread::detach()
+void APluginThread::detach()
 {
 printf("APluginThread::detach\n");
 	if(plugin_server)

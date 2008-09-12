@@ -51,7 +51,7 @@ Patch::~Patch()
 	}
 }
 
-int Patch::create_objects(char *text, int pixel)
+void Patch::create_objects(char *text, int pixel)
 {
 	int x, y;
 	this->pixel = pixel;

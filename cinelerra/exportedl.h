@@ -90,7 +90,7 @@ public:
 	ExportEDLWindow(MWindow *mwindow, ExportEDL *exportedl, ExportEDLAsset *exportasset);
 	~ExportEDLWindow();
 
-	int create_objects();
+	void create_objects();
 
 	ExportEDLAsset *exportasset;
 

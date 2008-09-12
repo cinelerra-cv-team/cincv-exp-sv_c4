@@ -89,7 +89,7 @@ FeatherEditsWindow::~FeatherEditsWindow()
 	delete text;
 }
 
-int FeatherEditsWindow::create_objects(int audio, int video)
+void FeatherEditsWindow::create_objects(int audio, int video)
 {
 	int x = 10;
 	int y = 10;

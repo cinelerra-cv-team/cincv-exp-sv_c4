@@ -62,7 +62,7 @@ int RenderProfile::calculate_h(BC_WindowBase *gui)
 	return BC_TextBox::calculate_h(gui, MEDIUMFONT, 1, 1);
 }
 
-int RenderProfile::create_objects()
+void RenderProfile::create_objects()
 {
 	int x = this->x, y = this->y;
 	char *default_text = "";
