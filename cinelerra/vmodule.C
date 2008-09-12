@@ -168,12 +168,8 @@ int VModule::import_frame(VFrame *output,
 			if (position > max_position) position = max_position;
 			int use_cache = renderengine && 
 				renderengine->command->single_frame();
-<<<<<<< HEAD:cinelerra/vmodule.C
-			int use_asynchronous = !use_cache && renderengine &&
-=======
 			int use_asynchronous = !use_cache && 
 				renderengine &&
->>>>>>> FETCH_HEAD:cinelerra/vmodule.C
 				renderengine->command->realtime &&
 				renderengine->edl->session->video_asynchronous;
 

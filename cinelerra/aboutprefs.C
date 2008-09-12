@@ -133,7 +133,6 @@ mpeg3_release());
 		0,
 		1));
 	y += listbox->get_h() + get_text_height(LARGEFONT) + 10;
->>>>>>> FETCH_HEAD:cinelerra/aboutprefs.C
 
 	set_font(LARGEFONT);
 	set_color(resources->text_default);

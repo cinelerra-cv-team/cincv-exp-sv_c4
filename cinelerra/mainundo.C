@@ -143,7 +143,7 @@ bool MainUndo::ignore_push(char *description, uint32_t load_flags, void* creator
 // - if it originates from the same creator
 		undo_stack.last->creator == creator &&
 // - if it follows closely after the previous undo
-		last_update->get_difference() < 300 /*millisec*/;
+		last_update->get_difference() < 300 ; // millisec
 	last_update->update();
 	return ignore;
 }

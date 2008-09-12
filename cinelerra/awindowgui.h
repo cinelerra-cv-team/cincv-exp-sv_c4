@@ -60,12 +60,8 @@ public:
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, Asset *asset);
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, EDL *edl);
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, PluginServer *plugin);
-<<<<<<< HEAD:cinelerra/awindowgui.h
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, Label *plugin);
-	AssetPicon(MWindow *mwindow, AWindowGUI *gui, char *folder);
-=======
 	AssetPicon(MWindow *mwindow, AWindowGUI *gui, const char *folder);
->>>>>>> FETCH_HEAD:cinelerra/awindowgui.h
 	virtual ~AssetPicon();
 
 	void create_objects();
@@ -106,6 +102,7 @@ public:
 	int keypress_event();
 	void async_update_assets();     // Sends update asset event
 	void sort_assets();
+	void update_assets();
 	void reposition_objects();
 	int current_folder_number();
 // Call back for MWindow entry point
@@ -183,7 +180,6 @@ private:
 	void update_asset_list();
 	void filter_displayed_assets();
 	Atom UpdateAssetsXAtom;
-	void update_assets();
 
 };
 

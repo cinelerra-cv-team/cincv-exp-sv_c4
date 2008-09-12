@@ -33,11 +33,8 @@
 #include "file.h"
 #include "fileavi.h"
 #include "fileavi.inc"
-<<<<<<< HEAD:cinelerra/fileavi.C
 #include "interlacemodes.h"
-=======
 #include "language.h"
->>>>>>> FETCH_HEAD:cinelerra/fileavi.C
 #include "mwindow.inc"
 #include "vframe.h"
 

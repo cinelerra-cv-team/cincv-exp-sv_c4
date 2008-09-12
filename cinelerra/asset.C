@@ -585,6 +585,7 @@ int Asset::read_audio(FileXML *file)
 int Asset::read_video(FileXML *file)
 {
 	char string[BCTEXTLEN];
+	char string2[BCTEXTLEN];
 
 	if(file->tag.title_is("VIDEO")) video_data = 1;
 	height = file->tag.get_property("HEIGHT", height);
@@ -601,10 +602,12 @@ int Asset::read_video(FileXML *file)
 	interlace_autofixoption = file->tag.get_property("INTERLACE_AUTOFIX",0);
 
 	ilacemode_to_xmltext(string, BC_ILACE_MODE_NOTINTERLACED);
-	interlace_mode = ilacemode_from_xmltext(file->tag.get_property("INTERLACE_MODE",string), BC_ILACE_MODE_NOTINTERLACED);
+        strncpy(string2, file->tag.get_property("INTERLACE_MODE",string), BCTEXTLEN);
+	interlace_mode = ilacemode_from_xmltext(string2, BC_ILACE_MODE_NOTINTERLACED);
 
 	ilacefixmethod_to_xmltext(string, BC_ILACE_FIXMETHOD_NONE);
-	interlace_fixmethod = ilacefixmethod_from_xmltext(file->tag.get_property("INTERLACE_FIXMETHOD",string), BC_ILACE_FIXMETHOD_NONE);
+        strncpy(string2, file->tag.get_property("INTERLACE_FIXMETHOD",string), BCTEXTLEN);
+	interlace_fixmethod = ilacefixmethod_from_xmltext(string2, BC_ILACE_FIXMETHOD_NONE);
 
 	file->tag.get_property("REEL_NAME", reel_name);
 	reel_number = file->tag.get_property("REEL_NUMBER", reel_number);

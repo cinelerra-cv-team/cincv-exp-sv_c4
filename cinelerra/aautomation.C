@@ -55,5 +55,4 @@ void AAutomation::create_objects()
 	autos[AUTOMATION_PAN]->autoidx = AUTOMATION_PAN;
 	autos[AUTOMATION_PAN]->autogrouptype = -1;
 
-	return 0;
 }

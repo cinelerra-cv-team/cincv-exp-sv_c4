@@ -126,12 +126,11 @@ int Device1394Input::open(const char *path,
 // Initialize grabbing
 	if(fd < 0)
 	{
-<<<<<<< HEAD:cinelerra/device1394input.C
+/*
 		if((fd = ::open(path, O_RDWR)) < 0)
-=======
+*/
 #define PATH "/dev/dv1394/0"
 		if((fd = ::open(PATH, O_RDWR)) < 0)
->>>>>>> FETCH_HEAD:cinelerra/device1394input.C
 		{
 			printf("Device1394Input::open %s: %s\n", path, strerror(errno));
 		}

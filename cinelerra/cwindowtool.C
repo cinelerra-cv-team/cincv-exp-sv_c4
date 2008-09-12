@@ -1863,11 +1863,13 @@ CWindowMaskBeforePlugins::CWindowMaskBeforePlugins(CWindowToolGUI *gui, int x, i
 
 int CWindowMaskBeforePlugins::handle_event()
 {
+	MaskAutos *autos;
 	MaskAuto *keyframe;
 	Track *track;
 	MaskPoint *point;
 	SubMask *mask;
 	((CWindowMaskGUI*)gui)->get_keyframe(track, 
+                autos,
 		keyframe,
 		mask, 
 		point,

@@ -49,7 +49,6 @@ void AWindow::create_objects()
 	asset_edit = new AssetEdit(mwindow);
 	clip_edit = new ClipEdit(mwindow, this, 0);
 	label_edit = new LabelEdit(mwindow, this, 0);
-	return 0;
 }
 
 

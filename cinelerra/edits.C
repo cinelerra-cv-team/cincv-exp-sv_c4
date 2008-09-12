@@ -151,9 +151,9 @@ void Edits::insert_edits(Edits *source_edits,
 	int64_t clipboard_length = 
 		track->to_units(source_edits->edl->local_session->clipboard_length, 1);
 	int64_t clipboard_end = position + clipboard_length;
-
-	int64_t total_length = 0;
 */
+	int64_t total_length = 0;
+/**/
 	int64_t clipboard_end = position + min_length;
 // Length pasted so far
 	int64_t source_len = 0;

@@ -19,7 +19,7 @@
  * 
  */
 
-#ifdef HAVE_FIREWIRE
+//#ifdef HAVE_FIREWIRE
 
 
 

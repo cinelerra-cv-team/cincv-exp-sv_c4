@@ -62,13 +62,13 @@ public:
 	void translate_masks(float translate_x, float translate_y);
 
 
-private:
+/*private:
 	void avg_points(MaskPoint *output, 
 		MaskPoint *input1, 
 		MaskPoint *input2, 
 		int64_t output_position,
 		int64_t position1, 
-		int64_t position2);
+		int64_t position2);*/
 };
 
 

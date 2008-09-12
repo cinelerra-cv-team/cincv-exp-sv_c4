@@ -26,6 +26,7 @@
 #include "bctimer.inc"
 #include "linklist.h"
 #include "mwindow.inc"
+#include "undostack.h"
 
 #include <stdint.h>
 
