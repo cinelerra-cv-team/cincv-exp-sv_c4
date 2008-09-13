@@ -256,7 +256,6 @@ void MainUndo::update_undo_after(const char *description,
 			description);
 		return;
 	}
->>>>>>> FETCH_HEAD:cinelerra/mainundo.C
 
 	update_undo_entry(description, load_flags, 0, changes_made);
 
