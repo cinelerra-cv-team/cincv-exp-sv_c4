@@ -16,3 +16,8 @@ Makefile.in
 missing
 stamp-h
 stamp-h1
+build
+*.patch
+update-mob-repo.sh
+*.bck
+*.bk2

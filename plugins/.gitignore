@@ -1,2 +1,6 @@
-Makefile
-Makefile.in
+*/*.plugin
+*/c_flags
+*/.gitignore
+*/*.bak
+Makefile.am.*
+debug
