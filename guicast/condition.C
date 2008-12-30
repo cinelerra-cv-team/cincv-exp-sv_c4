@@ -4,7 +4,9 @@
 #include "condition.h"
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/time.h>
 
 Condition::Condition(int init_value, char *title, int is_binary)
@@ -80,9 +82,27 @@ int Condition::timed_lock(int microseconds, char *location)
     timeout.tv_sec = now.tv_sec + microseconds / 1000000;
     timeout.tv_nsec = now.tv_usec * 1000 + (microseconds % 1000000) * 1000;
 
+    struct timeval start_time;
+    struct timeval new_time;
+    int64_t timeout_msec = ((int64_t)microseconds / 1000);
+    gettimeofday(&start_time, 0);
+
+
     while(value <= 0 && result != ETIMEDOUT)
 	{
-		result = pthread_cond_timedwait(&cond, &mutex, &timeout);
+// This doesn't work in all kernels
+//             result = pthread_cond_timedwait(&cond, &mutex, &timeout);
+// This is based on the most common frame rate since it's mainly used in
+// recording.
+           pthread_mutex_unlock(&mutex);
+               usleep(20000);
+               gettimeofday(&new_time, 0);
+               new_time.tv_usec -= start_time.tv_usec;
+               new_time.tv_sec -= start_time.tv_sec;
+           pthread_mutex_lock(&mutex);
+               if(value <= 0 &&
+                       (int64_t)new_time.tv_sec * 1000 + (int64_t)new_time.tv_usec / 1000 > timeout_msec)
+                       result = ETIMEDOUT;
     }
 
     if(result == ETIMEDOUT) 
