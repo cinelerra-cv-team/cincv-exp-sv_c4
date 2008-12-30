@@ -20,6 +20,7 @@ Asset::Asset()
  : ListItem<Asset>(), GarbageObject("Asset")
 {
 	init_values();
+//        printf("Asset::Asset()\n");
 }
 
 Asset::Asset(Asset &asset)
@@ -34,6 +35,11 @@ Asset::Asset(const char *path)
 {
 	init_values();
 	strcpy(this->path, path);
+        printf("Asset(const char *path): %s\n", path);
+	strncpy(this->proxypath1, path, BCTEXTLEN);
+	strncpy(this->proxypath2, path, BCTEXTLEN);
+	strncpy(this->proxypath3, path, BCTEXTLEN);
+	strncpy(this->proxypath4, path, BCTEXTLEN);
 }
 
 Asset::Asset(const int plugin_type, const char *plugin_title)
@@ -53,6 +59,11 @@ Asset::~Asset()
 int Asset::init_values()
 {
 	path[0] = 0;
+	proxypath1[0] = 0;
+	proxypath2[0] = 0;
+	proxypath3[0] = 0;
+	proxypath4[0] = 0;
+//        printf("Asset::init_values()\n");
 	strcpy(folder, MEDIA_FOLDER);
 //	format = FILE_MOV;
 // Has to be unknown for file probing to succeed
@@ -196,7 +207,12 @@ void Asset::copy_from(Asset *asset, int do_index)
 
 void Asset::copy_location(Asset *asset)
 {
+        printf("Asset::copy_location(Asset *asset), %s\n", asset->path);
 	strcpy(this->path, asset->path);
+	strcpy(this->proxypath1, asset->proxypath1);
+	strcpy(this->proxypath2, asset->proxypath2);
+	strcpy(this->proxypath3, asset->proxypath3);
+	strcpy(this->proxypath4, asset->proxypath4);
 	strcpy(this->folder, asset->folder);
 }
 
@@ -510,6 +526,10 @@ int Asset::read(FileXML *file,
 			{
 				read_video(file);
 			}
+			if(file->tag.title_is("PROXY"))
+			{
+				read_proxy(file);
+			}
 			else
 			if(file->tag.title_is("INDEX"))
 			{
@@ -592,6 +612,17 @@ int Asset::read_video(FileXML *file)
 	tcformat = file->tag.get_property("TCFORMAT", tcformat);
 
 	return 0;
+}
+
+int Asset::read_proxy(FileXML *file)
+{
+        printf("Asset::read_proxy(FileXML *file)\n");
+        strncpy(proxypath1, file->tag.get_property("PROXYPATH1", proxypath1), BCTEXTLEN);
+        strncpy(proxypath2, file->tag.get_property("PROXYPATH2", proxypath2), BCTEXTLEN);
+        strncpy(proxypath3, file->tag.get_property("PROXYPATH3", proxypath3), BCTEXTLEN);
+        strncpy(proxypath4, file->tag.get_property("PROXYPATH4", proxypath4), BCTEXTLEN);
+
+        return 0;
 }
 
 int Asset::read_index(FileXML *file)
@@ -745,6 +776,7 @@ int Asset::write(FileXML *file,
 // So change the block name if the asset doesn't have the data.
 	/* if(audio_data) */ write_audio(file);
 	/* if(video_data) */ write_video(file);
+        write_proxy(file);
 	if(index_status == 0 && include_index) write_index(file);  // index goes after source
 
 	file->tag.set_title("/ASSET");
@@ -843,6 +875,19 @@ int Asset::write_video(FileXML *file)
 	return 0;
 }
 
+int Asset::write_proxy(FileXML *file)
+{
+        printf("Asset::write_proxy(FileXML *file)\n");
+        file->tag.set_title("PROXY");
+        file->tag.set_property("PROXYPATH1", proxypath1);
+        file->tag.set_property("PROXYPATH2", proxypath2);
+        file->tag.set_property("PROXYPATH3", proxypath3);
+        file->tag.set_property("PROXYPATH4", proxypath4);
+	file->append_tag();
+	file->append_newline();
+	return 0;
+}
+
 int Asset::write_index(FileXML *file)
 {
 	file->tag.set_title("INDEX");
@@ -906,6 +951,10 @@ void Asset::load_defaults(BC_Hash *defaults,
 	if(do_path)
 	{
 		GET_DEFAULT("PATH", path);
+/*                strncpy(proxypath1, path, BCTEXTLEN);
+                strncpy(proxypath2, path, BCTEXTLEN);
+                strncpy(proxypath3, path, BCTEXTLEN);
+                strncpy(proxypath4, path, BCTEXTLEN);*/
 	}
 
 	if(do_compression)
@@ -1159,8 +1208,32 @@ void Asset::save_defaults(BC_Hash *defaults,
 
 int Asset::update_path(char *new_path)
 {
-	strcpy(path, new_path);
-	return 0;
+strcpy(path, new_path);
+return 0;
+}
+
+int Asset::update_proxypath1(char *new_proxypath1)
+{
+strcpy(proxypath1, new_proxypath1);
+return 0;
+}
+
+int Asset::update_proxypath2(char *new_proxypath2)
+{
+strcpy(proxypath2, new_proxypath2);
+return 0;
+}
+
+int Asset::update_proxypath3(char *new_proxypath3)
+{
+strcpy(proxypath3, new_proxypath3);
+return 0;
+}
+
+int Asset::update_proxypath4(char *new_proxypath4)
+{
+strcpy(proxypath4, new_proxypath4);
+return 0;
 }
 
 double Asset::total_length_framealigned(double fps) 
@@ -1232,6 +1305,7 @@ int Asset::dump()
 {
 	printf("  asset::dump\n");
 	printf("   %p %s\n", this, path);
+        printf("   %s, %s, %s, %s\n", proxypath1, proxypath2, proxypath3, proxypath4);
 	printf("   index_status %d\n", index_status);
 	printf("   format %d\n", format);
 	printf("   audio_data %d channels %d samplerate %d bits %d byte_order %d signed %d header %d dither %d acodec %c%c%c%c\n",

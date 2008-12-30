@@ -79,6 +79,7 @@ public:
 	int read(FileXML *file, int expand_relative = 1);
 	int read_audio(FileXML *xml);
 	int read_video(FileXML *xml);
+	int read_proxy(FileXML *xml);
 	int read_index(FileXML *xml);
 	int reset_index();  // When the index file is wrong, reset the asset values
 
@@ -98,12 +99,21 @@ public:
 	int write_audio(FileXML *xml);
 	int write_video(FileXML *xml);
 	int write_index(FileXML *xml);
+	int write_proxy(FileXML *xml);
 	int update_path(char *new_path);
+	int update_proxypath1(char *new_proxypath1);
+	int update_proxypath2(char *new_proxypath2);
+	int update_proxypath3(char *new_proxypath3);
+	int update_proxypath4(char *new_proxypath4);
 
 	double total_length_framealigned(double fps);
 
 // Path to file
 	char path[BCTEXTLEN];
+        char proxypath1[BCTEXTLEN];
+        char proxypath2[BCTEXTLEN];
+        char proxypath3[BCTEXTLEN];
+        char proxypath4[BCTEXTLEN];
 
 // Pipe command
 	char pipe[BCTEXTLEN];
