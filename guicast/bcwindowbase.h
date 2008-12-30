@@ -237,6 +237,8 @@ public:
 	virtual int reposition_widgets(){ printf("foo1"); return 0; }
 	int get_root_w(int ignore_dualhead = 0, int lock_display = 0);
 	int get_root_h(int lock_display);
+	int get_root_x(int lock_display);
+	int get_root_y(int lock_display);
 // Get current position
 	int get_abs_cursor_x(int lock_window);
 	int get_abs_cursor_y(int lock_window);

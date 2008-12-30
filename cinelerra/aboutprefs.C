@@ -100,6 +100,7 @@ mpeg3_release());
 "Johannes Sixt\n"
 "Mark Taraba\n"
 "Andraz Tori\n"
+"Simeon Voelkel\n"
 "Jonas Wulff\n"
 
 );

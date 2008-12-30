@@ -2737,6 +2737,31 @@ int BC_WindowBase::get_root_h(int lock_display)
 	return result;
 }
 
+int BC_WindowBase::get_root_x(int lock_display)
+{
+       if(lock_display) lock_window("BC_WindowBase::get_root_x");
+       Screen *screen_ptr = XDefaultScreenOfDisplay(display);
+       int root_w = WidthOfScreen(screen_ptr);
+       int root_h = HeightOfScreen(screen_ptr);
+       int result = 0;
+// Shift X based on position of current window if dual head
+       if((float)root_w / root_h > 1.8)
+       {
+               if(top_level->get_x() >= root_w / 2)
+                       result = root_w / 2;
+       }
+       if(lock_display) unlock_window();
+       return result;
+}
+
+int BC_WindowBase::get_root_y(int lock_display)
+{
+// Assume always 2 monitors side by side and ignore dual head for root Y
+       return 0;
+}
+
+
+
 // Bottom right corner
 int BC_WindowBase::get_x2()
 {

@@ -769,6 +769,8 @@ SET_TRACE
 		}
 		else
 		{
+                        canvas_fullscreen->reposition_window(subwindow->get_root_x(0),
+                                subwindow->get_root_y(0));
 			canvas_fullscreen->show_window();
 		}
 	}
