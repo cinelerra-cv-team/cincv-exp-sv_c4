@@ -136,6 +136,7 @@ cinelerra_SOURCES = aattachmentpoint.C \
 		    edl.C \
 		    edlsession.C \
 		    exportedl.C \
+		    extraprefs.C \
 		    fadeengine.C \
                     ffmpeg.C \
 		    fileac3.C \
@@ -444,6 +445,7 @@ noinst_HEADERS = aattachmentpoint.h \
 		 edits.h \
 		 edl.h \
 		 edlsession.h \
+		 extraprefs.h \
 		 exportedl.h \
 		 fadeengine.h \
 		 feather.h \
