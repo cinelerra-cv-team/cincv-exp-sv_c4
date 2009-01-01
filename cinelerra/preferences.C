@@ -65,6 +65,8 @@ Preferences::Preferences()
 	brender_fragment = 1;
 	local_rate = 0.0;
 
+        proxy_resolution_level = 1;
+
 	use_tipwindow = 1;
 
 	for(int i = 0; i < MAXCHANNELS; i++)
@@ -161,6 +163,7 @@ void Preferences::copy_from(Preferences *that)
 	use_brender = that->use_brender;
 	brender_fragment = that->brender_fragment;
 	*brender_asset = *that->brender_asset;
+        proxy_resolution_level = that->proxy_resolution_level;
 
 // Check boundaries
 
@@ -291,6 +294,7 @@ int Preferences::load_defaults(BC_Hash *defaults)
 //	renderfarm_vfs = defaults->get("RENDERFARM_VFS", renderfarm_vfs);
 	defaults->get("RENDERFARM_MOUNTPOINT", renderfarm_mountpoint);
 	int renderfarm_total = defaults->get("RENDERFARM_TOTAL", 0);
+        proxy_resolution_level = defaults->get("PROXY_RESOLUTION_LEVEL", 1);
 
 	for(int i = 0; i < renderfarm_total; i++)
 	{
@@ -378,6 +382,7 @@ int Preferences::save_defaults(BC_Hash *defaults)
 		sprintf(string, "RENDERFARM_RATE%d", i);
 		defaults->update(string, renderfarm_rate.values[i]);
 	}
+        defaults->update("PROXY_RESOLUTION_LEVEL", proxy_resolution_level);
 	return 0;
 }
 

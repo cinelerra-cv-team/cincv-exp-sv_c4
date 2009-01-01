@@ -103,6 +103,8 @@ public:
 
 // Tip of the day
 	int use_tipwindow;
+// Proxy: Resolution Level of files to be used
+        int proxy_resolution_level;
 
 // ====================================== Plugin Set ==============================
 	char global_plugin_dir[BCTEXTLEN];

@@ -156,7 +156,7 @@ int IndexFile::open_file()
 
 int IndexFile::open_source(File *source)
 {
-//printf("IndexFile::open_source %p %s\n", asset, asset->path);
+printf("IndexFile::open_source %p %s\n", asset, asset->path);
 	if(source->open_file(mwindow->preferences, 
 		asset, 
 		1, 

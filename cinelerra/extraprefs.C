@@ -56,9 +56,10 @@ int ExtraPrefs::create_objects()
 
         x = 5;
 
-/*
-        add_subwindow(new BC_Title(x, y, _("Images"), LARGEFONT, resources->text_default));
+
+        add_subwindow(new BC_Title(x, y, _("Proxy"), LARGEFONT, resources->text_default));
         y += 25;
+/*
         add_subwindow(new StillImageUseDuration(pwindow,
                 pwindow->thread->edl->session->si_useduration,
                 x,
@@ -74,21 +75,22 @@ int ExtraPrefs::create_objects()
 	
         add_subwindow(new BC_Bar(5, y, 	get_w() - 10));
 	y += 5;
-        
+
+*/
         x = 5;
-        add_subwindow(new BC_Title(x, y, _("Ruler Dump Target"), LARGEFONT, resources->text_default));
+        add_subwindow(new BC_Title(x, y, _("Resolution Level")));
         y += 25;
-        if (rulerdumptargetmenu)
+        if (prlmenu)
         {
   //              delete rulerdumptargetmenu;
         }
-        add_subwindow(rulerdumptargetmenu = new RulerDumpTargetMenu(pwindow, 
+        add_subwindow(prlmenu = new ProxyResolutionLevelMenu(pwindow, 
                 x,
                 y));
-        rulerdumptargetmenu->create_objects();
+        prlmenu->create_objects();
         
         y += 30;
-*/      
+
         add_subwindow(new BC_Bar(5, y, 	get_w() - 10));
 	y += 5;
 
@@ -111,6 +113,69 @@ void ExtraPrefs::reset()
 }
 
 
+ProxyResolutionLevelMenu::ProxyResolutionLevelMenu(PreferencesWindow *pwindow, int x, int y) : BC_PopupMenu(x, y, 175, proxy_resolution_level_to_string(pwindow->thread->preferences->proxy_resolution_level), 1)
+{
+        this->pwindow = pwindow;
+        level = pwindow->thread->preferences->proxy_resolution_level;
+}
+
+ProxyResolutionLevelMenu::~ProxyResolutionLevelMenu()
+{
+        ;
+}
+
+char* ProxyResolutionLevelMenu::proxy_resolution_level_to_string(int level)
+{
+        switch (level)
+        {
+                case 1:
+                        sprintf(string, _("1 (original resolution)"));
+                        break;
+                case 2:
+                        sprintf(string, _("2"));
+                        break;
+                case 3:
+                        sprintf(string, _("3"));
+                        break;
+                case 4:
+                        sprintf(string, _("4"));
+                        break;
+        }
+        return string;
+}
+
+void ProxyResolutionLevelMenu::create_objects()
+{
+        add_item(new ProxyResolutionLevelItem(this, _("1 (original resolution)"), 1));
+        add_item(new ProxyResolutionLevelItem(this, _("2"), 2));
+        add_item(new ProxyResolutionLevelItem(this, _("3"), 3));
+        add_item(new ProxyResolutionLevelItem(this, _("4"), 4));
+}
+
+int ProxyResolutionLevelMenu::handle_event()
+{
+        pwindow->thread->preferences->proxy_resolution_level = level;
+        return 1;
+}
+
+ProxyResolutionLevelItem::ProxyResolutionLevelItem(ProxyResolutionLevelMenu *popup, char *text, int level) : BC_MenuItem(text)
+{
+        this->popup = popup;
+        this->level = level;
+}
+
+ProxyResolutionLevelItem::~ProxyResolutionLevelItem()
+{
+        ;
+}
+
+int ProxyResolutionLevelItem::handle_event()
+{
+        popup->set_text(get_text());
+        popup->level = level;
+        popup->handle_event();
+        return 1;
+}
 
 /*
 StillImageUseDuration::StillImageUseDuration(PreferencesWindow *pwindow, int value, int x, int y)

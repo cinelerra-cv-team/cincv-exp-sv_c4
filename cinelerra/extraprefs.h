@@ -32,7 +32,7 @@
 #include "extraprefs.inc"
 #include "vdeviceprefs.inc"
 
-class RulerDumpTargetMenu;
+class ProxyResolutionLevelMenu;
 
 class ExtraPrefs : public PreferencesDialog
 {
@@ -44,12 +44,39 @@ public:
 //        int delete_objects();
         void reset();
 
-//        RulerDumpTargetMenu *rulerdumptargetmenu;
+        ProxyResolutionLevelMenu *prlmenu;
 
 //	FormatTools *recording_format;
 //	ADevicePrefs *audio_in_device;
 //	VDevicePrefs *video_in_device;
 	MWindow *mwindow;
+};
+
+class ProxyResolutionLevelMenu : public  BC_PopupMenu
+{
+public:
+        ProxyResolutionLevelMenu(PreferencesWindow *pwindow,
+                        int x,
+                        int y);
+        ~ProxyResolutionLevelMenu();
+        char* proxy_resolution_level_to_string(int level);
+        void create_objects();
+        int handle_event();
+
+        int level;
+        PreferencesWindow *pwindow;
+        char string[BCTEXTLEN];
+};
+
+class ProxyResolutionLevelItem : public BC_MenuItem
+{
+public:
+        ProxyResolutionLevelItem(ProxyResolutionLevelMenu *popup, char *text, int level);
+        ~ProxyResolutionLevelItem();
+        int handle_event();
+
+        ProxyResolutionLevelMenu *popup;
+        int level;
 };
 
 

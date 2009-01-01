@@ -65,6 +65,30 @@ void MainIndexes::add_next_asset(File *file, Asset *asset)
 		if(!file)
 		{
 			this_file = new File;
+//Switch path using proxypath
+                        char new_proxypath[BCTEXTLEN];
+
+                        switch(mwindow->preferences->proxy_resolution_level)
+                        {
+                                case 1:
+                                        strcpy(new_proxypath, asset->proxypath1);
+                                        break;
+                                case 2:
+                                        strcpy(new_proxypath, asset->proxypath2);
+                                        break;
+                                case 3:
+                                        strcpy(new_proxypath, asset->proxypath3);
+                                        break;
+                                case 4:
+                                        strcpy(new_proxypath, asset->proxypath4);
+                                        break;
+                                default:
+                                        strcpy(new_proxypath, asset->proxypath1);
+                                        break;
+                        }
+printf("switching from %s to %s, as %i has been selected.\n", asset->path, new_proxypath, mwindow->preferences->proxy_resolution_level);
+                        asset->update_path(new_proxypath);
+
 			this_file->open_file(mwindow->preferences,
 				asset,
 				1,

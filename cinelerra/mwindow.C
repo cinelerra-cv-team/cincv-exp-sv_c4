@@ -493,6 +493,7 @@ PluginServer* MWindow::scan_plugindb(char *title,
 
 void MWindow::init_preferences()
 {
+printf("MWindow::init_preferences()\n");
 	preferences = new Preferences;
 	preferences->load_defaults(defaults);
 	session = new MainSession(this);
@@ -858,6 +859,8 @@ SET_TRACE
 		0);
 	cwindow->playback_engine->interrupt_playback(0);
 	vwindow->playback_engine->interrupt_playback(0);
+ 
+        char new_proxypath[BCTEXTLEN];
 
 
 
@@ -896,6 +899,31 @@ SET_TRACE
 
 		sprintf(string, "Loading %s", new_asset->path);
 		gui->show_message(string);
+
+//Switch path using proxypath
+//                char new_proxypath[BCTEXTLEN];
+
+                switch(preferences->proxy_resolution_level)
+                {
+                        case 1:
+                                strcpy(new_proxypath, new_asset->proxypath1);
+                                break;
+                        case 2:
+                                strcpy(new_proxypath, new_asset->proxypath2);
+                                break;
+                        case 3:
+                                strcpy(new_proxypath, new_asset->proxypath3);
+                                break;
+                        case 4:
+                                strcpy(new_proxypath, new_asset->proxypath4);
+                                break;
+                        default:
+                                strcpy(new_proxypath, new_asset->proxypath1);
+                                break;
+                }
+printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);
+                new_asset->update_path(new_proxypath);
+
 SET_TRACE
 		result = new_file->open_file(preferences, new_asset, 1, 0, 0, 0);
 SET_TRACE
@@ -1026,6 +1054,29 @@ SET_TRACE
 // Recalculate length
 					delete new_file;
 					new_file = new File;
+//Switch path using proxypath
+//                char new_proxypath[BCTEXTLEN];
+
+                switch(preferences->proxy_resolution_level)
+                {
+                        case 1:
+                                strcpy(new_proxypath, new_asset->proxypath1);
+                                break;
+                        case 2:
+                                strcpy(new_proxypath, new_asset->proxypath2);
+                                break;
+                        case 3:
+                                strcpy(new_proxypath, new_asset->proxypath3);
+                                break;
+                        case 4:
+                                strcpy(new_proxypath, new_asset->proxypath4);
+                                break;
+                        default:
+                                strcpy(new_proxypath, new_asset->proxypath1);
+                                break;
+                }
+printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);
+                new_asset->update_path(new_proxypath);
 					result = new_file->open_file(preferences, new_asset, 1, 0, 0, 0);
 
 					if(load_mode != LOAD_RESOURCESONLY)
@@ -1137,6 +1188,30 @@ SET_TRACE
 		for(int i = 0; i < new_assets.total; i++)
 		{
 			Asset *new_asset = new_assets.values[i];
+//Switch path using proxypath
+//                        char new_proxypath[BCTEXTLEN];
+
+                        switch(preferences->proxy_resolution_level)
+                        {
+                                case 1:
+                                        strcpy(new_proxypath, new_asset->proxypath1);
+                                        break;
+                                case 2:
+                                        strcpy(new_proxypath, new_asset->proxypath2);
+                                        break;
+                                case 3:
+                                        strcpy(new_proxypath, new_asset->proxypath3);
+                                        break;
+                                case 4:
+                                        strcpy(new_proxypath, new_asset->proxypath4);
+                                        break;
+                                default:
+                                        strcpy(new_proxypath, new_asset->proxypath1);
+                                        break;
+                        }
+printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);
+                        new_asset->update_path(new_proxypath);
+
 			File *new_file = 0;
 			File *index_file = 0;
 			int got_it = 0;

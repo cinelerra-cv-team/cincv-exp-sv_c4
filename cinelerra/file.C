@@ -321,10 +321,10 @@ int File::open_file(Preferences *preferences,
 	int64_t base_samplerate,
 	float base_framerate)
 {
+printf("File:open_file(...): asset->path=%s\n",asset->path);
 	this->preferences = preferences;
 	this->asset->copy_from(asset, 1);
 	file = 0;
-
 
 	switch(this->asset->format)
 	{
