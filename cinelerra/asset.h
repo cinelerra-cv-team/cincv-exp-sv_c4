@@ -114,6 +114,12 @@ public:
         char proxypath2[BCTEXTLEN];
         char proxypath3[BCTEXTLEN];
         char proxypath4[BCTEXTLEN];
+//float for sizecorrection during proxy-editing
+        float size1;
+        float size2;
+        float size3;
+        float size4;
+        float z_multiplier;
 
 // Pipe command
 	char pipe[BCTEXTLEN];

@@ -45,14 +45,14 @@ int Assets::load(ArrayList<PluginServer*> *plugindb,
 			{
 //printf("Assets::load 2\n");
 				char *path = file->tag.get_property("SRC");
-//printf("Assets::load 3\n");
+printf("Assets::load 3\n");
 				Asset *new_asset = new Asset(path ? path : SILENCE);
 //printf("Assets::load 4\n");
 				new_asset->read(file);
 //printf("Assets::load 5\n");
 				update(new_asset);
 				Garbage::delete_object(new_asset);
-//printf("Assets::load 6\n");
+printf("Assets::load 6\n");
 			}
 		}
 	}

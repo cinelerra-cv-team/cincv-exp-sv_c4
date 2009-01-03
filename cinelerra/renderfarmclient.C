@@ -402,8 +402,9 @@ void RenderFarmClientThread::read_asset(int socket_fd, Asset *asset)
 
 	FileXML file;
 	file.read_from_string((char*)string2);
+printf("RenderFarmClientThread::read_asset(int socket_fd, Asset *asset)\n");
 	asset->read(&file);
-	
+printf("\n");
 
 
 	BC_Hash defaults;

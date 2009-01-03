@@ -898,6 +898,7 @@ SET_TRACE
 		new_edl->copy_session(edl);
 
 		sprintf(string, "Loading %s", new_asset->path);
+printf("\"%s\" at mwindow.C\n", string);
 		gui->show_message(string);
 
 //Switch path using proxypath
@@ -907,18 +908,23 @@ SET_TRACE
                 {
                         case 1:
                                 strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                 break;
                         case 2:
                                 strcpy(new_proxypath, new_asset->proxypath2);
+                                        new_asset->z_multiplier = 1/new_asset->size2;
                                 break;
                         case 3:
                                 strcpy(new_proxypath, new_asset->proxypath3);
+                                        new_asset->z_multiplier = 1/new_asset->size3;
                                 break;
                         case 4:
                                 strcpy(new_proxypath, new_asset->proxypath4);
+                                        new_asset->z_multiplier = 1/new_asset->size4;
                                 break;
                         default:
                                 strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                 break;
                 }
 printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);
@@ -1061,18 +1067,23 @@ SET_TRACE
                 {
                         case 1:
                                 strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                 break;
                         case 2:
                                 strcpy(new_proxypath, new_asset->proxypath2);
+                                        new_asset->z_multiplier = 1/new_asset->size2;
                                 break;
                         case 3:
                                 strcpy(new_proxypath, new_asset->proxypath3);
+                                        new_asset->z_multiplier = 1/new_asset->size3;
                                 break;
                         case 4:
                                 strcpy(new_proxypath, new_asset->proxypath4);
+                                        new_asset->z_multiplier = 1/new_asset->size4;
                                 break;
                         default:
                                 strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                 break;
                 }
 printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);
@@ -1195,18 +1206,23 @@ SET_TRACE
                         {
                                 case 1:
                                         strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                         break;
                                 case 2:
                                         strcpy(new_proxypath, new_asset->proxypath2);
+                                        new_asset->z_multiplier = 1/new_asset->size2;
                                         break;
                                 case 3:
                                         strcpy(new_proxypath, new_asset->proxypath3);
+                                        new_asset->z_multiplier = 1/new_asset->size3;
                                         break;
                                 case 4:
                                         strcpy(new_proxypath, new_asset->proxypath4);
+                                        new_asset->z_multiplier = 1/new_asset->size4;
                                         break;
                                 default:
                                         strcpy(new_proxypath, new_asset->proxypath1);
+                                        new_asset->z_multiplier = 1/new_asset->size1;
                                         break;
                         }
 printf("switching from %s to %s, as %i has been selected.\n", new_asset->path, new_proxypath, preferences->proxy_resolution_level);

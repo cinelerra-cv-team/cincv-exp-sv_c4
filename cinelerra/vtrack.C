@@ -307,7 +307,7 @@ void VTrack::calculate_input_transfer(Asset *asset,
 // camera and output coords
 	float z[6], x[6], y[6];        
 
-//printf("VTrack::calculate_input_transfer %lld\n", position);
+printf("VTrack::calculate_input_transfer %lld\n", position);
 
 // get camera center in asset
 	automation->get_camera(&auto_x, 
@@ -317,8 +317,12 @@ void VTrack::calculate_input_transfer(Asset *asset,
 		direction);
 
 	camera_z *= auto_z;
+printf("camera_z=%f\n",camera_z);
+	camera_z *= asset->z_multiplier;
 	camera_x += auto_x;
 	camera_y += auto_y;
+
+printf("camera_z=%f\n",camera_z);
 
 // get camera coords on asset
 	x[0] = camera_x - (float)track_w / 2 / camera_z;

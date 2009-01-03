@@ -348,6 +348,7 @@ CICacheItem::CICacheItem(CICache *cache, EDL *edl, Asset *asset)
 	*this->asset = *asset;
 	this->cache = cache;
 	checked_out = 0;
+printf("%s %s %s %s\n", asset->path, asset->proxypath1, this->asset->path, this->asset->proxypath1);
 
 
 	file = new File;
@@ -364,6 +365,42 @@ CICacheItem::CICacheItem(CICache *cache, EDL *edl, Asset *asset)
 
 
 
+printf("CICacheItem::CICacheItem(...) is invoking file->open_file(...)\n");
+//Switch path using proxypath
+                        char new_proxypath[BCTEXTLEN];
+
+                        switch(cache->preferences->proxy_resolution_level)
+                        {
+                                case 1:
+                                        strcpy(new_proxypath, this->asset->proxypath1);
+                                        this->asset->z_multiplier = 1/this->asset->size1;
+                                        asset->z_multiplier = 1/asset->size1;
+                                        break;
+                                case 2:
+                                        strcpy(new_proxypath, this->asset->proxypath2);
+                                        this->asset->z_multiplier = 1/this->asset->size2;
+                                        asset->z_multiplier = 1/asset->size2;
+                                        break;
+                                case 3:
+                                        strcpy(new_proxypath, this->asset->proxypath3);
+                                        this->asset->z_multiplier = 1/this->asset->size3;
+                                        asset->z_multiplier = 1/asset->size3;
+                                        break;
+                                case 4:
+                                        strcpy(new_proxypath, this->asset->proxypath4);
+                                        this->asset->z_multiplier = 1/this->asset->size4;
+                                        asset->z_multiplier = 1/asset->size4;
+                                        break;
+                                default:
+                                        strcpy(new_proxypath, this->asset->proxypath1);
+                                        this->asset->z_multiplier = 1/this->asset->size1;
+                                        asset->z_multiplier = 1/asset->size1;
+                                        break;
+                        }
+printf("switching from %s to %s, as %i has been selected.\n", this->asset->path, new_proxypath, cache->preferences->proxy_resolution_level);
+                        this->asset->update_path(new_proxypath);
+                        asset->update_path(new_proxypath);
+printf("%s %s %s %s\n", asset->path, asset->proxypath1, this->asset->path, this->asset->proxypath1);
 	if(result = file->open_file(cache->preferences, this->asset, 1, 0, -1, -1))
 	{
 SET_TRACE

@@ -103,7 +103,9 @@ void BatchRenderJob::load(FileXML *file)
 		if(file->tag.title_is("ASSET"))
 		{
 			file->tag.get_property("SRC", asset->path);
+printf("BatchRenderJob::load(FileXML *file)\n");
 			asset->read(file, 0);
+printf("\n");
 // The compression parameters are stored in the defaults to reduce
 // coding maintenance.  The defaults must now be stuffed into the XML for
 // unique storage.

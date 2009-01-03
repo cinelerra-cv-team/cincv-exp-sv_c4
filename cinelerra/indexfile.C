@@ -116,9 +116,12 @@ int IndexFile::open_file()
 	{
 // Index file already exists.
 // Get its last size without changing the status.
+printf("-\nIndexFile::open_file()\n");
 		Asset *test_asset = new Asset;
 		*test_asset = *asset;
+printf("--\n");
 		read_info(test_asset);
+printf("---\n");
 
 		FileSystem fs;
 		if(fs.get_date(index_filename) < fs.get_date(test_asset->path))
@@ -592,6 +595,7 @@ int IndexFile::remove_index()
 
 int IndexFile::read_info(Asset *test_asset)
 {
+printf("read_info beginning\n");
 	if(!test_asset) test_asset = asset;
 	if(test_asset->index_status == INDEX_NOTTESTED)
 	{
@@ -604,9 +608,21 @@ int IndexFile::read_info(Asset *test_asset)
 		data = new char[test_asset->index_start];
 		fread(data, test_asset->index_start - sizeof(int64_t), 1, file);
 		data[test_asset->index_start - sizeof(int64_t)] = 0;
+fprintf(stderr, "\'%s\'\n", data);
 		FileXML xml;
 		xml.read_from_string(data);
+printf("IndexFile::read_info(Asset *test_asset)\n");                
 		test_asset->read(&xml);
+// This might make cin fail, but is at the moment necessary. If in doubt change that again, but this is likely to make the proxy editing fail.
+//                test_asset = asset;		
+/*                
+                test_asset->update_path(asset->path);
+                test_asset->update_proxypath1(asset->proxypath1);
+                test_asset->update_proxypath2(asset->proxypath2);
+                test_asset->update_proxypath3(asset->proxypath3);
+                test_asset->update_proxypath4(asset->proxypath4);
+*/
+printf("\n");
 
 		delete [] data;
 		if(test_asset->format == FILE_UNKNOWN)

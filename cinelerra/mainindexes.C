@@ -72,18 +72,23 @@ void MainIndexes::add_next_asset(File *file, Asset *asset)
                         {
                                 case 1:
                                         strcpy(new_proxypath, asset->proxypath1);
+                                        asset->z_multiplier = 1/asset->size1;
                                         break;
                                 case 2:
                                         strcpy(new_proxypath, asset->proxypath2);
+                                        asset->z_multiplier = 1/asset->size2;
                                         break;
                                 case 3:
                                         strcpy(new_proxypath, asset->proxypath3);
+                                        asset->z_multiplier = 1/asset->size3;
                                         break;
                                 case 4:
                                         strcpy(new_proxypath, asset->proxypath4);
+                                        asset->z_multiplier = 1/asset->size4;
                                         break;
                                 default:
                                         strcpy(new_proxypath, asset->proxypath1);
+                                        asset->z_multiplier = 1/asset->size1;
                                         break;
                         }
 printf("switching from %s to %s, as %i has been selected.\n", asset->path, new_proxypath, mwindow->preferences->proxy_resolution_level);

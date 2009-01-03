@@ -40,6 +40,11 @@ Asset::Asset(const char *path)
 	strncpy(this->proxypath2, path, BCTEXTLEN);
 	strncpy(this->proxypath3, path, BCTEXTLEN);
 	strncpy(this->proxypath4, path, BCTEXTLEN);
+        size1 = 1;
+        size2 = 1;
+        size3 = 1;
+        size4 = 1;
+        z_multiplier = 1;
 }
 
 Asset::Asset(const int plugin_type, const char *plugin_title)
@@ -63,6 +68,11 @@ int Asset::init_values()
 	proxypath2[0] = 0;
 	proxypath3[0] = 0;
 	proxypath4[0] = 0;
+        size1 = 1;
+        size2 = 1;
+        size3 = 1;
+        size4 = 1;
+        z_multiplier = 1;
 //        printf("Asset::init_values()\n");
 	strcpy(folder, MEDIA_FOLDER);
 //	format = FILE_MOV;
@@ -213,6 +223,11 @@ void Asset::copy_location(Asset *asset)
 	strcpy(this->proxypath2, asset->proxypath2);
 	strcpy(this->proxypath3, asset->proxypath3);
 	strcpy(this->proxypath4, asset->proxypath4);
+        this->size1 = asset->size1;
+        this->size2 = asset->size2;
+        this->size3 = asset->size3;
+        this->size4 = asset->size4;
+        this->z_multiplier = asset->z_multiplier;
 	strcpy(this->folder, asset->folder);
 }
 
@@ -380,8 +395,10 @@ char* Asset::get_compression_text(int audio, int video)
 
 Asset& Asset::operator=(Asset &asset)
 {
+printf("copying asset %s : %s, %s, %s, %s\n", asset.path, asset.proxypath1, asset.proxypath2, asset.proxypath3, asset.proxypath4);
 	copy_location(&asset);
 	copy_format(&asset, 1);
+printf("copyed asset %s : %s, %s, %s, %s\n", path, proxypath1, proxypath2, proxypath3, proxypath4);
 	return *this;
 }
 
@@ -528,6 +545,9 @@ int Asset::read(FileXML *file,
 			}
 			if(file->tag.title_is("PROXY"))
 			{
+        if (proxypath1 && proxypath2 && proxypath3 && proxypath4 && path)
+// this might crash cin? 
+printf("found tag with title proxy! current status: %s @ %f ; %s @ %f ; %s @ %f ; %s @ %f\n", proxypath1, size1, proxypath2, size2, proxypath3, size3, proxypath4, size4);
 				read_proxy(file);
 			}
 			else
@@ -617,11 +637,32 @@ int Asset::read_video(FileXML *file)
 int Asset::read_proxy(FileXML *file)
 {
         printf("Asset::read_proxy(FileXML *file)\n");
+
         strncpy(proxypath1, file->tag.get_property("PROXYPATH1", proxypath1), BCTEXTLEN);
         strncpy(proxypath2, file->tag.get_property("PROXYPATH2", proxypath2), BCTEXTLEN);
         strncpy(proxypath3, file->tag.get_property("PROXYPATH3", proxypath3), BCTEXTLEN);
         strncpy(proxypath4, file->tag.get_property("PROXYPATH4", proxypath4), BCTEXTLEN);
 
+/*
+        strncpy(proxypath1, file->tag.get_property("PROXYPATH1", path), BCTEXTLEN);
+        strncpy(proxypath2, file->tag.get_property("PROXYPATH2", path), BCTEXTLEN);
+        strncpy(proxypath3, file->tag.get_property("PROXYPATH3", path), BCTEXTLEN);
+        strncpy(proxypath4, file->tag.get_property("PROXYPATH4", path), BCTEXTLEN);
+*/
+/*
+        strncpy(proxypath1, file->tag.get_property("PROXYPATH1", ""), BCTEXTLEN);
+        strncpy(proxypath2, file->tag.get_property("PROXYPATH2", ""), BCTEXTLEN);
+        strncpy(proxypath3, file->tag.get_property("PROXYPATH3", ""), BCTEXTLEN);
+        strncpy(proxypath4, file->tag.get_property("PROXYPATH4", ""), BCTEXTLEN);
+*/
+
+        size1 = file->tag.get_property("SIZE1", size1);
+        size2 = file->tag.get_property("SIZE2", size2);
+        size3 = file->tag.get_property("SIZE3", size3);
+        size4 = file->tag.get_property("SIZE4", size4);
+        if (proxypath1 && proxypath2 && proxypath3 && proxypath4 && path)
+// this might crash cin? 
+printf("%s @ %f ; %s @ %f ; %s @ %f ; %s @ %f\n", proxypath1, size1, proxypath2, size2, proxypath3, size3, proxypath4, size4);
         return 0;
 }
 
@@ -691,6 +732,7 @@ int Asset::write_index(char *path, int data_bytes)
 
 		index_status = INDEX_READY;
 // Write encoding information
+printf("writing XML at Asset::write_index(char *path, int data_bytes)\n");
 		write(&xml, 
 			1, 
 			"");
@@ -880,11 +922,20 @@ int Asset::write_proxy(FileXML *file)
         printf("Asset::write_proxy(FileXML *file)\n");
         file->tag.set_title("PROXY");
         file->tag.set_property("PROXYPATH1", proxypath1);
+        file->tag.set_property("SIZE1", size1);
         file->tag.set_property("PROXYPATH2", proxypath2);
+        file->tag.set_property("SIZE2", size2);
         file->tag.set_property("PROXYPATH3", proxypath3);
+        file->tag.set_property("SIZE3", size3);
         file->tag.set_property("PROXYPATH4", proxypath4);
+        file->tag.set_property("SIZE4", size4);
 	file->append_tag();
+        file->tag.set_title("/PROXY");
+        file->append_tag();
 	file->append_newline();
+        if (proxypath1 && proxypath2 && proxypath3 && proxypath4 && path)
+// this might crash cin? 
+printf("%s @ %f ; %s @ %f ; %s @ %f ; %s @ %f\n", proxypath1, size1, proxypath2, size2, proxypath3, size3, proxypath4, size4);
 	return 0;
 }
 
@@ -951,10 +1002,12 @@ void Asset::load_defaults(BC_Hash *defaults,
 	if(do_path)
 	{
 		GET_DEFAULT("PATH", path);
-/*                strncpy(proxypath1, path, BCTEXTLEN);
+/*
+                strncpy(proxypath1, path, BCTEXTLEN);
                 strncpy(proxypath2, path, BCTEXTLEN);
                 strncpy(proxypath3, path, BCTEXTLEN);
-                strncpy(proxypath4, path, BCTEXTLEN);*/
+                strncpy(proxypath4, path, BCTEXTLEN);
+*/
 	}
 
 	if(do_compression)
