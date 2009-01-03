@@ -20,6 +20,14 @@ class AssetEditByteOrderLOHI;
 class AssetEditPath;
 class AssetEditPathText;
 class AssetEditWindow;
+class AssetEditProxypath1;
+class AssetEditProxypath2;
+class AssetEditProxypath3;
+class AssetEditProxypath4;
+class AssetEditSize1;
+class AssetEditSize2;
+class AssetEditSize3;
+class AssetEditSize4;
 
 class AssetEdit : public Thread
 {
@@ -273,4 +281,93 @@ public:
 	int multiplier;
 	int previous;
 };
+
+class AssetEditProxypath1 : public BC_TextBox
+{
+public:
+	AssetEditProxypath1(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditProxypath1();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditProxypath2 : public BC_TextBox
+{
+public:
+	AssetEditProxypath2(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditProxypath2();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditProxypath3 : public BC_TextBox
+{
+public:
+	AssetEditProxypath3(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditProxypath3();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditProxypath4 : public BC_TextBox
+{
+public:
+	AssetEditProxypath4(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditProxypath4();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditSize1 : public BC_TextBox
+{
+public:
+	AssetEditSize1(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditSize1();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditSize2 : public BC_TextBox
+{
+public:
+	AssetEditSize2(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditSize2();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditSize3 : public BC_TextBox
+{
+public:
+	AssetEditSize3(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditSize3();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
+class AssetEditSize4 : public BC_TextBox
+{
+public:
+	AssetEditSize4(AssetEditWindow *fwindow, int x, int y);
+	~AssetEditSize4();
+
+	int handle_event();
+	
+	AssetEditWindow *fwindow;
+};
+
 #endif

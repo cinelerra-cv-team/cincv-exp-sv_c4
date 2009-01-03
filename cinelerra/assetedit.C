@@ -132,9 +132,9 @@ AssetEditWindow::AssetEditWindow(MWindow *mwindow, AssetEdit *asset_edit)
  : BC_Window(PROGRAM_NAME ": Asset Info", 
  	mwindow->gui->get_abs_cursor_x(1) - 400 / 2, 
 	mwindow->gui->get_abs_cursor_y(1) - 550 / 2, 
-	400, 
+	800, 
 	660,
-	400,
+	800,
 	560,
 	0,
 	0,
@@ -237,7 +237,7 @@ int AssetEditWindow::create_objects()
 
 	if(asset->audio_data)
 	{
-		add_subwindow(new BC_Bar(x, y, get_w() - x * 2));
+		add_subwindow(new BC_Bar(x, y, get_w()/2 - x * 2));
 		y += 5;
 
 		add_subwindow(new BC_Title(x, y, _("Audio:"), LARGEFONT, RED));
@@ -375,7 +375,7 @@ int AssetEditWindow::create_objects()
 	x = x1;
 	if(asset->video_data)
 	{
-		add_subwindow(new BC_Bar(x, y, get_w() - x * 2));
+		add_subwindow(new BC_Bar(x, y, get_w()/2 - x * 2));
 		y += 5;
 
 		add_subwindow(new BC_Title(x, y, _("Video:"), LARGEFONT, RED));
@@ -515,6 +515,42 @@ int AssetEditWindow::create_objects()
 
 		y += 30;
 	}
+
+        x = get_w()/2+5;
+        x1 = x;
+        y = 5;
+	add_subwindow(new BC_Bar(x, y, get_w()/2 - 5 * 2));
+        y += 5;
+	add_subwindow(new BC_Title(x, y, _("Proxy:"), LARGEFONT, RED));
+        y += 30;
+	add_subwindow(title = new BC_Title(x, y, _("Proxypath 1:")));
+        x2 = x1 + title->get_w() + 5;
+        int x3 = x2 + 205;
+        add_subwindow(new AssetEditProxypath1(this, x2, y));
+        add_subwindow(new AssetEditSize1(this, x3, y));
+
+        x = x1;
+        y += 30;
+	add_subwindow(new BC_Title(x, y, _("Proxypath 2:")));
+        add_subwindow(new AssetEditProxypath2(this, x2, y));
+        add_subwindow(new AssetEditSize2(this, x3, y));
+
+        x = x1;
+        y += 30;
+	add_subwindow(new BC_Title(x, y, _("Proxypath 3:")));
+        add_subwindow(new AssetEditProxypath3(this, x2, y));
+        add_subwindow(new AssetEditSize3(this, x3, y));
+
+        x = x1;
+        y += 30;
+	add_subwindow(new BC_Title(x, y, _("Proxypath 4:")));
+        add_subwindow(new AssetEditProxypath4(this, x2, y));
+        add_subwindow(new AssetEditSize4(this, x3, y));
+	
+        x = x1;
+        y += 30;
+        add_subwindow(new BC_Bar(x, y, get_w()/2 - 5 * 2));
+        y += 5;
 
 	add_subwindow(new BC_OKButton(this));
 	add_subwindow(new BC_CancelButton(this));
@@ -848,7 +884,7 @@ int AssetEditFormat::handle_event()
 
 
 AssetEditReelName::AssetEditReelName(AssetEditWindow *fwindow, int x, int y)
- : BC_TextBox(x, y, 300, 1, fwindow->asset->reel_name)
+ : BC_TextBox(x, y, 225, 1, fwindow->asset->reel_name)
 {
 	this->fwindow = fwindow;
 }
@@ -906,3 +942,138 @@ int AssetEditTCStartTextBox::handle_event()
 	fwindow->asset->tcstart += atoi(get_text()) * multiplier;
 	previous = atoi(get_text());
 }
+
+
+
+AssetEditProxypath1::AssetEditProxypath1(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 200, 1, fwindow->asset->proxypath1)
+{
+	this->fwindow = fwindow;
+}
+AssetEditProxypath1::~AssetEditProxypath1()
+{
+}
+int AssetEditProxypath1::handle_event()
+{
+//	strcpy(fwindow->asset->proxypath1, get_text());
+	fwindow->asset->update_proxypath1(get_text());
+}
+
+
+AssetEditProxypath2::AssetEditProxypath2(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 200, 1, fwindow->asset->proxypath2)
+{
+	this->fwindow = fwindow;
+}
+AssetEditProxypath2::~AssetEditProxypath2()
+{
+}
+int AssetEditProxypath2::handle_event()
+{
+//	strcpy(fwindow->asset->proxypath2, get_text());
+	fwindow->asset->update_proxypath2(get_text());
+}
+
+
+AssetEditProxypath3::AssetEditProxypath3(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 200, 1, fwindow->asset->proxypath3)
+{
+	this->fwindow = fwindow;
+}
+AssetEditProxypath3::~AssetEditProxypath3()
+{
+}
+int AssetEditProxypath3::handle_event()
+{
+//	strcpy(fwindow->asset->proxypath3, get_text());
+	fwindow->asset->update_proxypath3(get_text());
+}
+
+
+AssetEditProxypath4::AssetEditProxypath4(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 200, 1, fwindow->asset->proxypath4)
+{
+	this->fwindow = fwindow;
+}
+AssetEditProxypath4::~AssetEditProxypath4()
+{
+}
+int AssetEditProxypath4::handle_event()
+{
+//	strcpy(fwindow->asset->proxypath4, get_text());
+	fwindow->asset->update_proxypath4(get_text());
+}
+
+
+AssetEditSize1::AssetEditSize1(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 75, 1, fwindow->asset->size1)
+{
+	this->fwindow = fwindow;
+}
+AssetEditSize1::~AssetEditSize1()
+{
+}
+int AssetEditSize1::handle_event()
+{
+	fwindow->asset->size1 = atof(get_text());
+}
+
+
+AssetEditSize2::AssetEditSize2(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 75, 1, fwindow->asset->size2)
+{
+	this->fwindow = fwindow;
+}
+AssetEditSize2::~AssetEditSize2()
+{
+}
+int AssetEditSize2::handle_event()
+{
+	fwindow->asset->size2 = atof(get_text());
+}
+
+
+AssetEditSize3::AssetEditSize3(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 75, 1, fwindow->asset->size3)
+{
+	this->fwindow = fwindow;
+}
+AssetEditSize3::~AssetEditSize3()
+{
+}
+int AssetEditSize3::handle_event()
+{
+	fwindow->asset->size3 = atof(get_text());
+}
+
+
+AssetEditSize4::AssetEditSize4(AssetEditWindow *fwindow, int x, int y)
+ : BC_TextBox(x, y, 75, 1, fwindow->asset->size4)
+{
+	this->fwindow = fwindow;
+}
+AssetEditSize4::~AssetEditSize4()
+{
+}
+int AssetEditSize4::handle_event()
+{
+	fwindow->asset->size4 = atof(get_text());
+}
+
+/*
+int AssetEditProxypath1::handle_event()
+{
+	char *text = get_text() + strlen(get_text()) - 1;
+	
+	// Don't let user enter an invalid character -- only numbers here
+	if(*text < 48 ||
+		*text > 57)
+	{
+		*text = '\0';
+	}
+
+	fwindow->asset->reel_number = atoi(get_text());
+}
+*/
+
+
