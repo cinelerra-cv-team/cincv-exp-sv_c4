@@ -102,6 +102,7 @@ mpeg3_release());
 "Andraz Tori\n"
 "Simeon Voelkel\n"
 "Jonas Wulff\n"
+"David Arendt\n"
 
 );
 	draw_text(x, y, credits);
