@@ -181,6 +181,7 @@ int PlayTransport::keypress_event()
 				subwindow->unlock_window();
 				break;
 		}
+                if (result)
 		return result;
 	}
 
@@ -194,7 +195,26 @@ int PlayTransport::keypress_event()
 
 	if (subwindow->alt_down())
 	{
-		printf("received numpad-hit with hold alt! %i\n", subwindow->get_keypress());
+                if (subwindow->shift_down())
+                {
+		printf("received numpad-hit with hold alt and shift! %i\n", subwindow->get_keypress());
+        		switch(subwindow->get_keypress())
+	        	{
+		        	case KPPLUS:        handle_transport(SHIFTED_SLOWER_FAST_REWIND, 0, use_inout);                result = 1; break;
+			        case KP6:           handle_transport(SHIFTED_SLOWER_NORMAL_REWIND, 0, use_inout);              result = 1; break;
+        			case KP5:           handle_transport(SHIFTED_SLOWER_SLOW_REWIND, 0, use_inout);                result = 1; break;
+	        		case KP4:           handle_transport(SHIFTED_SLOWER_SINGLE_FRAME_REWIND, 0, use_inout);        result = 1; break;
+		        	case KP1:           handle_transport(SHIFTED_SLOWER_SINGLE_FRAME_FWD, 0, use_inout);   		  result = 1; break;
+			        case KP2:           handle_transport(SHIFTED_SLOWER_SLOW_FWD, 0, use_inout);           		  result = 1; break;
+        			case KP3:           handle_transport(SHIFTED_SLOWER_NORMAL_FWD, 0, use_inout);         		  result = 1; break;
+	        		case KPENTER:       handle_transport(SHIFTED_SLOWER_FAST_FWD, 0, use_inout);           		  result = 1; break;
+		        	case KPINS:         handle_transport(STOP, 0, use_inout);                       result = 1; break;
+		        	case ' ':           handle_transport(NORMAL_FWD, 0, use_inout);                 result = 1; break;
+        		}
+                }
+                else
+                {
+		printf("received numpad-hit with hold alt without shift! %i\n", subwindow->get_keypress());
 		switch(subwindow->get_keypress())
 		{
 			case KPPLUS:        handle_transport(SHIFTED_FAST_REWIND, 0, use_inout);                result = 1; break;
@@ -209,6 +229,7 @@ int PlayTransport::keypress_event()
 			case ' ':           handle_transport(NORMAL_FWD, 0, use_inout);                 result = 1; break;
 			case 'k':           handle_transport(STOP, 0, use_inout);   					  result = 1; break;
 		}
+                }
 	}
 	else
 	{
@@ -278,6 +299,14 @@ void PlayTransport::handle_transport(int command,
 	switch(command)
 	{
 // Commands that play back
+		case SHIFTED_SLOWER_FAST_REWIND:
+		case SHIFTED_SLOWER_NORMAL_REWIND:
+		case SHIFTED_SLOWER_SLOW_REWIND:
+		case SHIFTED_SLOWER_SINGLE_FRAME_REWIND:
+		case SHIFTED_SLOWER_SINGLE_FRAME_FWD:
+		case SHIFTED_SLOWER_SLOW_FWD:
+		case SHIFTED_SLOWER_NORMAL_FWD:
+		case SHIFTED_SLOWER_FAST_FWD:
 		case SHIFTED_FAST_REWIND:
 		case SHIFTED_NORMAL_REWIND:
 		case SHIFTED_SLOW_REWIND:

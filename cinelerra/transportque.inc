@@ -32,6 +32,15 @@
 #define SHIFTED_PAUSE             	 	  20
 #define SHIFTED_SLOW_FWD             	  21
 #define SHIFTED_SLOW_REWIND          	  22
+#define SHIFTED_SLOWER_SINGLE_FRAME_FWD     	  23
+#define SHIFTED_SLOWER_NORMAL_FWD           	  24
+#define SHIFTED_SLOWER_FAST_FWD             	  25
+#define SHIFTED_SLOWER_SINGLE_FRAME_REWIND  	  26
+#define SHIFTED_SLOWER_NORMAL_REWIND     	 	  27
+#define SHIFTED_SLOWER_FAST_REWIND       	 	  28
+#define SHIFTED_SLOWER_PAUSE             	 	  29
+#define SHIFTED_SLOWER_SLOW_FWD             	  30
+#define SHIFTED_SLOWER_SLOW_REWIND          	  31
 
 // Level of change.  Changes have to be inclusive of all the lesser changes.
 // Delete cache
