@@ -972,6 +972,9 @@ void MWindow::mute_selection()
 
 void MWindow::overwrite(EDL *source)
 {
+/*
+ * This overwrite(...) is executed when pressing b in viewer
+ */
 	FileXML file;
 
 	double src_start = source->local_session->get_selectionstart();
@@ -1922,7 +1925,9 @@ void MWindow::splice(EDL *source)
 		1);
 
 
-
+/*
+ * This splice(...) is executed when pressing v in viewer
+ */
 //file.dump();
 	double start = edl->local_session->get_selectionstart();
 	double end = edl->local_session->get_selectionend();
