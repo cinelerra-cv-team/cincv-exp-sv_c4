@@ -417,6 +417,10 @@ int YUVConfigVideo::create_objects()
 	add_subwindow(ffmpeg = new PipePreset(x, y, "ffmpeg", pipe_textbox, pipe_checkbox));
 	ffmpeg->add_item(new BC_MenuItem("(DVD) | ffmpeg -f yuv4mpegpipe -i - -y -target dvd -ilme -ildct -hq -f mpeg2video %"));
 	ffmpeg->add_item(new BC_MenuItem("(VCD) | ffmpeg -f yuv4mpegpipe -i - -y -target vcd -hq -f mpeg2video %"));
+	ffmpeg->add_item(new BC_MenuItem("(HDV 25p) |ffmpeg -f yuv4mpegpipe -i - -y -r 25 -b 25000000 -f mpeg2video %"));
+	ffmpeg->add_item(new BC_MenuItem("(HDV 50i) |ffmpeg -f yuv4mpegpipe -i - -y -ilme -r 50 -b 25000000 -f mpeg2video %"));
+	ffmpeg->add_item(new BC_MenuItem("(FullHD 25p) |ffmpeg -f yuv4mpegpipe -i - -y -r 25 -b 28000000 -f mpeg2video %"));
+	ffmpeg->add_item(new BC_MenuItem("(FullHD 50i) |ffmpeg -f yuv4mpegpipe -i - -y -ilme -r 50 -b 28000000 -f mpeg2video %"));
 
 	add_subwindow(new BC_OKButton(this));
 	add_subwindow(new BC_CancelButton(this));
