@@ -111,6 +111,10 @@ int SvgWin::create_objects()
 	add_tool(edit_svg_button = new EditSvgButton(client, this, x+190, y));
 	add_tool(svg_file_title = new BC_Title(x, y+26, client->config.svg_file));
 
+	y += 26;
+	y += 30;
+	add_tool(use_imagemagick_workaround_checkbox = new UseImagemagickWorkaround(client, x, y));
+
 	x +=150;
 
 	show_window();
@@ -405,6 +409,20 @@ NewSvgWindow::NewSvgWindow(SvgMain *client, SvgWin *window, char *init_directory
 NewSvgWindow::~NewSvgWindow() {}
 
 
+UseImagemagickWorkaround::UseImagemagickWorkaround(SvgMain *client, 
+	int x, 
+	int y)
+ : BC_CheckBox(x, y, client->config.use_imagemagick_workaround, _("Use Imagemagick Workaround"))
+{
+	this->client = client;
+}
+
+int UseImagemagickWorkaround::handle_event()
+{
+	client->config.use_imagemagick_workaround = get_value();
+	client->send_configure_change();
+	return 1;
+}
 
 
 

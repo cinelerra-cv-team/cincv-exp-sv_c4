@@ -17,6 +17,7 @@ class SvgCoord;
 class NewSvgButton;
 class NewSvgWindow;
 class EditSvgButton;
+class UseImagemagickWorkaround;
 
 class SvgWin : public BC_Window
 {
@@ -33,6 +34,7 @@ public:
 	NewSvgButton *new_svg_button;
 	NewSvgWindow *new_svg_thread;
 	EditSvgButton *edit_svg_button;
+	UseImagemagickWorkaround *use_imagemagick_workaround_checkbox;
 	Mutex editing_lock;
 	int editing;
 
@@ -99,6 +101,16 @@ public:
 	SvgMain *client;
 	SvgWin *window;
 	int fh_fifo;
+};
+
+class UseImagemagickWorkaround : public BC_CheckBox
+{
+public:
+	UseImagemagickWorkaround(SvgMain *client, 
+		int x, 
+		int y);
+	int handle_event();
+	SvgMain *client;
 };
 
 
