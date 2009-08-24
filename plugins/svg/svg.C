@@ -43,6 +43,7 @@ SvgConfig::SvgConfig()
 	out_w = 720;
 	out_h = 480;
 	last_load = 0;
+	use_imagemagick_workaround = 1;
 	strcpy(svg_file, "");
 }
 
@@ -56,6 +57,7 @@ int SvgConfig::equivalent(SvgConfig &that)
 		EQUIV(out_y, that.out_y) && 
 		EQUIV(out_w, that.out_w) &&
 		EQUIV(out_h, that.out_h) &&
+		(use_imagemagick_workaround == that.use_imagemagick_workaround) &&
 		!strcmp(svg_file, that.svg_file);
 }
 
@@ -70,6 +72,7 @@ void SvgConfig::copy_from(SvgConfig &that)
 	out_w = that.out_w;
 	out_h = that.out_h;
 	last_load = that.last_load;
+	use_imagemagick_workaround = that.use_imagemagick_workaround;
 	strcpy(svg_file, that.svg_file);
 }
 
@@ -90,6 +93,7 @@ void SvgConfig::interpolate(SvgConfig &prev,
 	this->out_y = prev.out_y * prev_scale + next.out_y * next_scale;
 	this->out_w = prev.out_w * prev_scale + next.out_w * next_scale;
 	this->out_h = prev.out_h * prev_scale + next.out_h * next_scale;
+	this->use_imagemagick_workaround = prev.use_imagemagick_workaround;
 	strcpy(this->svg_file, prev.svg_file);
 }
 
@@ -145,6 +149,7 @@ int SvgMain::load_defaults()
 	config.out_y = defaults->get("OUT_Y", config.out_y);
 	config.out_w = defaults->get("OUT_W", config.out_w);
 	config.out_h = defaults->get("OUT_H", config.out_h);
+	config.use_imagemagick_workaround = defaults->get("USE_IMAGEMAGICK_WORKAROUND", config.use_imagemagick_workaround);
 	strcpy(config.svg_file, "");
 //	defaults->get("SVG_FILE", config.svg_file);
 }
@@ -159,6 +164,7 @@ int SvgMain::save_defaults()
 	defaults->update("OUT_Y", config.out_y);
 	defaults->update("OUT_W", config.out_w);
 	defaults->update("OUT_H", config.out_h);
+	defaults->update("USE_IMAGEMAGICK_WORKAROUND", config.use_imagemagick_workaround);
 	defaults->update("SVG_FILE", config.svg_file);
 	defaults->save();
 }
@@ -182,6 +188,7 @@ void SvgMain::save_data(KeyFrame *keyframe)
 	output.tag.set_property("OUT_Y", config.out_y);
 	output.tag.set_property("OUT_W", config.out_w);
 	output.tag.set_property("OUT_H", config.out_h);
+	output.tag.set_property("USE_IMAGEMAGICK_WORKAROUND", config.use_imagemagick_workaround);
 	output.tag.set_property("SVG_FILE", config.svg_file);
 	output.append_tag();
 	output.tag.set_title("/SVG");
@@ -215,6 +222,7 @@ void SvgMain::read_data(KeyFrame *keyframe)
 				config.out_y =	input.tag.get_property("OUT_Y", config.out_y);
 				config.out_w =	input.tag.get_property("OUT_W", config.out_w);
 				config.out_h =	input.tag.get_property("OUT_H", config.out_h);
+				config.use_imagemagick_workaround =	input.tag.get_property("USE_IMAGEMAGICK_WORKAROUND", config.use_imagemagick_workaround);
 				input.tag.get_property("SVG_FILE", config.svg_file);
 			}
 		}
@@ -254,11 +262,46 @@ int SvgMain::process_realtime(VFrame *input_ptr, VFrame *output_ptr)
 	{
 		need_reconfigure = 1;
 		char command[OLTEXTLEN];
-		sprintf(command,
-			"inkscape --without-gui --cinelerra-export-file=%s %s",
-			filename_raw, config.svg_file);
-		printf(_("Running command %s\n"), command);
-		system(command);
+		if (config.use_imagemagick_workaround == 1)
+		{
+		// Current Inkscape versions do not support --cinelerra-export-file anymore. This lead to a crash in 
+		// almost all current Cinelerra-installations if this plugin was used somewhere. However there is a 
+		// second way (or somehow a workaround) to get a RAWC file using imagemagick and a small tool written 
+		// for adding a faked RAWC header.
+		// If the user did not disable the option "use_imagemagick_workaround" (it is enabled by default as 
+		// it is more likely to work on most current installations) this way (the workaround) will be used.
+		// You will need the imagemagick suite with RAW-file support and rawc-convert which is shipped with 
+		// this version of cinelerra.
+
+			char filename_png[OLTEXTLEN];
+			char filename_rgba[OLTEXTLEN];
+			strcpy(filename_png, config.svg_file);
+			strcpy(filename_rgba, config.svg_file);
+			strcat(filename_png, ".png");
+			strcat(filename_rgba, ".rgba");
+
+			// 1: run inkscape to generate a .png out of the .svg
+			sprintf(command,
+				"inkscape --without-gui --export-png=%s %s",
+				filename_png, config.svg_file);
+			printf(_("Running command %s\n"), command);
+			system(command);
+			// 2: run rawc-convert to generate a .raw in RAWC format out of the .png
+			sprintf(command,
+				"rawc-convert \"%s\" \"%s\" \"%s\"",
+				filename_png, filename_rgba, filename_raw);
+			printf(_("Running command %s\n"), command);
+			system(command);
+			// 3: now we should have a .raw file with a valid RAWC header.
+		}
+		else
+		{
+			sprintf(command,
+				"inkscape --without-gui --cinelerra-export-file=%s %s",
+				filename_raw, config.svg_file);
+			printf(_("Running command %s\n"), command);
+			system(command);
+		}
 		stat(filename_raw, &st_raw);
 		force_raw_render = 0;
 		fh_raw = open(filename_raw, O_RDWR); // in order for lockf to work it has to be open for writing

@@ -26,6 +26,7 @@ public:
 		long current_frame);
 
 	float in_x, in_y, in_w, in_h, out_x, out_y, out_w, out_h;
+	int use_imagemagick_workaround;
 	char svg_file[BCTEXTLEN];
 	int64_t last_load;
 };
