@@ -377,13 +377,58 @@ void SvgInkscapeThread::run()
 	char filename_raw[OLTEXTLEN];
 	strcpy(filename_raw, client->config.svg_file);
 	strcat(filename_raw, ".raw");
+	if (client->config.use_imagemagick_workaround == 1)
+	{
+	// Current Inkscape versions do not support --cinelerra-export-file anymore. This lead to a crash in 
+	// almost all current Cinelerra-installations if this plugin was used somewhere. However there is a 
+	// second way (or somehow a workaround) to get a RAWC file using imagemagick and a small tool written 
+	// for adding a faked RAWC header.
+	// If the user did not disable the option "use_imagemagick_workaround" (it is enabled by default as 
+	// it is more likely to work on most current installations) this way (the workaround) will be used.
+	// You will need the imagemagick suite with RAW-file support and rawc-convert which is shipped with 
+	// this version of cinelerra.
 
-	sprintf(command, "inkscape --cinelerra-export-file=%s %s",
-		filename_raw, client->config.svg_file);
-	printf(_("Running external SVG editor: %s\n"), command);		
-	enable_cancel();
-	system(command);
-	printf(_("External SVG editor finished\n"));
+		char filename_png[OLTEXTLEN];
+		char filename_rgba[OLTEXTLEN];
+		strcpy(filename_png, client->config.svg_file);
+		strcpy(filename_rgba, client->config.svg_file);
+		strcat(filename_png, ".png");
+		strcat(filename_rgba, ".rgba");
+
+		// We shall edit the .svg so open inkscape with GUI:
+		sprintf(command,
+			"inkscape --with-gui %s",
+			client->config.svg_file);
+		printf(_("Running external SVG editor: %s\n"), command);		
+		enable_cancel();
+		system(command);
+		printf(_("External SVG editor finished\n"));
+
+		// 1: run inkscape to generate a .png out of the .svg
+		sprintf(command,
+			"inkscape --without-gui --export-png=%s %s",
+			filename_png, client->config.svg_file);
+		printf(_("Running command %s\n"), command);
+		system(command);
+		// 2: run rawc-convert to generate a .raw in RAWC format out of the .png
+		sprintf(command,
+			"rawc-convert \"%s\" \"%s\" \"%s\"",
+			filename_png, filename_rgba, filename_raw);
+		printf(_("Running command %s\n"), command);
+		system(command);
+		// 3: now we should have a .raw file with a valid RAWC header.
+	}
+	else
+	{
+		sprintf(command,
+			"inkscape --cinelerra-export-file=%s %s",
+			filename_raw, client->config.svg_file);
+		printf(_("Running external SVG editor: %s\n"), command);		
+		enable_cancel();
+		system(command);
+		printf(_("External SVG editor finished\n"));
+	}
+
 	{
 		struct fifo_struct fifo_buf;
 		fifo_buf.pid = getpid();
