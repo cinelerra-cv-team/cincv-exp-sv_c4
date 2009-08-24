@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	unsigned char buf[4096];
 	while ( (n = fread(&buf, 1, 4096, in)) > 0 )
 	{
-		fprintf (stderr, "%i\n", n);
+//		fprintf (stderr, "%i\n", n);
 		stat = fwrite(&buf, 1, n, out);
 	}
 
