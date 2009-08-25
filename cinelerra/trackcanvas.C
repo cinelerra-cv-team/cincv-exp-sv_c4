@@ -4973,6 +4973,17 @@ int TrackCanvas::button_press_event()
 			result = 1;
 		}
 		else
+		if(get_buttonpress() == 6)
+		{
+			mwindow->move_left(get_w() / 10);
+			result = 1;
+		}
+		if(get_buttonpress() == 7)
+		{
+			mwindow->move_right(get_w() / 10);
+			result = 1;
+		}
+		else
 		switch(mwindow->edl->session->editing_mode)
 		{
 // Test handles and resource boundaries and highlight a track
