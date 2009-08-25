@@ -752,7 +752,7 @@ int BC_WindowBase::dispatch_event()
 			cursor_y = event->xbutton.y;
 			button_number = event->xbutton.button;
 			event_win = event->xany.window;
-			if (button_number != 4 && button_number != 5)
+			if (button_number != 4 && button_number != 5 && button_number != 6 && button_number != 7)
 	  			button_down = 1;
 			button_pressed = event->xbutton.button;
 			button_time1 = button_time2;
@@ -765,7 +765,7 @@ int BC_WindowBase::dispatch_event()
 			drag_y1 = cursor_y - get_resources()->drag_radius;
 			drag_y2 = cursor_y + get_resources()->drag_radius;
 
-			if(button_time2 - button_time1 < resources.double_click)
+			if(button_time2 - button_time1 < resources.double_click && button_number != 4 && button_number != 5 && button_number != 6 && button_number != 7)
 			{
 // Ignore triple clicks
 				double_click = 1; 

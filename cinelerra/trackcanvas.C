@@ -4478,7 +4478,7 @@ int TrackCanvas::do_edit_handles(int cursor_x,
 		}
 
 // Reposition cursor
-		if(button_press)
+		if(button_press && get_buttonpress() != 4 && get_buttonpress() != 5 && get_buttonpress() != 6 && get_buttonpress() != 7)
 		{
 			mwindow->session->drag_edit = edit_result;
 			mwindow->session->drag_handle = handle_result;
@@ -4565,7 +4565,7 @@ int TrackCanvas::do_plugin_handles(int cursor_x,
 			new_cursor = RIGHT_CURSOR;
 		}
 		
-		if(button_press)
+		if(button_press && get_buttonpress() != 4 && get_buttonpress() != 5 && get_buttonpress() != 6 && get_buttonpress() != 7)
 		{
 			mwindow->session->drag_plugin = plugin_result;
 			mwindow->session->drag_handle = handle_result;
@@ -5192,6 +5192,11 @@ int TrackCanvas::start_selection(double position)
 	int rerender = 0;
 	position = mwindow->edl->align_to_frame(position, 0);
 
+	if (get_buttonpress() == 4 || get_buttonpress() == 5 || get_buttonpress() == 6 || get_buttonpress() == 7)
+	{
+		// scrolling should not affect the selection
+		return rerender;
+	}
 
 // Extend a border
 	if(shift_down() && ! alt_down())
