@@ -5183,7 +5183,7 @@ int TrackCanvas::start_selection(double position)
 
 
 // Extend a border
-	if(shift_down())
+	if(shift_down() && ! alt_down())
 	{
 		double midpoint = (mwindow->edl->local_session->get_selectionstart(1) + 
 			mwindow->edl->local_session->get_selectionend(1)) / 2;
@@ -5201,6 +5201,24 @@ int TrackCanvas::start_selection(double position)
 			selection_midpoint1 = mwindow->edl->local_session->get_selectionstart(1);
 // Don't que the CWindow for the end
 		}
+	}
+	else if (alt_down() && !shift_down())
+	{
+// Move the selection to the new position;
+		mwindow->edl->local_session->set_selectionend(position 
+				+ mwindow->edl->local_session->get_selectionend(1) 
+				- mwindow->edl->local_session->get_selectionstart(1));
+		mwindow->edl->local_session->set_selectionstart(position);
+		selection_midpoint1 = mwindow->edl->local_session->get_selectionend(1);
+	}
+	else if (alt_down() && shift_down())
+	{
+// Move the selection to the new position;
+		mwindow->edl->local_session->set_selectionstart(position
+				- mwindow->edl->local_session->get_selectionend(1)
+				+ mwindow->edl->local_session->get_selectionstart(1));
+		mwindow->edl->local_session->set_selectionend(position);
+		selection_midpoint1 = mwindow->edl->local_session->get_selectionstart(1);
 	}
 	else
 // Start a new selection
