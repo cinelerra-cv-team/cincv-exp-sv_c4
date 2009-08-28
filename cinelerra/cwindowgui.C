@@ -413,6 +413,20 @@ int CWindowGUI::keypress_event()
 				canvas->start_fullscreen();
 			lock_window("CWindowGUI::keypress_event 1");
 			break;
+		case 'x':
+			unlock_window();
+			mwindow->gui->lock_window("CWindowGUI::keypress_event 4");
+			mwindow->cut();
+			mwindow->gui->unlock_window();
+			lock_window("CWindowGUI::keypress_event 4");
+			break;
+		case BACKSPACE:
+			unlock_window();
+			mwindow->gui->lock_window("CWindowGUI::keypress_event 3");
+			mwindow->clear_entry();
+			mwindow->gui->unlock_window();
+			lock_window("CWindowGUI::keypress_event 3");
+			break;
 		case ESC:
 			unlock_window();
 			if(mwindow->session->cwindow_fullscreen)
