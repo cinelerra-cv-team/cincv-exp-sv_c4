@@ -70,7 +70,10 @@ Module* VRender::new_module(Track *track)
 
 int VRender::flash_output()
 {
-	return renderengine->video->write_buffer(video_out, renderengine->edl);
+	if(video_out)
+		return renderengine->video->write_buffer(video_out, renderengine->edl);
+	else
+		return 0;
 }
 
 int VRender::process_buffer(VFrame *video_out, 
@@ -109,6 +112,7 @@ SET_TRACE
 	int use_cache = renderengine->command->single_frame();
 	int use_asynchronous = 
 		renderengine->command->realtime && 
+		renderengine->edl->session->video_every_frame &&
 		renderengine->edl->session->video_asynchronous;
 SET_TRACE
 
