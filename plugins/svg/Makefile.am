@@ -7,5 +7,9 @@ AM_CXXFLAGS = $(LARGEFILE_CFLAGS)
 INCLUDES = -I$(top_srcdir)/guicast -I$(top_srcdir)/cinelerra -I$(top_srcdir)/quicktime
 LIBTOOL = $(SHELL) $(top_builddir)/libtool $(LTCXX_FLAGS)
 
+bin_PROGRAMS = rawc-convert
+rawc_convert_SOURCES = rawc-convert.C
+
+
 noinst_HEADERS = empty_svg.h picon_png.h svg.h svgwin.h 
 EXTRA_DIST = picon.png
