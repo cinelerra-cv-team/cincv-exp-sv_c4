@@ -29,6 +29,7 @@ public:
 // Get keyframe for editing in the CWindow.
 // create - if 0 forces automatic creation to be off
 //          if 1 uses automatic creation option to create
+// note: any created float auto will be interpolated automatically
 	Auto* calculate_affected_auto(Autos *autos, 
 		int create = 1,
 		int *created = 0,

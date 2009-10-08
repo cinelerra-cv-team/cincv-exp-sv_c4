@@ -47,10 +47,15 @@ public:
 
 
 // synchronization with tracks
+/* 
+  What's up with this methods? I can't find an implementation anywhere.
+  Commenting them out does no harm, guess they are defunct....
+  
+  
 	FloatAutos* get_pan_automation(int channel);  // get pan automation
 	FloatAutos* get_fade_automation();       // get the fade automation for this module
-
-
+*/
+	
 	double *level_history;
 	int64_t *level_samples;
 	int current_level;
