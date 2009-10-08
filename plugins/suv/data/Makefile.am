@@ -508,6 +508,12 @@ PNGS = \
 	timebar_bg.png \
 	timebar_bg_flat.png \
 	timebar_brender.png \
+	timebar_brender_red.png \
+	timebar_brender_yellow.png \
+	timebar_brender_green.png \
+	timebar_brender_cyan.png \
+	timebar_brender_blue.png \
+	timebar_brender_magenta.png \
 	timebar_view.png \
 	tipbutton_dn.png \
 	tipbutton_hi.png \
