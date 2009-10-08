@@ -25,7 +25,7 @@ AudioOutConfig::AudioOutConfig(int duplex)
 
 	sprintf(alsa_out_device, "default");
 	alsa_out_bits = 16;
-	interrupt_workaround = 0;
+	interrupt_workaround = 1;
 
 	firewire_channel = 63;
 	firewire_port = 0;
