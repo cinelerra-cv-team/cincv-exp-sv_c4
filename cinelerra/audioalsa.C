@@ -187,7 +187,7 @@ snd_pcm_format_t AudioALSA::translate_format(int format)
 	}
 }
 
-void AudioALSA::set_params(snd_pcm_t *dsp, 
+int AudioALSA::set_params(snd_pcm_t *dsp, 
 	int channels, 
 	int bits,
 	int samplerate,
@@ -204,22 +204,45 @@ void AudioALSA::set_params(snd_pcm_t *dsp,
 	if (err < 0) 
 	{
 		printf("AudioALSA::set_params: no PCM configurations available\n");
-		return;
+                return 1;
 	}
 
-	snd_pcm_hw_params_set_access(dsp, 
+	err=snd_pcm_hw_params_set_access(dsp, 
 		params,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(dsp, 
+        if(err){
+          fprintf(stderr,"AudioALSA::set_params: failed to set up "
+                  "interleaved device access.\n");
+          return 1;
+        }
+
+	err=snd_pcm_hw_params_set_format(dsp, 
 		params, 
 		translate_format(bits));
-	snd_pcm_hw_params_set_channels(dsp, 
+        if(err){
+          fprintf(stderr,"AudioALSA::set_params: failed to set output "
+                  "format.\n");
+          return 1;
+        }
+
+	err=snd_pcm_hw_params_set_channels(dsp, 
 		params, 
 		channels);
-	snd_pcm_hw_params_set_rate_near(dsp, 
+        if(err){
+          fprintf(stderr,"AudioALSA::set_params: Configured ALSA device "
+                  "does not support %d channel operation.\n",channels);
+          return 1;
+        }
+
+	err=snd_pcm_hw_params_set_rate_near(dsp, 
 		params, 
 		(unsigned int*)&samplerate, 
 		(int*)0);
+        if(err){
+          fprintf(stderr,"AudioALSA::set_params: Configured ALSA device "
+                  "does not support %u Hz playback.\n",(unsigned int)samplerate);
+          return 1;
+        }
 
 // Buffers written must be equal to period_time
 	int buffer_time;
@@ -250,7 +273,7 @@ void AudioALSA::set_params(snd_pcm_t *dsp,
 	if(err < 0)
 	{
 		printf("AudioALSA::set_params: hw_params failed\n");
-		return;
+		return 1;
 	}
 
 	snd_pcm_uframes_t chunk_size = 1024;
@@ -269,6 +292,7 @@ void AudioALSA::set_params(snd_pcm_t *dsp,
 	if(snd_pcm_sw_params(dsp, swparams) < 0)
 	{
 		printf("AudioALSA::set_params: snd_pcm_sw_params failed\n");
+                /* we can continue staggering along even if this fails */
 	}
 
 	device->device_buffer = samples * bits / 8 * channels;
@@ -277,6 +301,7 @@ void AudioALSA::set_params(snd_pcm_t *dsp,
 
 //	snd_pcm_hw_params_free(params);
 //	snd_pcm_sw_params_free(swparams);
+        return 0;
 }
 
 int AudioALSA::open_input()
@@ -296,16 +321,21 @@ int AudioALSA::open_input()
 
 	if(err < 0)
 	{
+                dsp_in = 0;
 		printf("AudioALSA::open_input: %s\n", snd_strerror(err));
 		return 1;
 	}
 
-	set_params(dsp_in, 
+	err = set_params(dsp_in, 
 		device->get_ichannels(), 
 		device->in_config->alsa_in_bits,
 		device->in_samplerate,
 		device->in_samples);
-
+        if(err){
+          fprintf(stderr,"AudioALSA::open_input: set_params failed.  Aborting sampling.\n");
+          close_input();
+          return 1;
+        }
 	return 0;
 }
 
@@ -330,11 +360,17 @@ int AudioALSA::open_output()
 		return 1;
 	}
 
-	set_params(dsp_out, 
+	err = set_params(dsp_out, 
 		device->get_ochannels(), 
 		device->out_config->alsa_out_bits,
 		device->out_samplerate,
 		device->out_samples);
+        if(err){
+          fprintf(stderr,"AudioALSA::open_output: set_params failed.  Aborting playback.\n");
+          close_output();
+          return 1;
+        }
+
 	timer->update();
 	return 0;
 }
@@ -350,6 +386,7 @@ int AudioALSA::close_output()
 	if(device->w && dsp_out)
 	{
 		snd_pcm_close(dsp_out);
+                dsp_out = 0;
 	}
 	return 0;
 }
@@ -362,6 +399,7 @@ int AudioALSA::close_input()
 		snd_pcm_drop(dsp_in);
 		snd_pcm_drain(dsp_in);
 		snd_pcm_close(dsp_in);
+                dsp_in = 0;
 	}
 	return 0;
 }
