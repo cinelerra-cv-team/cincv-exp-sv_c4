@@ -20,6 +20,7 @@ SUBDIRS= \
 	chromakey \
 	chromakeyhsv \
 	colorbalance \
+	colorgrade \
 	compressor \
 	crossfade \
 	decimate \
