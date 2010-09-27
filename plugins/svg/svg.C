@@ -29,6 +29,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 
 #include <libintl.h>
