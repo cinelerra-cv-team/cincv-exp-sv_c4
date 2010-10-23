@@ -1,0 +1,28 @@
+README for Cin2.1SV
+-------------------
+
+Cin2.1SV
+--------
+
+Cin2.1SV is not CinCV, note the S. It is an unofficial, experimental branch in a separate git-repo.
+
+Building
+--------
+
+It is recommended to use a dedicated build directory for building Cin2.1SV:
+
+.../: mkdir build
+
+To (re)build cinelerra e.g. the following procedure can be used (adopt --enable-.../--disable-... as needed):
+
+.../: autoreconf -i -f 
+.../: cd build
+.../build/: CINPREFIXDIR=/foo/bar/baz/ CXXFLAGS=-D__STDC_CONSTANT_MACROS \
+            ../configure --prefix=$CINPREFIXDIR --with-plugindir=$CINPREFIXDIR/lib/cinelerra \
+	    --enable-opengl --with-external-ffmpeg "--with-buildinfo=cust/Cin2.1SV"
+.../build/: make 
+.../build/: sudo make install
+
+The above lines were used (October 2010) by the maintainer of this repo for successfully building Cin2.1SV on his gentoo (64bit) machine using external ffmpeg and a dedicated prefix to keep /usr/local/... clean.
+
+
