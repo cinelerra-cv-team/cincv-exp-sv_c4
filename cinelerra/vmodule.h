@@ -77,7 +77,13 @@ public:
 		int use_opengl = 0);
 
 // synchronization with tracks
+/* 
+  What's up with this? Can't find an implementation anywhere.
+  Same for AModule::get_fade_automation()
+  Commenting this out does no harm, probably dead code?  
+  
 	FloatAutos* get_fade_automation();       // get the fade automation for this module
+*/
 
 // Temp frames for loading from file handlers
 	VFrame *input_temp;

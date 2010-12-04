@@ -183,10 +183,10 @@ void Autos::insert_track(Autos *automation,
 	if(replace_default) default_auto->copy_from(automation->default_auto);
 	for(Auto *current = automation->first; current; current = NEXT)
 	{
-		Auto *new_auto = insert_auto(start_unit + current->position);
+		int64_t new_pos = start_unit + current->position;
+		Auto *new_auto = insert_auto(new_pos);
 		new_auto->copy_from(current);
-// Override copy_from
-		new_auto->position = current->position + start_unit;
+		new_auto->position = new_pos;
 	}
 }
 
@@ -381,7 +381,7 @@ Auto* Autos::insert_auto(int64_t position)
 		if(current)
 		{
 			insert_after(current, result = new_auto());
-			result->copy_from(current);
+			result->fill_from_template(current,position);
 		}
 		else
 		{
@@ -389,10 +389,11 @@ Auto* Autos::insert_auto(int64_t position)
 			if(!current) current = default_auto;
 
 			insert_before(first, result = new_auto());
-			if(current) result->copy_from(current);
+			if(current) 
+				result->fill_from_template(current,position);
+			else
+				result->position = position;
 		}
-
-		result->position = position;
 	}
 	else
 	{
@@ -438,10 +439,11 @@ Auto* Autos::insert_auto_for_editing(int64_t position)
 			if(!current) current = default_auto;
 
 			insert_before(first, result = new_auto());
-			if(current) result->copy_from(current);
+			if(current) 
+				result->fill_from_template(current,position);
+			else
+				result->position = position;
 		}
-
-		result->position = position;
 	}
 	else
 	{

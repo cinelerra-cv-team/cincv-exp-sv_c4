@@ -42,24 +42,62 @@ public:
 	int identical(FloatAuto *src);
 	void copy_from(Auto *that);
 	void copy_from(FloatAuto *that);
+	void fill_from_template(Auto *other, int64_t new_position); // recalculates the tangents
+	int interpolate_from(Auto *a1, Auto *a2, int64_t position); // bézier interpolation
 	void copy(int64_t start, int64_t end, FileXML *file, int default_only);
 	void load(FileXML *xml);
 
- 	float value_to_percentage();
- 	float invalue_to_percentage();
- 	float outvalue_to_percentage();
-/* 	float percentage_to_value(float percentage);
- * 	float percentage_to_invalue(float percentage);
- * 	float percentage_to_outvalue(float percentage);
- */
 
-// Control values are relative to value
-	float value, control_in_value, control_out_value;
-// X control positions relative to value position for drawing.
-// In native units of the track.
-	int64_t control_in_position, control_out_position;
+// "the value" (=payload of this keyframe)
+	float value() {return this->val;}
+	void value(float newval);
+
+// Possible policies to handle the tagents for the 
+// bézier curves connecting adjacent automation points
+	enum t_mode 
+	{
+		SMOOTH,     // tangents are coupled in order to yield a smooth curve
+		LINEAR,     // tangents always pointing directly to neighbouring automation points
+		TFREE,      // tangents on both sides coupled but editable by dragging the handles
+		FREE        // tangents on both sides are independent and editable via GUI
+	};
+
+	t_mode tangent_mode;
+	void change_tangent_mode(t_mode); // recalculates tangents as well
+	void toggle_tangent_mode();       // cycles through all modes (e.g. by ctrl-click)
+	
+
+// Control values (y coords of bézier control point), relative to value
+	float control_in_value()            {check_pos(); return this->ctrl_in_val;}
+	float control_out_value()           {check_pos(); return this->ctrl_out_val;}
+	void control_in_value(float newval) ;
+	void control_out_value(float newval);
+	
+// get calculated x-position of control points for drawing, 
+// relative to auto position, in native units of the track.
+	int64_t control_in_position()       {check_pos(); return this->ctrl_in_pos;}
+	int64_t control_out_position()      {check_pos(); return this->ctrl_out_pos;}
+	
+// define new position and value, re-adjust ctrl point, notify neighbours
+	void adjust_to_new_coordinates(int64_t position, float value);
+    
+
 
 private:
+	void adjust_tangents();             // recalc. ctrk in and out points, if automatic tangent mode (SMOOTH or LINEAR)
+	void adjust_ctrl_positions(FloatAuto *p=0, FloatAuto *n=0); // recalc. x location of ctrl points, notify neighbours
+	void set_ctrl_positions(FloatAuto*, FloatAuto*);
+	void calc_slope(Auto*,Auto*,float&,float&);
+	void check_pos()                    { if (position!=pos_valid) {adjust_ctrl_positions(); pos_valid=position;}}
+	void tangent_dirty()                { pos_valid=-1; }
+
+// Control values are relative to value
+	float val, ctrl_in_val, ctrl_out_val;
+// X control positions relative to value position for drawing.
+// In native units of the track.
+	int64_t ctrl_in_pos, ctrl_out_pos;
+
+	int64_t pos_valid;                  // 'dirty flag' to recalculate ctrl point positions on demand
 	int value_to_str(char *string, float value);
 };
 

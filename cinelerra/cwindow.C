@@ -131,6 +131,7 @@ Auto* CWindow::calculate_affected_auto(Autos *autos,
 	int create,
 	int *created,
 	int redraw)
+	// redrawing may be switched off, e.g. if dragging camera/projector in compositor,
 {
 	Auto* affected_auto = 0;
 	if(created) *created = 0;

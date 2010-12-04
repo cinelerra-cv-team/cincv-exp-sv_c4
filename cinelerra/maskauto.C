@@ -284,6 +284,7 @@ int MaskAuto::interpolate_from(Auto *a1, Auto *a2, int64_t position) {
 	if (!mask_auto2 || mask_auto2->masks.total == 0) // if mask_auto == null, copy from first
 	{
 		copy_from(mask_auto1);
+		this->position = position;
 		return 0;
 	}
 	this->mode = mask_auto1->mode;
@@ -315,9 +316,8 @@ int MaskAuto::interpolate_from(Auto *a1, Auto *a2, int64_t position) {
 				mask_auto2->position);
 			new_submask->points.append(point);
 		}
-
 	}
-
+	return 1;
 
 }
 

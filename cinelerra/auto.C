@@ -69,9 +69,15 @@ void Auto::copy_from(Auto *that)
 	this->position = that->position;
 }
 
+void Auto::fill_from_template(Auto *other, int64_t new_position)
+{   // may be overridden to handle the templating as a special case (see FloatAuto)
+	copy_from(other);
+	position = new_position;
+}
+
 int Auto::interpolate_from(Auto *a1, Auto *a2, int64_t position)
 {
-	copy_from(a1);
+	fill_from_template(a1,position);
 	return 0;
 }
 
@@ -80,20 +86,4 @@ void Auto::load(FileXML *xml)
 	printf("Auto::load\n");
 }
 
-
-
-float Auto::value_to_percentage()
-{
-	return 0;
-}
-
-float Auto::invalue_to_percentage()
-{
-	return 0;
-}
-
-float Auto::outvalue_to_percentage()
-{
-	return 0;
-}
 

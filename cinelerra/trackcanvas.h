@@ -30,6 +30,7 @@
 #include "edithandles.inc"
 #include "floatauto.inc"
 #include "floatautos.inc"
+#include "intauto.inc"
 #include "guicast.h"
 #include "keyframe.inc"
 #include "mwindow.inc"
@@ -42,7 +43,6 @@
 #include "tracks.inc"
 #include "transitionhandles.inc"
 #include "keyframe.inc"
-#include "floatauto.inc"
 
 class TrackCanvas : public BC_SubWindow
 {
@@ -71,6 +71,9 @@ public:
 // canvas and just draw the overlays over it
 	void draw_overlays();
 	void update_handles();
+// shorthand, called from compositor/tools: does flash() as well	
+	void redraw_overlays();
+	
 // Convert edit coords to transition coords
 	void get_transition_coords(int64_t &x, int64_t &y, int64_t &w, int64_t &h);
 	void get_handle_coords(Edit *edit, 
@@ -86,13 +89,13 @@ public:
 		int64_t edit_h);
 	void draw_automation();
 	void draw_inout_points();
-	void draw_auto(Auto *current, 
+	void draw_toggle_auto( 
 		int x, 
 		int y, 
 		int center_pixel, 
 		int zoom_track,
 		int color);
-	void draw_floatauto(Auto *current, 
+	void draw_floatauto(FloatAuto *current, 
 		int x, 
 		int y, 
 		int in_x,
@@ -102,7 +105,7 @@ public:
 		int center_pixel, 
 		int zoom_track,
 		int color);
-	int test_auto(Auto *current, 
+	int test_toggle_auto(IntAuto *current, 
 		int x, 
 		int y, 
 		int center_pixel, 
@@ -110,7 +113,7 @@ public:
 		int cursor_x, 
 		int cursor_y, 
 		int buttonpress);
-	int test_floatauto(Auto *current, 
+	int test_floatauto(FloatAuto *current, 
 		int x, 
 		int y, 
 		int in_x,
@@ -121,7 +124,8 @@ public:
 		int zoom_track, 
 		int cursor_x, 
 		int cursor_y, 
-		int buttonpress);
+		int buttonpress,
+		int autogrouptype);
 	void draw_floatline(int center_pixel, 
 		FloatAuto *previous,
 		FloatAuto *current,
@@ -234,7 +238,7 @@ public:
 		double zoom_units,
 		double yscale,
 		int autogrouptype);
-	void synchronize_autos(float change, Track *skip, FloatAuto *fauto, int fill_gangs);
+	void synchronize_fadeautos(float change, Track *skip, FloatAuto *fauto, int fill_gangs);
 
 
 	void draw_brender_start();
@@ -384,6 +388,21 @@ public:
 	void draw_paste_destination();
 
 	int draw_floating_handle(int flash);
+
+
+private:
+	void draw_floatauto_ctrlpoint(
+	int x, 
+	int y, 
+	int cp_x, 
+	int cp_y, 
+	int center_pixel, 
+	int zoom_track,
+	int color);
+
+	float value_to_percentage(float auto_value, int autogrouptype); 
+	// transforms automation value into current display coords
+	// dependant on current automation display range for given kind of automation
 
 
 private:
