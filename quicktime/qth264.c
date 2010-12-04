@@ -107,7 +107,8 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 	int width = quicktime_video_width(file, track);
 	int height = quicktime_video_height(file, track);
 	int w_16 = quicktime_quantize16(width);
-	int h_16 = quicktime_quantize16(height);
+	// ffmpeg interprets the codec height as the presentation height
+	int h_8 = quicktime_quantize8(height);
 	int i;
 	int result = 0;
 	int bytes = 0;
@@ -131,7 +132,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 	{
 		codec->encode_initialized[current_field] = 1;
 		codec->param.i_width = w_16;
-		codec->param.i_height = w_16;
+		codec->param.i_height = h_8;
 		codec->param.i_fps_num = quicktime_frame_rate_n(file, track);
 		codec->param.i_fps_den = quicktime_frame_rate_d(file, track);
 
@@ -174,16 +175,16 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 
 	if(codec->header_only)
 	{
-		bzero(codec->pic[current_field]->img.plane[0], w_16 * h_16);
-		bzero(codec->pic[current_field]->img.plane[1], w_16 * h_16 / 4);
-		bzero(codec->pic[current_field]->img.plane[2], w_16 * h_16 / 4);
+		bzero(codec->pic[current_field]->img.plane[0], w_16 * h_8);
+		bzero(codec->pic[current_field]->img.plane[1], w_16 * h_8 / 4);
+		bzero(codec->pic[current_field]->img.plane[2], w_16 * h_8 / 4);
 	}
 	else
 	if(file->color_model == BC_YUV420P)
 	{
-		memcpy(codec->pic[current_field]->img.plane[0], row_pointers[0], w_16 * h_16);
-		memcpy(codec->pic[current_field]->img.plane[1], row_pointers[1], w_16 * h_16 / 4);
-		memcpy(codec->pic[current_field]->img.plane[2], row_pointers[2], w_16 * h_16 / 4);
+		memcpy(codec->pic[current_field]->img.plane[0], row_pointers[0], w_16 * h_8);
+		memcpy(codec->pic[current_field]->img.plane[1], row_pointers[1], w_16 * h_8 / 4);
+		memcpy(codec->pic[current_field]->img.plane[2], row_pointers[2], w_16 * h_8 / 4);
 	}
 	else
 	{
@@ -230,7 +231,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 		&nnal, 
 		codec->pic[current_field], 
 		&pic_out);
-	int allocation = w_16 * h_16 * 3;
+	int allocation = w_16 * h_8 * 3;
 	if(!codec->work_buffer)
 	{
 		codec->work_buffer = calloc(1, allocation);
