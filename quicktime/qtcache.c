@@ -44,7 +44,7 @@ void quicktime_put_frame(quicktime_cache_t *ptr,
 	quicktime_cacheframe_t *frame = 0;
 	int i;
 
-//printf("quicktime_put_frame 1\n");
+//printf("quicktime_put_frame %d total=%d allocation=%d\n", __LINE__, ptr->total, ptr->allocation);
 // Get existing frame
 	for(i = 0; i < ptr->total; i++)
 	{
@@ -61,7 +61,12 @@ void quicktime_put_frame(quicktime_cache_t *ptr,
 		if(ptr->total >= ptr->allocation)
 		{
 			int new_allocation = ptr->allocation * 2;
-//printf("quicktime_put_frame 10 %d\n", new_allocation);
+
+// printf("quicktime_put_frame %d ptr->allocation=%d new_allocation=%d\n", 
+// __LINE__, 
+// ptr->allocation, 
+// new_allocation);
+
 			if(!new_allocation) new_allocation = 32;
 			ptr->frames = realloc(ptr->frames, 
 				sizeof(quicktime_cacheframe_t) * new_allocation);
@@ -99,6 +104,44 @@ void quicktime_put_frame(quicktime_cache_t *ptr,
 		frame->frame_number = frame_number;
 	}
 //printf("quicktime_put_frame 100\n");
+
+
+//printf("quicktime_put_frame %d total=%d allocation=%d\n", __LINE__, ptr->total, ptr->allocation);
+// Delete oldest frames
+	if(ptr->max)
+	{
+		while(quicktime_cache_usage(ptr) > ptr->max && ptr->total > 0)
+		{
+			quicktime_cacheframe_t *frame = &ptr->frames[0];
+
+			if(frame->y) free(frame->y);
+			if(frame->u) free(frame->u);
+			if(frame->v) free(frame->v);
+
+			for(i = 0; i < ptr->total - 1; i++)
+			{
+				quicktime_cacheframe_t *frame1 = &ptr->frames[i];
+				quicktime_cacheframe_t *frame2 = &ptr->frames[i + 1];
+				*frame1 = *frame2;
+			}
+
+
+			frame = &ptr->frames[ptr->total - 1];
+			frame->y = 0;
+			frame->u = 0;
+			frame->v = 0;
+			ptr->total--;
+			ptr->allocation--;
+		}
+	}
+
+
+// printf("quicktime_put_frame %d total=%d allocation=%d\n", __LINE__, ptr->total, ptr->allocation);
+// printf("quicktime_put_frame %d max=0x%x current=0x%x\n", 
+// __LINE__,
+// ptr->max, 
+// quicktime_cache_usage(ptr));
+
 }
 
 int quicktime_get_frame(quicktime_cache_t *ptr,
@@ -148,8 +191,8 @@ int64_t quicktime_cache_usage(quicktime_cache_t *ptr)
 {
 	int64_t result = 0;
 	int i;
-//printf("quicktime_cache_usage %p %d %lld\n", ptr,  ptr->allocation, result);
-	for(i = 0; i < ptr->allocation; i++)
+//printf("quicktime_cache_usage %p %d %lld\n", ptr,  ptr->total, result);
+	for(i = 0; i < ptr->total; i++)
 	{
 		quicktime_cacheframe_t *frame = &ptr->frames[i];
 		result += frame->y_size + frame->u_size + frame->v_size;
@@ -157,5 +200,10 @@ int64_t quicktime_cache_usage(quicktime_cache_t *ptr)
 	return result;
 }
 
+
+void quicktime_cache_max(quicktime_cache_t *ptr, int bytes)
+{
+	ptr->max = bytes;
+}
 
 

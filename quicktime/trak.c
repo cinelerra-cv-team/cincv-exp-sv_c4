@@ -313,7 +313,7 @@ int quicktime_avg_chunk_samples(quicktime_t *file, quicktime_trak_t *trak)
 int quicktime_chunk_of_sample(int64_t *chunk_sample, 
 	int64_t *chunk, 
 	quicktime_trak_t *trak, 
-	long sample)
+	int64_t sample)
 {
 	quicktime_stsc_table_t *table = trak->mdia.minf.stbl.stsc.table;
 	long total_entries = trak->mdia.minf.stbl.stsc.total_entries;
@@ -340,6 +340,7 @@ int quicktime_chunk_of_sample(int64_t *chunk_sample,
 		if(sample < total + range_samples) break;
 
 		chunk1samples = table[chunk2entry].samples;
+//printf("quicktime_chunk_of_sample chunk1samples=%lld\n", chunk1samples);
 		chunk1 = chunk2;
 
 		if(chunk2entry < total_entries)
@@ -348,6 +349,8 @@ int quicktime_chunk_of_sample(int64_t *chunk_sample,
 			total += range_samples;
 		}
 	}while(chunk2entry < total_entries);
+//printf("quicktime_chunk_of_sample chunk1samples=%lld sample=%lld total=%lld chunk1=%lld\n",
+//chunk1samples, sample, total, chunk1);
 
 	if(chunk1samples)
 		*chunk = (sample - total) / chunk1samples + chunk1;

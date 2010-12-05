@@ -239,6 +239,8 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 	}
 	else
 	{
+		if(!codec->rows)
+			codec->rows = malloc(height * sizeof(*(codec->rows)));
 		for(i = 0; i < height; i++)
 			codec->rows[i] = buffer + i * codec->bytes_per_line;
 
@@ -277,6 +279,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 		vtrack->current_chunk,
 		&chunk_atom, 
 		1);
+printf("10\n");
 
 	vtrack->current_chunk++;
 	return result;

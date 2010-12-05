@@ -158,6 +158,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 
 		codec->encoder[current_field] = x264_encoder_open(&codec->param);
 		codec->pic[current_field] = calloc(1, sizeof(x264_picture_t));
+//printf("encode 1 %d %d\n", codec->param.i_width, codec->param.i_height);
    		x264_picture_alloc(codec->pic[current_field], 
 			X264_CSP_I420, 
 			codec->param.i_width, 
@@ -188,6 +189,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 	}
 	else
 	{
+//printf("encode 2 %p %p %p\n", codec->pic[current_field]->img.plane[0], codec->pic[current_field]->img.plane[1], codec->pic[current_field]->img.plane[2]);
 		cmodel_transfer(0, /* Leave NULL if non existent */
 			row_pointers,
 			codec->pic[current_field]->img.plane[0], /* Leave NULL if non existent */
@@ -225,12 +227,16 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 
     x264_picture_t pic_out;
     x264_nal_t *nals;
-	int nnal;
+	int nnal = 0;
+	do
+	{
 	x264_encoder_encode(codec->encoder[current_field], 
 		&nals, 
 		&nnal, 
 		codec->pic[current_field], 
 		&pic_out);
+//printf("encode %d nnal=%d\n", __LINE__, nnal);
+	} while(codec->header_only && !nnal);
 	int allocation = w_16 * h_8 * 3;
 	if(!codec->work_buffer)
 	{
@@ -238,6 +244,7 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 	}
 
 	codec->buffer_size = 0;
+//printf("encode %d nnal=%d\n", __LINE__, nnal);
 	for(i = 0; i < nnal; i++)
 	{
 #if X264_BUILD >= 76
@@ -251,8 +258,17 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 #endif
 		unsigned char *ptr = codec->work_buffer + codec->buffer_size;
 
+//printf("encode %d size=%d\n", __LINE__, size);
 		if(size > 0)
 		{
+			if(size + codec->buffer_size > allocation)
+			{
+				printf("qth264.c %d: overflow size=%d allocation=%d\n",
+					__LINE__,
+					size,
+					allocation);
+			}
+
 // Size of NAL for avc
 			uint64_t avc_size = size - 4;
 
@@ -408,6 +424,8 @@ static int decode(quicktime_t *file, unsigned char **row_pointers, int track)
  * 	return result;
  * }
  */
+
+
 
 static void flush(quicktime_t *file, int track)
 {

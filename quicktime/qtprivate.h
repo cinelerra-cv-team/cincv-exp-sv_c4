@@ -5,7 +5,7 @@
 
 /* Version used internally.  You need to query it with the C functions */
 #define QUICKTIME_MAJOR 2
-#define QUICKTIME_MINOR 2
+#define QUICKTIME_MINOR 3
 #define QUICKTIME_RELEASE 0
 
 
@@ -26,6 +26,8 @@
 
 #define AVI_FRAME_RATE_BASE 10000
 #define MAX_RIFFS  0x100
+
+#define QT_TRACE printf("%s: %d\n", __FILE__, __LINE__);
 
 #include <stdio.h>
 #include <stdint.h>
@@ -158,6 +160,12 @@ typedef struct
 
 typedef struct
 {
+	char *data;
+	int data_size;
+} quicktime_frma_t;
+
+typedef struct
+{
 	char format[4];
 	char reserved[6];
 	int data_reference;
@@ -206,6 +214,7 @@ typedef struct
 
 	int extradata_size;
 	char *extradata;
+	quicktime_frma_t frma;
 } quicktime_stsd_table_t;
 
 
@@ -564,6 +573,8 @@ typedef struct
 	quicktime_indxtable_t *table;
 } quicktime_indx_t;
 
+/* AVI equivalent for each trak.  Use file->moov.total_tracks */
+/* Need it for super indexes during reading. */
 typedef struct
 {
 	quicktime_atom_t atom;
@@ -571,6 +582,12 @@ typedef struct
 	quicktime_indx_t indx;
 /* AVI needs header placeholders before anything else is written */
 	int64_t length_offset;
+/* Sample count read directly from auds */
+	int64_t samples;
+/* Bytes per second read directly from auds */
+	int bytes_per_second;
+/* Bytes totalled up from idx1 */
+	int64_t total_bytes;
 	int64_t samples_per_chunk_offset;
 	int64_t sample_size_offset;
 /* Start of indx header for later writing */
@@ -644,6 +661,7 @@ typedef struct
 	quicktime_cacheframe_t *frames;
 	int total;
 	int allocation;
+	int max;
 } quicktime_cache_t;
 
 /* table of pointers to every track */
@@ -695,8 +713,12 @@ typedef struct
 	int64_t old_preload_ptr;
 
 
-/* ASF section */
+
+
+
+/* ASF/WMV section */
 	int use_asf;
+	void *asf;
 
 
 
@@ -731,6 +753,9 @@ typedef struct
 	int64_t preload_start;     /* Start of preload_buffer in file */
 	int64_t preload_end;       /* End of preload buffer in file */
 	int64_t preload_ptr;       /* Offset of preload_start in preload_buffer */
+
+/* Temporary storage until tracks are created */
+	int cache_size;
 
 /* Write ahead buffer */
 /* Amount of data in presave buffer */

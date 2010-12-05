@@ -177,6 +177,12 @@ void quicktime_set_avcc_header(quicktime_avcc_t *avcc,
 	unsigned char *data, 
 	int size);
 
+void quicktime_delete_frma(quicktime_frma_t *frma);
+int quicktime_read_frma(quicktime_t *file, 
+	quicktime_atom_t *parent_atom,
+	quicktime_atom_t *leaf_atom,
+	quicktime_frma_t *frma);
+void quicktime_frma_dump(quicktime_frma_t *frma);
 
 
 
@@ -253,6 +259,11 @@ void quicktime_write_ix(quicktime_t *file,
 void quicktime_read_ix(quicktime_t *file,
 	quicktime_ix_t *ix);
 
+
+
+void quicktime_write_moov(quicktime_t *file,
+	quicktime_moov_t *moov,
+	int rewind);
 
 
 /* compression_id is for AVI reading */
@@ -483,6 +494,9 @@ void quicktime_shift_vbr(quicktime_audio_map_t *atrack, int bytes);
 void quicktime_store_vbr_float(quicktime_audio_map_t *atrack,
 	float *samples,
 	int sample_count);
+void quicktime_store_vbr_int16(quicktime_audio_map_t *atrack,
+	int16_t *samples,
+	int sample_count);
 
 void quicktime_copy_vbr_float(quicktime_vbr_t *vbr,
 	int64_t start_position, 
@@ -494,6 +508,7 @@ void quicktime_copy_vbr_float(quicktime_vbr_t *vbr,
 
 // Frame caching for keyframed video.
 quicktime_cache_t* quicktime_new_cache();
+void quicktime_cache_max(quicktime_cache_t *ptr, int bytes);
 void quicktime_delete_cache(quicktime_cache_t *ptr);
 void quicktime_reset_cache(quicktime_cache_t *ptr);
 void quicktime_put_frame(quicktime_cache_t *ptr,

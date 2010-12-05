@@ -485,7 +485,7 @@ void cmodel_to_text(char *string, int cmodel)
 	}
 }
 
-int cmodel_from_text(char *text)
+int cmodel_from_text(const char *text)
 {
 	if(!strcasecmp(text, "RGB-8 Bit"))   return BC_RGB888;
 	if(!strcasecmp(text, "RGBA-8 Bit"))  return BC_RGBA8888;
@@ -498,6 +498,21 @@ int cmodel_from_text(char *text)
 	if(!strcasecmp(text, "YUV-16 Bit"))  return BC_YUV161616;
 	if(!strcasecmp(text, "YUVA-16 Bit")) return BC_YUVA16161616;
 	return BC_RGB888;
+}
+
+int cmodel_is_float(int colormodel)
+{
+	switch(colormodel)
+	{
+		case BC_A_FLOAT: // FIXME: This is not in HV's code but I guess it should be there, too
+		case BC_RGB_FLOAT:
+		case BC_RGBA_FLOAT:
+			return 1;
+			break;
+		default:
+			return 0;
+			break;
+	}
 }
 
 int cmodel_is_yuv(int colormodel)

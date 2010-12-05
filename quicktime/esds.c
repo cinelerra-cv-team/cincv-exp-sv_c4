@@ -228,6 +228,8 @@ void quicktime_write_esds(quicktime_t *file,
 
 void quicktime_esds_dump(quicktime_esds_t *esds)
 {
+	if(esds->mpeg4_header_size)
+	{
 	printf("       elementary stream description\n");
 	printf("        mpeg4_header_size=0x%x\n", esds->mpeg4_header_size);
 	printf("        mpeg4_header=");
@@ -235,6 +237,7 @@ void quicktime_esds_dump(quicktime_esds_t *esds)
 	for(i = 0; i < esds->mpeg4_header_size; i++)
 		printf("%02x ", (unsigned char)esds->mpeg4_header[i]);
 	printf("\n");
+	}
 }
 
 

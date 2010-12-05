@@ -112,11 +112,12 @@ int cmodel_calculate_max(int colormodel);
 int cmodel_components(int colormodel);
 int cmodel_is_yuv(int colormodel);
 int cmodel_has_alpha(int colormodel);
+int cmodel_is_float(int colormodel);
 
 // Tell when to use plane arguments or row pointer arguments to functions
 int cmodel_is_planar(int color_model);
 void cmodel_to_text(char *string, int cmodel);
-int cmodel_from_text(char *text);
+int cmodel_from_text(const char *text);
 
 
 

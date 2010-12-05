@@ -17,6 +17,7 @@
  
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "colormodels.h"
 #include "libmjpeg.h"
 
@@ -446,6 +447,7 @@ static void allocate_temps(mjpeg_t *mjpeg)
         switch(mjpeg->jpeg_color_model)
         {
             case BC_YUV422P:
+//printf("allocate_temps 1\n");
 	            mjpeg->temp_data = calloc(1, mjpeg->coded_w * mjpeg->coded_h * 2);
 	            mjpeg->temp_rows[0] = calloc(1, sizeof(unsigned char*) * mjpeg->coded_h);
 	            mjpeg->temp_rows[1] = calloc(1, sizeof(unsigned char*) * mjpeg->coded_h);
@@ -717,10 +719,13 @@ static void decompress_field(mjpeg_compressor *engine)
 	if(setjmp(engine->jpeg_error.setjmp_buffer))
 	{
 /* If we get here, the JPEG code has signaled an error. */
+printf("decompress_field %d\n", __LINE__);
 		delete_jpeg_objects(engine);
+printf("decompress_field %d\n", __LINE__);
 		new_jpeg_objects(engine);
+printf("decompress_field %d\n", __LINE__);
 		mjpeg->error = 1;
-//printf("decompress_field 1\n");
+printf("decompress_field %d\n", __LINE__);
 		goto finish;
 	}
 
@@ -766,6 +771,7 @@ static void decompress_field(mjpeg_compressor *engine)
 	pthread_mutex_unlock(&(mjpeg->decompress_init));
 	get_rows(mjpeg, engine);
 
+//printf("decompress_field 30\n");
 
 	while(engine->jpeg_decompress.output_scanline < engine->jpeg_decompress.output_height)
 	{
@@ -776,6 +782,7 @@ static void decompress_field(mjpeg_compressor *engine)
 	}
 	jpeg_finish_decompress(&engine->jpeg_decompress);
 
+//printf("decompress_field 40\n");
 
 finish:
 	;
@@ -846,6 +853,7 @@ static void delete_temps(mjpeg_t *mjpeg)
 	    free(mjpeg->temp_rows[0]);
 	    free(mjpeg->temp_rows[1]);
 	    free(mjpeg->temp_rows[2]);
+	    mjpeg->temp_data = 0;
 	}
 }
 
@@ -1160,18 +1168,22 @@ int mjpeg_decompress(mjpeg_t *mjpeg,
 /* Start decompressors */
 	for(i = 0; i < mjpeg->fields && !result; i++)
 	{
+//printf("mjpeg_decompress 5\n");
 		unlock_compress_loop(mjpeg->decompressors[i]);
+//printf("mjpeg_decompress 6\n");
 
 // For dual CPUs, don't want second thread to start until temp data is allocated by the first.
 // For single CPUs, don't want two threads running simultaneously
 		if(mjpeg->cpus < 2 || !mjpeg->temp_data)
 		{
+//printf("mjpeg_decompress 7\n");
 			lock_compress_loop(mjpeg->decompressors[i]);
+//printf("mjpeg_decompress 8\n");
 			if(i == 0) got_first_thread = 1;
 		}
 	}
 
-//printf("mjpeg_decompress 5\n");
+//printf("mjpeg_decompress 10\n");
 /* Wait for decompressors */
 	for(i = 0; i < mjpeg->fields && !result; i++)
 	{

@@ -721,7 +721,8 @@ static int encode(quicktime_t *file, unsigned char **row_pointers, int track)
 			         codec->ffmpeg_id == CODEC_FLAG_H263P_SLICE_STRUCT))
 			{
 				avcodec_thread_init(context, file->cpus);
-				context->thread_count = file->cpus;
+// FFMPEG does that already when executing avcodec_thread_init.
+//				context->thread_count = file->cpus;
 			}
 
 			if(!codec->fix_bitrate)
@@ -1137,6 +1138,7 @@ static quicktime_mpeg4_codec_t* init_common(quicktime_video_map_t *vtrack,
 
 // Set defaults
 	codec->bitrate = 1000000;
+	codec->bitrate_tolerance = 1000000;
 	codec->rc_period = 50;
 	codec->rc_reaction_ratio = 45;
 	codec->rc_reaction_period = 10;

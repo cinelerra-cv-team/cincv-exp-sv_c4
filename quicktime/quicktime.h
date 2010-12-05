@@ -56,6 +56,7 @@ extern "C" {
 
 /* Jpeg Photo */
 #define QUICKTIME_JPEG "jpeg"
+#define QUICKTIME_MJPG "MJPG"
 
 /* Concatenated png images.  Allows alpha */
 #define QUICKTIME_PNG "png "
@@ -127,6 +128,7 @@ extern "C" {
 #define QUICKTIME_MP3 ".mp3"
 
 #define QUICKTIME_MP4A "mp4a"
+#define QUICKTIME_QDM2 "QDM2"
 
 /* Mike Row Soft */
 /* AVI decode only */
@@ -164,9 +166,9 @@ void quicktime_set_asf(quicktime_t *file, int value);
 int quicktime_make_streamable(char *in_path, char *out_path);
 
 /* Set various options in the file. */
-void quicktime_set_copyright(quicktime_t *file, char *string);
-void quicktime_set_name(quicktime_t *file, char *string);
-void quicktime_set_info(quicktime_t *file, char *string);
+void quicktime_set_copyright(quicktime_t *file, const char *string);
+void quicktime_set_name(quicktime_t *file, const char *string);
+void quicktime_set_info(quicktime_t *file, const char *string);
 char* quicktime_get_copyright(quicktime_t *file);
 char* quicktime_get_name(quicktime_t *file);
 char* quicktime_get_info(quicktime_t *file);
@@ -206,7 +208,7 @@ void quicktime_set_jpeg(quicktime_t *file, int quality, int use_float);
 /* It iterates through every track and sets the key in that codec to */
 /* the value.  The value can be any data type and the key must be a */
 /* string which the codec understands. */
-void quicktime_set_parameter(quicktime_t *file, char *key, void *value);
+void quicktime_set_parameter(quicktime_t *file, const char *key, void *value);
 
 /* Get the english title of a codec based on its fourcc. */
 /* Used by info boxed. */
@@ -388,6 +390,7 @@ long quicktime_decode_video(quicktime_t *file,
 
 /* Get memory used by video decoders.  Only counts frame caches. */
 int64_t quicktime_memory_usage(quicktime_t *file);
+void quicktime_set_cache_max(quicktime_t *file, int bytes);
 
 /* Decode or encode audio for a single channel into the buffer. */
 /* Pass a buffer for the _i or the _f argument if you want int16 or float data. */
