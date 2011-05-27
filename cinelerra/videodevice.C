@@ -39,9 +39,9 @@
 #ifdef HAVE_FIREWIRE
 #include "vdevice1394.h"
 #endif
-#include "vdevicebuz.h"
+//#include "vdevicebuz.h"
 #include "vdevicedvb.h"
-#include "vdevicev4l.h"
+//#include "vdevicev4l.h"
 #include "vdevicev4l2.h"
 #include "vdevicev4l2jpeg.h"
 #include "vdevicex11.h"
@@ -203,7 +203,6 @@ int VideoDevice::open_input(VideoInConfig *config,
 			result = input_base->open_input();
 			break;
 
-
 #ifdef HAVE_VIDEO4LINUX2
 		case VIDEO4LINUX2:
 			new_device_base();
@@ -250,8 +249,8 @@ VDeviceBase* VideoDevice::new_device_base()
 {
 	switch(in_config->driver)
 	{
-		case VIDEO4LINUX:
-			return input_base = new VDeviceV4L(this);
+		//case VIDEO4LINUX:
+		//	return input_base = new VDeviceV4L(this);
 
 #ifdef HAVE_VIDEO4LINUX2
 		case VIDEO4LINUX2:
@@ -264,8 +263,8 @@ VDeviceBase* VideoDevice::new_device_base()
 		case SCREENCAPTURE:
 			return input_base = new VDeviceX11(this, 0);
 
-		case CAPTURE_BUZ:
-			return input_base = new VDeviceBUZ(this);
+		//case CAPTURE_BUZ:
+		//	return input_base = new VDeviceBUZ(this);
 
 #ifdef HAVE_FIREWIRE
 		case CAPTURE_FIREWIRE:
@@ -662,9 +661,9 @@ int VideoDevice::open_output(VideoOutConfig *config,
 //printf("VideoDevice::open_output 1 %d\n", out_config->driver);
 	switch(out_config->driver)
 	{
-		case PLAYBACK_BUZ:
-			output_base = new VDeviceBUZ(this);
-			break;
+		//case PLAYBACK_BUZ:
+		//	output_base = new VDeviceBUZ(this);
+		//	break;
 		case PLAYBACK_X11:
 		case PLAYBACK_X11_XV:
 		case PLAYBACK_X11_GL:

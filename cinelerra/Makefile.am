@@ -305,10 +305,8 @@ cinelerra_SOURCES = aattachmentpoint.C \
 		    vattachmentpoint.C \
 		    vautomation.C \
 		    vdevicebase.C \
-		    vdevicebuz.C \
 		    vdevicedvb.C \
 		    vdeviceprefs.C \
-		    vdevicev4l.C \
 		    vdevicev4l2.C \
 		    vdevicev4l2jpeg.C \
 		    vdevicex11.C \
@@ -630,11 +628,9 @@ noinst_HEADERS = aattachmentpoint.h \
 		 vautomation.h \
 		 vdevice1394.h \
 		 vdevicebase.h \
-		 vdevicebuz.h \
 		 vdevicedvb.h \
 		 vdevicelml.h \
 		 vdeviceprefs.h \
-		 vdevicev4l.h \
 		 vdevicev4l2.h \
 		 vdevicev4l2jpeg.h \
 		 vdevicex11.h \

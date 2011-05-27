@@ -32,10 +32,8 @@ make $OBJDIR/videoconfig.o
 make $OBJDIR/vedits.o
 make $OBJDIR/vedit.o
 make $OBJDIR/vdevicex11.o
-make $OBJDIR/vdevicev4l.o
 make $OBJDIR/vdeviceprefs.o
 make $OBJDIR/vdevicelml.o
-make $OBJDIR/vdevicebuz.o
 make $OBJDIR/vdevicebase.o
 make $OBJDIR/vdevice1394.o
 make $OBJDIR/vautomation.o

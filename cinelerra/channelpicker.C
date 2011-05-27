@@ -39,7 +39,7 @@
 #include "recordgui.h"
 #include "recordmonitor.h"
 #include "theme.h"
-#include "vdevicebuz.h"
+//#include "vdevicebuz.h"
 #include "vdeviceprefs.h"
 #include "videodevice.h"
 
@@ -280,7 +280,7 @@ PrefsChannelPicker::PrefsChannelPicker(MWindow *mwindow,
 //	printf("PrefsChannelPicker::PrefsChannelPicker 1\n");
 	this->mwindow = mwindow;
 	this->prefs = prefs;
-	VDeviceBUZ::get_inputs(&input_sources);
+//	VDeviceBUZ::get_inputs(&input_sources);
 }
 
 PrefsChannelPicker::~PrefsChannelPicker()
